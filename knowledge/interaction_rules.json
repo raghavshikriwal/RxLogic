@@ -1,0 +1,73 @@
+{
+  "source_note": "RxNav's live Drug-Drug Interaction API was permanently discontinued by NLM in Jan 2024. This file is a manually curated rule set based on well-documented, publicly known interactions (ONC High-Priority style pairs), cross-referenced against openFDA label warnings. See README Scope & Limitations.",
+  "medications": {
+    "metformin": "6809",
+    "aspirin": "1191",
+    "lisinopril": "29046",
+    "atorvastatin": "83367",
+    "warfarin": "11289",
+    "ibuprofen": "5640",
+    "omeprazole": "7646",
+    "metoprolol": "6918",
+    "amoxicillin": "723",
+    "levothyroxine": "10582"
+  },
+  "interaction_rules": [
+    {
+      "medication_a": "warfarin",
+      "medication_b": "aspirin",
+      "severity": "severe",
+      "description": "Combined use significantly increases risk of bleeding due to additive anticoagulant/antiplatelet effects.",
+      "source": "openFDA label / clinical literature"
+    },
+    {
+      "medication_a": "warfarin",
+      "medication_b": "ibuprofen",
+      "severity": "severe",
+      "description": "NSAIDs increase bleeding risk when combined with warfarin; also raises GI bleed risk independently.",
+      "source": "openFDA label / clinical literature"
+    },
+    {
+      "medication_a": "lisinopril",
+      "medication_b": "ibuprofen",
+      "severity": "moderate",
+      "description": "NSAIDs can reduce the antihypertensive effect of ACE inhibitors and increase risk of kidney impairment.",
+      "source": "openFDA label / clinical literature"
+    },
+    {
+      "medication_a": "metformin",
+      "medication_b": "omeprazole",
+      "severity": "mild",
+      "description": "PPIs may alter metformin absorption slightly; generally low clinical significance but monitored.",
+      "source": "clinical literature"
+    },
+    {
+      "medication_a": "atorvastatin",
+      "medication_b": "amoxicillin",
+      "severity": "mild",
+      "description": "Rare reports of altered statin metabolism with some antibiotics; low-risk combination overall.",
+      "source": "clinical literature"
+    },
+    {
+      "medication_a": "metoprolol",
+      "medication_b": "ibuprofen",
+      "severity": "moderate",
+      "description": "NSAIDs can blunt the blood-pressure-lowering effect of beta-blockers.",
+      "source": "openFDA label / clinical literature"
+    },
+    {
+      "medication_a": "levothyroxine",
+      "medication_b": "omeprazole",
+      "severity": "moderate",
+      "description": "PPIs can reduce levothyroxine absorption; dosing timing separation is typically recommended.",
+      "source": "clinical literature"
+    },
+    {
+      "medication_a": "warfarin",
+      "medication_b": "amoxicillin",
+      "severity": "moderate",
+      "description": "Antibiotics can alter gut flora affecting vitamin K synthesis, potentiating warfarin's effect.",
+      "source": "clinical literature"
+    }
+  ]
+}
