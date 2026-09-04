@@ -6,7 +6,6 @@ services.reasoning_service, and the typed result is serialized back
 out. Section 4.1: the schema boundary is enforced here too, not just
 between the LLM and the reasoning core.
 """
-from services.llm_parser import parse_medications
 
 from __future__ import annotations
 
@@ -25,6 +24,8 @@ from models.exceptions import (
     UnknownMedicationError,
 )
 from models.schemas import DailyPlan, Medication, TimingPreference
+from services.llm_parser import parse_medications
+from services.plan_log_service import get_recent_plans, log_plan
 from services.reasoning_service import generate_daily_plan
 
 api = Blueprint("api", __name__, url_prefix="/api")
@@ -60,6 +61,19 @@ def _parse_medications(payload: dict[str, Any]) -> list[Medication]:
             validation_errors="'medications' must be a JSON array",
         )
     return [_parse_medication(m) for m in raw_medications]
+
+
+# -- best-effort logging helper -----------------------------------------------
+
+
+def _try_log_plan(medications: list[Medication], plan: DailyPlan, source: str) -> None:
+    """Best-effort persistence: a logging failure must never turn a
+    successful plan response into a 500. Errors are swallowed here
+    intentionally -- this is an audit trail, not the primary contract."""
+    try:
+        log_plan(medications, plan, source=source)
+    except Exception:
+        pass  # TODO: replace with real logging (Section 6.3) once a logger is wired in
 
 
 # -- response serialization: typed DailyPlan -> JSON --------------------------
@@ -101,6 +115,7 @@ def create_plan() -> tuple[dict[str, Any], int]:
 
     medications = _parse_medications(payload)
     plan = generate_daily_plan(medications)
+    _try_log_plan(medications, plan, source="structured")
     return jsonify(_serialize_plan(plan)), 200
 
 
@@ -123,7 +138,17 @@ def create_plan_from_text() -> tuple[dict[str, Any], int]:
 
     medications = parse_medications(user_text)
     plan = generate_daily_plan(medications)
+    _try_log_plan(medications, plan, source="natural_language")
     return jsonify(_serialize_plan(plan)), 200
+
+
+@api.route("/plans", methods=["GET"])
+@limiter.limit("30 per minute")
+def list_plans() -> tuple[dict[str, Any], int]:
+    """Returns the most recent logged plans, newest first (Section 6.3 auditability)."""
+    limit = request.args.get("limit", default=20, type=int)
+    limit = max(1, min(limit, 100))  # clamp to a sane range
+    return jsonify({"plans": get_recent_plans(limit=limit)}), 200
 
 
 # -- error handling: every RxLogicError -> a specific, predictable response ---

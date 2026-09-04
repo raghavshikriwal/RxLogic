@@ -69,8 +69,8 @@ class RuleEngine:
                 if self._matches(rule, med_a.name, med_b.name):
                     flagged.append(
                         Interaction(
-                            medication_a=med_a.name,
-                            medication_b=med_b.name,
+                            medication_a=med_a.name.lower(),
+                            medication_b=med_b.name.lower(),
                             severity=rule.severity,
                             confidence=1.0,  # rule-based match = certain; uncertainty layer refines this later
                             rule_id=rule.rule_id,

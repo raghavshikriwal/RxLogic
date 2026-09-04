@@ -1,9 +1,10 @@
 """
 Application factory for RxLogic.
 
-Section 6.3: wires the rate limiter (extensions.py) and the API
-blueprint (routes/api.py) together. Kept as a factory rather than a
-module-level app so tests can build isolated instances.
+Section 6.3: wires the rate limiter (extensions.py), the API
+blueprint (routes/api.py), and the persistence layer (models/database.py)
+together. Kept as a factory rather than a module-level app so tests
+can build isolated instances.
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify
 
 from extensions import limiter
+from models.database import init_db
 from routes.api import api
 
 load_dotenv()
@@ -22,6 +24,8 @@ load_dotenv()
 def create_app() -> Flask:
     app = Flask(__name__)
     app.config["JSON_SORT_KEYS"] = False
+
+    init_db()
 
     limiter.init_app(app)
     app.register_blueprint(api)
