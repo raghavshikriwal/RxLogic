@@ -27,12 +27,15 @@ from datetime import datetime, timezone
 from sqlalchemy import JSON, DateTime, Integer, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///:memory:")
+def _normalize_database_url(url: str) -> str:
+    """Neon (and most managed Postgres providers) hand out URLs with the
+    "postgres://" scheme, but SQLAlchemy 2.x requires "postgresql://"."""
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql://", 1)
+    return url
 
-# Neon (and most managed Postgres providers) hand out URLs with the
-# "postgres://" scheme, but SQLAlchemy 2.x requires "postgresql://".
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+DATABASE_URL = _normalize_database_url(os.getenv("DATABASE_URL", "sqlite:///:memory:"))
 
 engine = create_engine(DATABASE_URL, echo=False, future=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)

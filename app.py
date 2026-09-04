@@ -9,6 +9,7 @@ can build isolated instances.
 
 from __future__ import annotations
 
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -19,6 +20,11 @@ from models.database import init_db
 from routes.api import api
 
 load_dotenv()
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+)
 
 
 def create_app() -> Flask:
@@ -45,6 +51,6 @@ def create_app() -> Flask:
 
 app = create_app()
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover -- only runs via `python app.py`, never under pytest
     debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=debug)

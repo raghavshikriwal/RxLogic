@@ -35,9 +35,14 @@ def test_module_level_wrapper_matches_class_behavior():
 
 
 def test_no_interactions_produces_plan_with_no_warnings():
+    # metformin + lisinopril used to be interaction-free, but the knowledge
+    # base has since grown a curated mild rule for that exact pair (see
+    # test_rule_engine.py::test_real_knowledge_base_covers_expanded_curated_pairs
+    # [lisinopril-metformin]). metformin + atorvastatin has no rule between
+    # them in knowledge/interaction_rules.json, so it's a genuine no-warnings case.
     meds = [
         Medication(name="Metformin", frequency_per_day=2),
-        Medication(name="Lisinopril", frequency_per_day=1),
+        Medication(name="Atorvastatin", frequency_per_day=1),
     ]
     plan = generate_daily_plan(meds)
 

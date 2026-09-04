@@ -41,6 +41,15 @@ def test_health_endpoint(client):
     assert response.get_json() == {"status": "ok"}
 
 
+def test_root_index_route(client):
+    response = client.get("/")
+    body = response.get_json()
+
+    assert response.status_code == 200
+    assert body["service"] == "RxLogic"
+    assert body["api_health"] == "/api/health"
+
+
 def test_create_plan_success(client):
     payload = {
         "medications": [
@@ -199,15 +208,24 @@ def test_create_plan_generic_rxlogic_error_falls_back_to_catch_all_handler(mock_
 # ---------------------------------------------------------------------------
 
 @patch("routes.api.log_plan")
-def test_create_plan_logging_failure_does_not_break_success_response(mock_log_plan, client):
+def test_create_plan_logging_failure_does_not_break_success_response(mock_log_plan, client, caplog):
     mock_log_plan.side_effect = RuntimeError("database is unreachable")
 
     payload = {"medications": [{"name": "Metformin", "frequency_per_day": 1}]}
-    response = client.post("/api/plan", json=payload)
+    with caplog.at_level("ERROR", logger="routes.api"):
+        response = client.post("/api/plan", json=payload)
 
     assert response.status_code == 200
     assert len(response.get_json()["entries"]) == 1
     mock_log_plan.assert_called_once()
+
+    # the failure must not vanish silently -- it should land in the logs
+    # with enough context (source, medication count) to investigate later.
+    assert len(caplog.records) == 1
+    logged = caplog.records[0]
+    assert logged.levelname == "ERROR"
+    assert "structured" in logged.getMessage()
+    assert logged.exc_info is not None  # traceback must be attached, not just a message
 
 
 # ---------------------------------------------------------------------------

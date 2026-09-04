@@ -20,7 +20,7 @@ import requests
 
 from models.exceptions import ExternalAPIError, SchemaValidationError
 from models.schemas import TimingPreference
-from services.llm_parser import LLMParser
+from services.llm_parser import LLMParser, parse_medications
 
 
 def _mock_ollama_response(content: str) -> Mock:
@@ -117,6 +117,14 @@ def test_invalid_timing_preference_raises_schema_validation_error(mock_post):
 
 
 @patch("services.llm_parser.requests.post")
+def test_blank_name_raises_schema_validation_error(mock_post):
+    mock_post.return_value = _mock_ollama_response('[{"name": "   ", "frequency_per_day": 1}]')
+
+    with pytest.raises(SchemaValidationError):
+        LLMParser().parse("some input")
+
+
+@patch("services.llm_parser.requests.post")
 def test_ollama_connection_failure_raises_external_api_error(mock_post):
     mock_post.side_effect = requests.ConnectionError("Ollama not running")
 
@@ -132,3 +140,15 @@ def test_ollama_http_error_raises_external_api_error(mock_post):
 
     with pytest.raises(ExternalAPIError):
         LLMParser().parse("some input")
+
+
+@patch("services.llm_parser.requests.post")
+def test_module_level_wrapper_delegates_to_llm_parser(mock_post):
+    # test_api.py exercises this name only as a mock at the routes.api import
+    # site, so the wrapper's actual one-line body was never itself covered.
+    mock_post.return_value = _mock_ollama_response('[{"name": "metformin", "frequency_per_day": 2}]')
+
+    result = parse_medications("I take metformin twice a day")
+
+    assert len(result) == 1
+    assert result[0].name == "metformin"

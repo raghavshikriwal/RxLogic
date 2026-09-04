@@ -9,6 +9,7 @@ between the LLM and the reasoning core.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict
 from typing import Any
 
@@ -29,6 +30,7 @@ from services.plan_log_service import get_recent_plans, log_plan
 from services.reasoning_service import generate_daily_plan
 
 api = Blueprint("api", __name__, url_prefix="/api")
+logger = logging.getLogger(__name__)
 
 # -- request parsing: JSON -> typed Medication objects -----------------------
 
@@ -68,12 +70,21 @@ def _parse_medications(payload: dict[str, Any]) -> list[Medication]:
 
 def _try_log_plan(medications: list[Medication], plan: DailyPlan, source: str) -> None:
     """Best-effort persistence: a logging failure must never turn a
-    successful plan response into a 500. Errors are swallowed here
-    intentionally -- this is an audit trail, not the primary contract."""
+    successful plan response into a 500. The exception is swallowed
+    from the caller's point of view, but never silently -- it's
+    recorded with a full traceback (Section 6.3 auditability) so a
+    broken audit trail is visible in ops/monitoring instead of
+    disappearing without a trace."""
     try:
         log_plan(medications, plan, source=source)
     except Exception:
-        pass  # TODO: replace with real logging (Section 6.3) once a logger is wired in
+        logger.exception(
+            "Failed to persist PlanLog row (source=%s, medication_count=%d); "
+            "the /api/plan response still succeeded, but this plan is missing "
+            "from the audit trail.",
+            source,
+            len(medications),
+        )
 
 
 # -- response serialization: typed DailyPlan -> JSON --------------------------
