@@ -62,3 +62,12 @@ class ScheduleEntry:
     scheduled_time: time
     reasoning: str                       # human-readable explanation
     constraint_ids: list[str] = field(default_factory=list)  # traces to CSP constraints
+
+@dataclass(frozen=True)
+class DailyPlan:
+    """The planner's final output: a chronologically-ordered schedule,
+    surfaced safety warnings, and a full goal-stack resolution trace
+    (Section 6.1: every decision must be traceable, not black-box)."""
+    entries: list[ScheduleEntry]                               # chronological, ready for display
+    warnings: list[Interaction] = field(default_factory=list)  # moderate/severe interactions surfaced to the user
+    goal_trace: list[str] = field(default_factory=list)        # order in which sub-goals were committed
