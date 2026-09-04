@@ -2,20 +2,24 @@
 Tests for routes/api.py + app.py
 
 Covers: /api/health, a successful /api/plan round-trip through Flask's
-test client, and that each domain exception maps to its documented
-HTTP status code.
+test client, that each domain exception maps to its documented HTTP
+status code, and the /api/plan/nl free-text entry point (with
+llm_parser mocked so no live Ollama instance is required).
 """
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pytest
 
 from app import create_app
+from models.exceptions import ExternalAPIError
+from models.schemas import Medication
 
 
 @pytest.fixture()
@@ -85,3 +89,35 @@ def test_create_plan_empty_medication_list_returns_422(client):
 def test_medications_field_wrong_type_returns_400(client):
     response = client.post("/api/plan", json={"medications": "not a list"})
     assert response.status_code == 400
+
+
+@patch("routes.api.parse_medications")
+def test_create_plan_from_text_success(mock_parse, client):
+    mock_parse.return_value = [
+        Medication(name="warfarin", frequency_per_day=1),
+        Medication(name="aspirin", frequency_per_day=1),
+    ]
+
+    response = client.post("/api/plan/nl", json={"text": "I take warfarin and just started aspirin"})
+    body = response.get_json()
+
+    assert response.status_code == 200
+    assert len(body["entries"]) == 2
+    assert body["warnings"][0]["severity"] == "severe"
+    mock_parse.assert_called_once_with("I take warfarin and just started aspirin")
+
+
+def test_create_plan_from_text_missing_text_field_returns_400(client):
+    response = client.post("/api/plan/nl", json={})
+    assert response.status_code == 400
+
+
+@patch("routes.api.parse_medications")
+def test_create_plan_from_text_ollama_down_returns_502(mock_parse, client):
+    mock_parse.side_effect = ExternalAPIError(api_name="Ollama", status_code=None)
+
+    response = client.post("/api/plan/nl", json={"text": "metformin twice a day"})
+    body = response.get_json()
+
+    assert response.status_code == 502
+    assert body["error"] == "external_api_error"

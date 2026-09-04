@@ -6,6 +6,7 @@ services.reasoning_service, and the typed result is serialized back
 out. Section 4.1: the schema boundary is enforced here too, not just
 between the LLM and the reasoning core.
 """
+from services.llm_parser import parse_medications
 
 from __future__ import annotations
 
@@ -99,6 +100,28 @@ def create_plan() -> tuple[dict[str, Any], int]:
         raise SchemaValidationError(raw_output="<no body>", validation_errors="request body must be JSON")
 
     medications = _parse_medications(payload)
+    plan = generate_daily_plan(medications)
+    return jsonify(_serialize_plan(plan)), 200
+
+
+@api.route("/plan/nl", methods=["POST"])
+@limiter.limit("10 per minute")  # lower than /plan: this hits the LLM, not just the reasoning core
+def create_plan_from_text() -> tuple[dict[str, Any], int]:
+    """
+    Free-text entry point (Layer 1, Section 4.1). Parses natural language
+    into the same typed Medication schema /plan expects, then runs the
+    identical reasoning pipeline. Proves Section 4.3: this route is a thin
+    convenience wrapper -- remove it entirely and /plan still fully works.
+    """
+    payload = request.get_json(silent=True)
+    if payload is None:
+        raise SchemaValidationError(raw_output="<no body>", validation_errors="request body must be JSON")
+
+    user_text = payload.get("text")
+    if not isinstance(user_text, str) or not user_text.strip():
+        raise SchemaValidationError(raw_output=str(payload), validation_errors="'text' must be a non-empty string")
+
+    medications = parse_medications(user_text)
     plan = generate_daily_plan(medications)
     return jsonify(_serialize_plan(plan)), 200
 
