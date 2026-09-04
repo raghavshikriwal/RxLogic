@@ -129,6 +129,45 @@ def test_default_engine_loads_real_knowledge_base():
     assert len(engine.rules) > 0
 
 
+def test_real_knowledge_base_has_no_duplicate_pairs():
+    """Structural integrity: no medication pair should be covered by more than
+    one rule, regardless of the order the pair is written in the source file.
+    Catches accidental double-entry when the curated set is expanded."""
+    engine = RuleEngine()
+    seen_pairs = set()
+    for rule in engine.rules:
+        pair = frozenset((rule.medication_a, rule.medication_b))
+        assert pair not in seen_pairs, f"duplicate interaction pair: {pair}"
+        seen_pairs.add(pair)
+
+
+@pytest.mark.parametrize(
+    "medication_a, medication_b",
+    [
+        ("warfarin", "amoxicillin"),
+        ("warfarin", "omeprazole"),
+        ("warfarin", "levothyroxine"),
+        ("warfarin", "atorvastatin"),
+        ("aspirin", "ibuprofen"),
+        ("lisinopril", "ibuprofen"),
+        ("metoprolol", "ibuprofen"),
+        ("omeprazole", "levothyroxine"),
+        ("lisinopril", "metformin"),
+        ("lisinopril", "metoprolol"),
+    ],
+)
+def test_real_knowledge_base_covers_expanded_curated_pairs(medication_a, medication_b):
+    """Drift detection for the expanded rule set (Section: knowledge base
+    coverage). Each pair below was curated to extend coverage beyond the
+    original 8 rules using only medications already in the seed roster, so
+    every one of them must fire against the shipped knowledge base."""
+    engine = RuleEngine()
+    flagged = engine.check_interactions([_med(medication_a), _med(medication_b)])
+
+    assert len(flagged) == 1, f"expected exactly one rule to fire for {medication_a} + {medication_b}"
+    assert flagged[0].severity != Severity.UNKNOWN
+
+
 # ---------------------------------------------------------------------------
 # Forward chaining: check_interactions()
 # ---------------------------------------------------------------------------
