@@ -1,4 +1,4 @@
-﻿export default function Footer() {
+export default function Footer() {
   return (
     <footer className="bg-obsidian">
       <div className="mx-auto max-w-page px-24 py-40">

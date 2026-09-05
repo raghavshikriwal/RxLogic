@@ -1,4 +1,4 @@
-﻿/**
+/**
  * The hero's visual is a 24-hour clock face with dose markers, rendered
  * as inline SVG rather than a stock photo — it's the literal shape of
  * a DailyPlan, which is the one thing distinctive to this product.

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { listPlans } from '../api.js';
 import ErrorBanner from '../components/ErrorBanner.jsx';
 

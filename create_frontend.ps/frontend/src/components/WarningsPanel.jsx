@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Severity is communicated through fill weight and border treatment,
  * not color — the palette is strictly monochrome, so "severe" reads
  * as a solid obsidian badge, "mild" as a quiet outline. This keeps the

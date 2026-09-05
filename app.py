@@ -19,73 +19,119 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, Response, jsonify, send_from_directory
 
 from extensions import limiter
 from models.database import init_db
 from routes.api import api
 
+# -- configuration -------------------------------------------------------
+
 load_dotenv()
 
-logging.basicConfig(
-    level=os.getenv("LOG_LEVEL", "INFO").upper(),
-    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-)
+LOG_FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
+DEFAULT_LOG_LEVEL = "INFO"
+DEFAULT_PORT = 5000
+DEFAULT_HOST = "0.0.0.0"
 
-FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "frontend", "dist")
+FRONTEND_DIST = Path(__file__).parent / "frontend" / "dist"
+
+SERVICE_NAME = "RxLogic"
+SERVICE_DESCRIPTION = "Hybrid LLM + symbolic reasoning core for medication scheduling."
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", DEFAULT_LOG_LEVEL).upper(),
+    format=LOG_FORMAT,
+)
+logger = logging.getLogger(__name__)
+
+
+# -- application factory --------------------------------------------------
 
 
 def create_app() -> Flask:
-    app = Flask(__name__, static_folder=FRONTEND_DIST, static_url_path="")
+    """Build and configure the Flask application.
+
+    Route/extension setup order matters here: the `/api/info` route is
+    registered onto the `api` blueprint *before* that blueprint is
+    attached to the app. Flask freezes a blueprint's route table the
+    moment `register_blueprint` runs, so registering first and adding
+    routes after raises an `AssertionError` at import time.
+    """
+    app = Flask(__name__, static_folder=str(FRONTEND_DIST), static_url_path="")
     app.config["JSON_SORT_KEYS"] = False
 
     init_db()
-
     limiter.init_app(app)
+
+    _register_info_route(api)
     app.register_blueprint(api)
 
-    @api.route("/info", methods=["GET"])
-    def info():
-        return jsonify(
-            {
-                "service": "RxLogic",
-                "description": "Hybrid LLM + symbolic reasoning core for medication scheduling.",
-                "api_health": "/api/health",
-            }
-        ), 200
+    _register_frontend_route(app)
+
+    return app
+
+
+def _register_info_route(blueprint: Any) -> None:
+    """Attach the lightweight service-metadata endpoint to the API blueprint."""
+
+    @blueprint.route("/info", methods=["GET"])
+    def info() -> tuple[Response, int]:
+        return (
+            jsonify(
+                {
+                    "service": SERVICE_NAME,
+                    "description": SERVICE_DESCRIPTION,
+                    "api_health": "/api/health",
+                }
+            ),
+            200,
+        )
+
+
+def _register_frontend_route(app: Flask) -> None:
+    """Attach the catch-all route that serves the built React app.
+
+    Real files (JS/CSS bundles, favicon, etc.) are served directly;
+    anything else -- including client-side routes like /history --
+    falls back to index.html so React Router can take over. Flask
+    matches the more specific /api/... rules in routes/api.py before
+    this catch-all, so it never shadows the API blueprint.
+    """
 
     @app.route("/", defaults={"path": ""})
     @app.route("/<path:path>")
-    def serve_frontend(path: str):
-        """
-        Serves the built React app for every non-API route.
+    def serve_frontend(path: str) -> tuple[Response, int] | Response:
+        static_root = Path(app.static_folder)
 
-        Real files (JS/CSS bundles, favicon, etc.) are served directly;
-        anything else -- including client-side routes like /history --
-        falls back to index.html so React Router can take over. Flask
-        matches the more specific /api/... rules in routes/api.py
-        before this catch-all, so it never shadows the API blueprint.
-        """
-        if not os.path.isdir(app.static_folder):
-            return jsonify(
-                {
-                    "error": "frontend_not_built",
-                    "message": "The React app hasn't been built yet. Run "
-                    "`npm install && npm run build` inside frontend/, then restart.",
-                }
-            ), 503
+        if not static_root.is_dir():
+            return (
+                jsonify(
+                    {
+                        "error": "frontend_not_built",
+                        "message": (
+                            "The React app hasn't been built yet. Run "
+                            "`npm install && npm run build` inside frontend/, "
+                            "then restart."
+                        ),
+                    }
+                ),
+                503,
+            )
 
-        if path and os.path.exists(os.path.join(app.static_folder, path)):
-            return send_from_directory(app.static_folder, path)
-        return send_from_directory(app.static_folder, "index.html")
-
-    return app
+        requested_file = static_root / path
+        if path and requested_file.exists():
+            return send_from_directory(static_root, path)
+        return send_from_directory(static_root, "index.html")
 
 
 app = create_app()
 
 if __name__ == "__main__":  # pragma: no cover -- only runs via `python app.py`, never under pytest
     debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)), debug=debug)
+    port = int(os.getenv("PORT", DEFAULT_PORT))
+    app.run(host=DEFAULT_HOST, port=port, debug=debug)

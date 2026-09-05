@@ -1,4 +1,4 @@
-﻿import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 const NAV_LINKS = [
   { to: '/', label: 'Plan', end: true },

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @param {import('../api.js').ScheduleEntry[]} entries - already
  *   chronologically ordered by the backend (DailyPlan.entries).
  */

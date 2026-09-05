@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @param {string[]} trace - plan.goal_trace, the order sub-goals were
  *   committed in. This is a real sequence, not decoration, so numbered
  *   markers are the right call here.

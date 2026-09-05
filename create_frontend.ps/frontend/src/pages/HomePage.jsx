@@ -1,4 +1,4 @@
-﻿import { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import Hero from '../components/Hero.jsx';
 import MedicationForm from '../components/MedicationForm.jsx';
 import ErrorBanner from '../components/ErrorBanner.jsx';

@@ -1,4 +1,4 @@
-﻿import { useId, useState } from 'react';
+import { useId, useState } from 'react';
 import { createPlan, createPlanFromText } from '../api.js';
 
 const TIMING_OPTIONS = [

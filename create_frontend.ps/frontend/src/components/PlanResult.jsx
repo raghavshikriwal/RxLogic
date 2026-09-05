@@ -1,4 +1,4 @@
-﻿import ScheduleTimeline from './ScheduleTimeline.jsx';
+import ScheduleTimeline from './ScheduleTimeline.jsx';
 import WarningsPanel from './WarningsPanel.jsx';
 import GoalTrace from './GoalTrace.jsx';
 

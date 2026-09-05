@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Thin fetch wrapper around the RxLogic API.
  *
  * Kept dependency-free (no axios) on purpose — four endpoints don't

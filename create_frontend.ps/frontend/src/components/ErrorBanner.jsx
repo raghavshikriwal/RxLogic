@@ -1,4 +1,4 @@
-﻿import { ApiErrorCode } from '../api.js';
+import { ApiErrorCode } from '../api.js';
 
 /**
  * Copy is written per error code rather than showing the raw backend
