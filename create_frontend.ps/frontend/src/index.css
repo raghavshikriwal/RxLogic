@@ -1,0 +1,79 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Design tokens as CSS custom properties.
+  Tailwind's config is the source of truth for utility classes; these
+  exist for the handful of places (SVG strokes, chart bars, focus rings)
+  that need a raw value outside a className.
+*/
+:root {
+  --color-obsidian: #000000;
+  --color-paper: #ffffff;
+  --color-charcoal: #2f2f2f;
+  --color-ash: #898989;
+  --color-fog: #dddddd;
+  --color-slate: #999999;
+
+  --nav-height: 72px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Visible keyboard focus everywhere — never suppressed, only restyled
+   to match the monochrome system instead of the browser default blue. */
+:focus-visible {
+  outline: 2px solid var(--color-obsidian);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-obsidian);
+  color: var(--color-paper);
+}
+
+/* Thin, monochrome scrollbar — default chrome fights the black/white
+   system more than any other single browser affordance. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-paper);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-fog);
+  border-radius: 100px;
+  border: 2px solid var(--color-paper);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-slate);
+}
