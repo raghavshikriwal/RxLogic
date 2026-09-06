@@ -32,4 +32,4 @@ knowledge/cache/*.json
 .DS_Store
 Thumbs.db
 .vscode/
-.idea/
+.idea/.env
