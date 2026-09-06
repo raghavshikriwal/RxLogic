@@ -2,6 +2,13 @@
 
 **A neuro-symbolic AI agent for medication scheduling and drug-interaction reasoning.**
 
+[![Tests](https://github.com/raghavshikriwal/RxLogic/actions/workflows/tests.yml/badge.svg)](https://github.com/raghavshikriwal/RxLogic/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](runtime.txt)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://rxlogic-ataf.onrender.com)
+
+**[Live demo →](https://rxlogic-ataf.onrender.com)** — note: the deployed instance has no Ollama backend, so free-text ("Describe in words") input is unavailable there by design; structured input works fully. See [§7.3](#73-natural-language-input-optional) and [§1](#1-why-this-project) for why that's expected, not a bug.
+
 A small, locally-hosted LLM handles natural-language *understanding* at the edges of the system. Every actual decision — interaction detection, risk confidence, dose scheduling, conflict resolution — is made by classical, explainable AI: a forward-chaining rule engine, a fuzzy-logic uncertainty layer, a constraint-satisfaction scheduler, and a goal-stack planner. Disable the LLM entirely and the system still works, end to end, from a structured form.
 
 > ⚠️ **Educational demonstrator, not a medical device.** RxLogic illustrates neuro-symbolic reasoning applied to a safety-adjacent domain. It is not a substitute for a pharmacist or physician and must not be used for real medication decisions. See [§8 Scope, Safety & Limitations](#8-scope-safety--limitations).
@@ -21,6 +28,7 @@ A small, locally-hosted LLM handles natural-language *understanding* at the edge
 9. [Testing](#9-testing)
 10. [Design Principles](#10-design-principles)
 11. [Future Scope](#11-future-scope)
+12. [License](#license)
 
 ---
 
@@ -189,11 +197,12 @@ Returns a chronologically ordered schedule, every flagged interaction with its s
 | `unknown_medication` | 422 | Medication can't be resolved against the knowledge base |
 | `insufficient_data` | 422 | Empty medication list — nothing to reason about |
 | `no_feasible_schedule` | 422 | CSP has no solution under the given constraints |
-| `external_api_error` | 502 | RxNav / openFDA / Ollama call failed |
+| `external_api_error` | 502 | RxNav / openFDA drug-data lookup failed |
+| `llm_api_error` | 502 | Ollama (LLM parser) unreachable or errored — kept distinct from `external_api_error` so the client can point the user toward structured input specifically, rather than a generic "try again" |
 
 ## 7. Getting Started
 
-### Backend
+### 7.1 Backend
 
 ```bash
 python -m venv venv
@@ -204,17 +213,18 @@ python app.py                     # serves on http://localhost:5000
 
 By default the backend uses an in-memory SQLite database. To use PostgreSQL, set `DATABASE_URL` in `.env` (a Neon `postgres://` URL is normalized to `postgresql://` automatically).
 
-### Frontend
+### 7.2 Frontend
 
 ```bash
 cd frontend
 npm install
 npm run dev                       # http://localhost:5173, proxies /api to :5000
+npm run build                     # produces frontend/dist/, committed to git
 ```
 
-For a single deployable artifact, `npm run build` produces `frontend/dist/`, which `app.py` serves directly — no separate frontend host, no CORS configuration.
+`frontend/dist/` is tracked in version control on purpose: Render's native Python runtime has no Node.js, so the build artifact is committed rather than built on every deploy. **Rebuild and re-commit `frontend/dist/` after any change to `frontend/src/`**, or the deployed site will silently serve a stale bundle.
 
-### Optional: natural-language input
+### 7.3 Natural-Language Input (Optional)
 
 Natural-language parsing (`/api/plan/nl`) requires a local [Ollama](https://ollama.com) instance:
 
@@ -223,18 +233,32 @@ ollama pull phi3:mini
 ollama serve
 ```
 
-If Ollama isn't running, `/api/plan/nl` returns a clean `external_api_error` — every other route, and the entire reasoning core, is unaffected. This is by design (see §1).
+If Ollama isn't running, `/api/plan/nl` returns a clean, correctly-attributed `llm_api_error` — every other route, and the entire reasoning core, is unaffected. This is by design (see §1) and is verified directly in [§9](#9-testing).
 
-### Environment variables
+### 7.4 Deployment on Render with Neon
+
+The live demo runs on this exact configuration:
+
+| Component | Choice | Notes |
+|---|---|---|
+| Hosting | [Render](https://render.com) — free tier, Python 3 runtime | Build: `pip install -r requirements.txt` · Start: `gunicorn app:app` |
+| Python version | 3.12.7, pinned via `PYTHON_VERSION` env var | Render's current default (3.14) has no `psycopg2-binary` wheel yet; pinning avoids a source-build ABI mismatch |
+| Database | [Neon](https://neon.tech) serverless Postgres, free tier | `DATABASE_URL` set to the **pooled** connection string (hostname ends in `-pooler`) |
+| Ollama | Not deployed | Only runs locally; the deployed instance correctly falls back to `llm_api_error` for free-text input, proving the neuro-symbolic litmus test (§1) holds in production, not just in dev |
+
+Required environment variables on Render — see [§7.5](#75-environment-variables) for the full table. Set `PYTHON_VERSION`, `DATABASE_URL`, `LOG_LEVEL`, and `FLASK_DEBUG`; leave `OLLAMA_BASE_URL`/`OLLAMA_MODEL` unset in production.
+
+### 7.5 Environment Variables
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `DATABASE_URL` | `sqlite:///:memory:` | Persistence backend |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama server address |
+| `DATABASE_URL` | `sqlite:///:memory:` | Persistence backend — set to a Neon pooled connection string in production |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama server address — local development only |
 | `OLLAMA_MODEL` | `phi3:mini` | Local model used for NL parsing |
 | `FLASK_DEBUG` | `false` | Flask debug mode — off by default in every environment |
 | `LOG_LEVEL` | `INFO` | Logging verbosity |
-| `PORT` | `5000` | Server port |
+| `PORT` | `5000` | Server port — Render sets this automatically; leave unset there |
+| `PYTHON_VERSION` | *(platform default)* | Render-specific — pins the Python runtime; see [§7.4](#74-deployment-on-render-with-neon) |
 
 ## 8. Scope, Safety & Limitations
 
@@ -256,6 +280,24 @@ pytest --cov=services --cov=models --cov=routes   # with coverage
 
 Ten test modules cover the rule engine, uncertainty layer, CSP scheduler, planner, LLM parser, drug data client, database layer, API routes, and a full end-to-end pipeline run — each reasoning module is independently testable with zero dependency on the LLM or the API layer, matching the architectural separation above.
 
+### Live Ollama verification (manual)
+
+`tests/test_llm_parser.py` mocks every Ollama call, so it verifies the parsing/validation logic but never exercises a real model. `live_llm_smoke_test.py` fills that gap — it calls `services.llm_parser.parse_medications()` directly against a running Ollama instance, with no Flask/routing layer in between:
+
+```bash
+ollama pull phi3:mini
+ollama serve            # usually starts automatically after install
+python live_llm_smoke_test.py
+```
+
+**Diagnosed issue:** an early run of this script intermittently timed out on certain inputs. `diagnose_case2_timeout.py` (same repo root) isolated the cause by sending the identical request with a much longer timeout budget: `phi3:mini` at `temperature=0.0` (greedy decoding) could fall into a repetition loop on specific inputs and never emit a stop token — reproduced hanging past 180s on one deterministic case. `REQUEST_TIMEOUT_SECONDS` alone couldn't fix this, since it only bounds how long the *caller* waits, not how long Ollama keeps generating in the background.
+
+**Fix**, both in `services/llm_parser.py`:
+- `MAX_OUTPUT_TOKENS = 300` — passed as Ollama's `num_predict` option, this caps generation length outright. A medication-extraction JSON array never legitimately needs more than a few dozen tokens per medication, so 300 is a generous ceiling that costs nothing on the happy path but guarantees every request resolves in bounded time.
+- `REQUEST_TIMEOUT_SECONDS = 60` — a generous caller-side ceiling that also covers cold-start model load time on slower local hardware, on top of the generation cap above.
+
+With both in place, all three cases in `live_llm_smoke_test.py` complete cleanly and consistently.
+
 ## 10. Design Principles
 
 - **Strict schema boundary.** `models/schemas.py`'s frozen dataclasses are the *only* thing that crosses layer boundaries. The reasoning core never imports SQLAlchemy; the persistence layer never imports the reasoning core's types; the LLM never talks to the reasoning engine with raw text.
@@ -272,7 +314,12 @@ Ten test modules cover the rule engine, uncertainty layer, CSP scheduler, planne
 - Add a notification/reminder subsystem for real adherence tracking (explicitly out of scope for this build).
 - Explore a small fine-tuned or distilled model for the parsing layer to reduce local compute requirements.
 
+## License
+
+Released under the [MIT License](LICENSE) — see the file for full terms.
+
 ---
 
 **Author:** Raghav Shikriwal · B.Tech Information Technology, 3rd Year — NSUT
 **Course Alignment:** Artificial Intelligence Elective
+**Repository:** [github.com/raghavshikriwal/RxLogic](https://github.com/raghavshikriwal/RxLogic)
