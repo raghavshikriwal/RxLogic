@@ -64,11 +64,19 @@ print(f"=== STARTUP: FRONTEND_DIST.is_dir() = {FRONTEND_DIST.is_dir()} ===")
 def create_app() -> Flask:
     """Build and configure the Flask application.
 
-    Route/extension setup order matters here: the `/api/info` route is
-    registered onto the `api` blueprint *before* that blueprint is
-    attached to the app. Flask freezes a blueprint's route table the
-    moment `register_blueprint` runs, so registering first and adding
-    routes after raises an `AssertionError` at import time.
+    This factory is safe to call more than once per process -- tests
+    call it fresh for every test to get an isolated app instance. The
+    `api` blueprint itself, however, is a module-level singleton
+    (defined once in routes/api.py), and Flask permanently freezes a
+    blueprint's route table the moment it's registered onto *any* app.
+    Adding a route to it here would work the first time and raise an
+    `AssertionError` on every call after that.
+
+    That's why `/api/info` is attached to the blueprint once, at import
+    time (see `_register_info_route(api)` below, outside this
+    function) rather than inside `create_app()`. Re-registering an
+    already-frozen blueprint onto a *new* app via `register_blueprint`
+    is fine and is exactly what repeated `create_app()` calls do.
     """
     app = Flask(__name__, static_folder=None)
     app.config["JSON_SORT_KEYS"] = False
@@ -76,7 +84,6 @@ def create_app() -> Flask:
     init_db()
     limiter.init_app(app)
 
-    _register_info_route(api)
     app.register_blueprint(api)
 
     _register_frontend_route(app)
@@ -89,7 +96,11 @@ def create_app() -> Flask:
 
 
 def _register_info_route(blueprint: Any) -> None:
-    """Attach the lightweight service-metadata endpoint to the API blueprint."""
+    """Attach the lightweight service-metadata endpoint to the API blueprint.
+
+    Called once at module import time (below), not from inside
+    create_app() -- see that function's docstring for why.
+    """
 
     @blueprint.route("/info", methods=["GET"])
     def info() -> tuple[Response, int]:
@@ -147,6 +158,7 @@ def _register_frontend_route(app: Flask) -> None:
         return send_from_directory(static_root, "index.html")
 
 
+_register_info_route(api)  # runs exactly once per process, before create_app() ever runs
 app = create_app()
 
 if __name__ == "__main__":  # pragma: no cover -- only runs via `python app.py`, never under pytest
