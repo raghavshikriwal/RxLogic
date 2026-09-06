@@ -23,6 +23,13 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
+
+# Must run before importing models.database: that module reads
+# DATABASE_URL at import time (module-level `os.getenv` call), so if
+# load_dotenv() runs after the import, it always sees the unset
+# variable and silently falls back to in-memory SQLite.
+load_dotenv()
+
 from flask import Flask, Response, jsonify, send_from_directory
 
 from extensions import limiter
@@ -30,8 +37,6 @@ from models.database import init_db
 from routes.api import api
 
 # -- configuration -------------------------------------------------------
-
-load_dotenv()
 
 LOG_FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
 DEFAULT_LOG_LEVEL = "INFO"
