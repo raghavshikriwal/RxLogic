@@ -41,13 +41,31 @@ def test_health_endpoint(client):
     assert response.get_json() == {"status": "ok"}
 
 
-def test_root_index_route(client):
-    response = client.get("/")
-    body = response.get_json()
+def test_root_route_returns_friendly_error_when_frontend_not_built(client, tmp_path):
+    """When frontend/dist doesn't exist (e.g. a fresh clone before `npm
+    run build`), the root route should degrade to a clear JSON error
+    instead of crashing -- see app.py's `_register_frontend_route`."""
+    missing_dist = tmp_path / "dist-not-built"
+    with patch("app.FRONTEND_DIST", missing_dist):
+        response = client.get("/")
+
+    assert response.status_code == 503
+    assert response.get_json()["error"] == "frontend_not_built"
+
+
+def test_root_route_serves_built_frontend_index(client, tmp_path):
+    """When frontend/dist exists, the root route should serve its
+    index.html rather than any API JSON payload."""
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<html><body>RxLogic</body></html>")
+
+    with patch("app.FRONTEND_DIST", dist):
+        response = client.get("/")
 
     assert response.status_code == 200
-    assert body["service"] == "RxLogic"
-    assert body["api_health"] == "/api/health"
+    assert b"RxLogic" in response.data
+
 
 
 def test_create_plan_success(client):
