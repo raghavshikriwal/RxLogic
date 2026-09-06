@@ -49,6 +49,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+print(f"=== STARTUP: FRONTEND_DIST resolves to: {FRONTEND_DIST} ===")
+print(f"=== STARTUP: FRONTEND_DIST.is_dir() = {FRONTEND_DIST.is_dir()} ===")
+
 
 # -- application factory --------------------------------------------------
 
@@ -62,7 +65,7 @@ def create_app() -> Flask:
     moment `register_blueprint` runs, so registering first and adding
     routes after raises an `AssertionError` at import time.
     """
-    app = Flask(__name__, static_folder=str(FRONTEND_DIST), static_url_path="")
+    app = Flask(__name__, static_folder=None)
     app.config["JSON_SORT_KEYS"] = False
 
     init_db()
@@ -72,6 +75,10 @@ def create_app() -> Flask:
     app.register_blueprint(api)
 
     _register_frontend_route(app)
+
+    print("=== STARTUP: registered URL rules: ===")
+    for rule in app.url_map.iter_rules():
+        print(f"===   {rule} -> {rule.endpoint} ===")
 
     return app
 
@@ -106,9 +113,12 @@ def _register_frontend_route(app: Flask) -> None:
     @app.route("/", defaults={"path": ""})
     @app.route("/<path:path>")
     def serve_frontend(path: str) -> tuple[Response, int] | Response:
-        static_root = Path(app.static_folder)
+        print(f"=== CATCH-ALL HIT: path={path!r} ===")
+        static_root = FRONTEND_DIST
+        print(f"=== static_root={static_root}, is_dir={static_root.is_dir()} ===")
 
         if not static_root.is_dir():
+            print("=== RETURNING 503 frontend_not_built ===")
             return (
                 jsonify(
                     {
@@ -124,8 +134,11 @@ def _register_frontend_route(app: Flask) -> None:
             )
 
         requested_file = static_root / path
+        print(f"=== requested_file={requested_file}, exists={requested_file.exists()} ===")
         if path and requested_file.exists():
+            print("=== SERVING requested_file directly ===")
             return send_from_directory(static_root, path)
+        print("=== SERVING index.html fallback ===")
         return send_from_directory(static_root, "index.html")
 
 

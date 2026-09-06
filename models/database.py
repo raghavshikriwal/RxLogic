@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import JSON, DateTime, Integer, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
+from sqlalchemy.pool import StaticPool
 
 def _normalize_database_url(url: str) -> str:
     """Neon (and most managed Postgres providers) hand out URLs with the
@@ -37,7 +38,22 @@ def _normalize_database_url(url: str) -> str:
 
 DATABASE_URL = _normalize_database_url(os.getenv("DATABASE_URL", "sqlite:///:memory:"))
 
-engine = create_engine(DATABASE_URL, echo=False, future=True)
+if DATABASE_URL == "sqlite:///:memory:":
+    # In-memory SQLite gives each thread its own separate, empty
+    # database by default -- fine for a single-threaded test run,
+    # but the dev server can hand requests to a different thread
+    # than the one that created the tables, causing
+    # "no such table" errors. StaticPool + check_same_thread=False
+    # forces every thread to share the one connection/database.
+    engine = create_engine(
+        DATABASE_URL,
+        echo=False,
+        future=True,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+else:
+    engine = create_engine(DATABASE_URL, echo=False, future=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 
 
