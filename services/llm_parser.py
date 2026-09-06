@@ -26,7 +26,25 @@ from models.schemas import Medication, TimingPreference
 
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "phi3:mini")
-REQUEST_TIMEOUT_SECONDS = 30
+
+# 60s rather than a tighter bound: local CPU inference speed varies a lot
+# across machines, and this is a hard ceiling for the whole request, not
+# just generation -- it also covers model load time on a cold Ollama start.
+REQUEST_TIMEOUT_SECONDS = 60
+
+# Caps how many tokens the model may generate for a single extraction call.
+#
+# Diagnosed via a live test against a real Ollama instance: with
+# temperature=0.0 (greedy decoding) and no generation cap, phi3:mini could
+# fall into a repetition loop on certain inputs and never emit a stop
+# token -- reproduced hanging past 180s on one specific, deterministic
+# input, while REQUEST_TIMEOUT_SECONDS alone only limited how long the
+# *caller* waited, not how long Ollama kept generating in the background.
+# A medication-extraction JSON array never legitimately needs more than a
+# few dozen tokens per medication, so this is a generous ceiling that costs
+# nothing on the happy path but guarantees every request resolves in
+# bounded time instead of tying up a worker indefinitely.
+MAX_OUTPUT_TOKENS = 300
 
 _SYSTEM_PROMPT = """You are a strict information-extraction module. Given a user's \
 free-text description of medications they take, extract a JSON array of \
@@ -74,7 +92,10 @@ class LLMParser:
                         {"role": "user", "content": user_text},
                     ],
                     "stream": False,
-                    "options": {"temperature": 0.0},  # deterministic extraction, not creative generation
+                    "options": {
+                        "temperature": 0.0,  # deterministic extraction, not creative generation
+                        "num_predict": MAX_OUTPUT_TOKENS,  # bounded generation -- see comment above
+                    },
                 },
                 timeout=REQUEST_TIMEOUT_SECONDS,
             )
@@ -89,8 +110,17 @@ class LLMParser:
     def _validate_and_convert(self, raw_content: str) -> list[Medication]:
         cleaned = raw_content.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
 
+        # raw_decode (not json.loads) deliberately stops after the first
+        # complete JSON value and ignores anything after it. Diagnosed via
+        # a live test: even with MAX_OUTPUT_TOKENS capping generation,
+        # phi3:mini sometimes emits a fully valid array and then keeps
+        # generating more content instead of stopping. json.loads correctly
+        # (but unhelpfully) rejects that whole response as "Extra data" --
+        # the array itself was still valid, we just need to stop reading
+        # at the end of it instead of demanding the entire string be
+        # exactly one JSON document.
         try:
-            parsed: list[dict[str, Any]] = json.loads(cleaned)
+            parsed, _ = json.JSONDecoder().raw_decode(cleaned)
         except json.JSONDecodeError as exc:
             raise SchemaValidationError(raw_output=raw_content, validation_errors=f"not valid JSON: {exc}") from exc
 

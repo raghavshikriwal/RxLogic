@@ -152,3 +152,40 @@ def test_module_level_wrapper_delegates_to_llm_parser(mock_post):
 
     assert len(result) == 1
     assert result[0].name == "metformin"
+ # --- Add this to the end of tests/test_llm_parser.py ---
+#
+# Regression test for a bug found via live testing against real Ollama
+# (not caught by any existing mocked test, since none of them simulated
+# trailing content after a valid array).
+
+
+@patch("services.llm_parser.requests.post")
+def test_trailing_content_after_valid_json_is_ignored(mock_post):
+    """
+    Regression test for a bug found via live testing against real Ollama:
+    under greedy decoding (temperature=0.0), phi3:mini sometimes emits a
+    fully valid JSON array and then keeps generating instead of stopping
+    -- observed in practice as a truncated repeat of the answer straight
+    after it. json.loads correctly rejects the whole string as "Extra
+    data"; raw_decode should read just the first valid array and ignore
+    whatever comes after it.
+    """
+    mock_post.return_value = _mock_ollama_response(
+        '[{"name": "lisinopril", "dosage_mg": 10, "frequency_per_day": 1, '
+        '"timing_preference": "morning", "with_food": null}, '
+        '{"name": "atorvastatin", "frequency_per_day": 1, "timing_preference": "night"}]'
+        "\n\nHere is the array again:\n"
+        '[{"name": "lisinopril"'  # truncated, as if cut off mid-repeat by num_predict
+    )
+
+    result = LLMParser().parse("lisinopril every morning, 10mg, and atorvastatin at night")
+
+    assert len(result) == 2
+    assert {m.name for m in result} == {"lisinopril", "atorvastatin"}
+
+    lisinopril = next(m for m in result if m.name == "lisinopril")
+    assert lisinopril.dosage_mg == 10
+    assert lisinopril.timing_preference == TimingPreference.MORNING
+
+    atorvastatin = next(m for m in result if m.name == "atorvastatin")
+    assert atorvastatin.timing_preference == TimingPreference.NIGHT   
