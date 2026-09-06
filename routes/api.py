@@ -187,7 +187,14 @@ def handle_constraint_unsatisfiable_error(err: ConstraintUnsatisfiableError):
 
 @api.errorhandler(ExternalAPIError)
 def handle_external_api_error(err: ExternalAPIError):
-    return jsonify({"error": "external_api_error", "message": str(err)}), 502
+    # Ollama failures (Layer 1, LLM parser) and RxNav/openFDA failures
+    # (drug-data client) both raise ExternalAPIError, but they are
+    # different failure modes for the user: one means "the AI parser
+    # is down, try structured input instead", the other means "drug
+    # lookup is temporarily unavailable". Keep them distinguishable
+    # past this handler instead of collapsing both into one code.
+    error_code = "llm_api_error" if err.api_name == "Ollama" else "external_api_error"
+    return jsonify({"error": error_code, "message": str(err)}), 502
 
 
 @api.errorhandler(RxLogicError)

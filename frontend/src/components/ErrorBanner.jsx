@@ -26,6 +26,10 @@ const COPY = {
     title: 'The drug-data lookup failed.',
     hint: 'This is usually temporary — try again in a moment.',
   },
+  [ApiErrorCode.LLM_API_ERROR]: {
+    title: "Couldn't reach the AI parser for free-text input.",
+    hint: 'Try again in a moment, or use "Add medications" for structured input instead.',
+  },
   [ApiErrorCode.NETWORK]: {
     title: 'Could not reach RxLogic.',
     hint: 'Check your connection and try again.',

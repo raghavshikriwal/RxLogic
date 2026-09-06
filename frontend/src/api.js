@@ -17,6 +17,7 @@ export const ApiErrorCode = Object.freeze({
   INSUFFICIENT_DATA: 'insufficient_data',
   NO_FEASIBLE_SCHEDULE: 'no_feasible_schedule',
   EXTERNAL_API_ERROR: 'external_api_error',
+  LLM_API_ERROR: 'llm_api_error',
   REASONING_ERROR: 'reasoning_error',
   NETWORK: 'network_error',
 });
