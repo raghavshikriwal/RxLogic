@@ -35,6 +35,12 @@ from services.rule_engine import RULES_PATH, InteractionRule, RuleEngine
 def rules_file(tmp_path) -> Path:
     """A small, self-contained rule set covering the behaviors under test."""
     payload = {
+        "medications": {
+            "warfarin": "11289",
+            "Aspirin": "1191",  # mixed case on purpose: lookups must be case-insensitive
+            "metformin": "6809",
+            "omeprazole": "7646",
+        },
         "interaction_rules": [
             {
                 "medication_a": "warfarin",
@@ -250,3 +256,83 @@ def test_duplicate_medication_entry_does_not_self_match(engine):
     # two entries for the same medication should never be flagged against themselves
     meds = [_med("Warfarin"), _med("Warfarin")]
     assert engine.check_interactions(meds) == []
+
+
+# ---------------------------------------------------------------------------
+# Knowledge-base coverage (fail-safe: unknown != interaction-free)
+# ---------------------------------------------------------------------------
+
+def test_known_medications_are_loaded_lowercased(engine):
+    assert engine.known_medications == frozenset({"warfarin", "aspirin", "metformin", "omeprazole"})
+
+
+def test_known_medications_is_empty_when_file_has_no_medications_map(tmp_path):
+    path = tmp_path / "rules.json"
+    path.write_text(json.dumps({"interaction_rules": []}), encoding="utf-8")
+
+    assert RuleEngine(rules_path=path).known_medications == frozenset()
+
+
+def test_find_unknown_medications_returns_empty_when_all_are_covered(engine):
+    assert engine.find_unknown_medications([_med("Warfarin"), _med("ASPIRIN")]) == []
+
+
+def test_find_unknown_medications_flags_uncovered_drug(engine):
+    assert engine.find_unknown_medications([_med("Warfarin"), _med("Zolpidem")]) == ["Zolpidem"]
+
+
+def test_find_unknown_medications_preserves_input_order_and_original_spelling(engine):
+    meds = [_med("Zolpidem"), _med("Warfarin"), _med("Xanax")]
+    assert engine.find_unknown_medications(meds) == ["Zolpidem", "Xanax"]
+
+
+def test_find_unknown_medications_deduplicates_case_insensitively(engine):
+    meds = [_med("Zolpidem"), _med("zolpidem"), _med("ZOLPIDEM")]
+    assert engine.find_unknown_medications(meds) == ["Zolpidem"]
+
+
+def test_unpadded_names_only_are_recognized_so_matching_and_coverage_agree(engine):
+    # " warfarin" would never match a rule in _matches, so it must not
+    # count as covered either -- otherwise it would pass as "no interactions".
+    assert engine.find_unknown_medications([_med(" warfarin")]) == [" warfarin"]
+
+
+def test_real_knowledge_base_every_rule_drug_is_a_known_medication():
+    engine = RuleEngine(rules_path=RULES_PATH)
+    rule_drugs = {name for rule in engine.rules for name in (rule.medication_a, rule.medication_b)}
+
+    assert rule_drugs <= engine.known_medications
+
+
+# ---------------------------------------------------------------------------
+# Coverage assessment
+# ---------------------------------------------------------------------------
+
+def test_assess_coverage_is_complete_when_every_drug_is_known(engine):
+    coverage = engine.assess_coverage([_med("Warfarin"), _med("ASPIRIN")])
+
+    assert coverage.total == 2
+    assert coverage.is_complete
+    assert coverage.unchecked == ()
+
+
+def test_assess_coverage_lists_unknown_drugs_as_unchecked(engine):
+    coverage = engine.assess_coverage([_med("Warfarin"), _med("Zolpidem"), _med("Xanax")])
+
+    assert coverage.total == 3
+    assert coverage.checked == 1
+    assert coverage.unchecked == ("Zolpidem", "Xanax")
+
+
+def test_assess_coverage_counts_distinct_drugs_case_insensitively(engine):
+    coverage = engine.assess_coverage([_med("Warfarin"), _med("warfarin"), _med("Aspirin")])
+
+    assert coverage.total == 2
+    assert coverage.is_complete
+
+
+def test_assess_coverage_of_empty_list_is_zero_of_zero(engine):
+    coverage = engine.assess_coverage([])
+
+    assert coverage.total == 0
+    assert coverage.is_complete

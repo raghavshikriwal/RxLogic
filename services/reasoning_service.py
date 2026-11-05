@@ -19,7 +19,9 @@ defined (Section 4.1).
 
 from __future__ import annotations
 
-from models.exceptions import InsufficientDataError
+from dataclasses import replace
+
+from models.exceptions import InsufficientDataError, UnknownMedicationError
 from models.schemas import DailyPlan, Medication
 from services.planner import Planner
 from services.rule_engine import RuleEngine
@@ -40,15 +42,26 @@ class ReasoningService:
 
         Fail-safe (Section 9): an empty medication list has nothing to
         reason about, so this raises InsufficientDataError rather than
-        returning a hollow, misleadingly "valid" plan.
+        returning a hollow, misleadingly "valid" plan. Likewise, any
+        medication outside the knowledge base raises
+        UnknownMedicationError (listing every unrecognized drug) instead
+        of being scheduled as if it had no interactions.
+
+        Every returned plan carries a `Coverage` summary (e.g. "6 of 6
+        drugs checked") so a clean warnings list is never mistaken for
+        "everything was verified".
         """
         if not medications:
             raise InsufficientDataError("no medications provided to reason about")
 
+        coverage = self.rule_engine.assess_coverage(medications)
+        if not coverage.is_complete:
+            raise UnknownMedicationError(coverage.unchecked[0], coverage.unchecked[1:])
+
         interactions = self.rule_engine.check_interactions(medications)
         interactions = refine_confidence(interactions, total_medication_count=len(medications))
         plan = Planner(medications, interactions).build_plan()
-        return plan
+        return replace(plan, coverage=coverage)
 
 
 def generate_daily_plan(medications: list[Medication]) -> DailyPlan:

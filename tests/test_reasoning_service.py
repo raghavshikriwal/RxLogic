@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pytest
 
-from models.exceptions import InsufficientDataError
+from models.exceptions import InsufficientDataError, UnknownMedicationError
 from models.schemas import Medication, Severity
 from services.reasoning_service import ReasoningService, generate_daily_plan
 
@@ -89,8 +89,82 @@ def test_custom_rule_engine_can_be_injected():
     class _EmptyRuleEngine(RuleEngine):
         def __init__(self):
             self.rules = []  # skip loading the real knowledge base
+            self.known_medications = frozenset({"warfarin", "aspirin"})
 
     meds = [Medication(name="Warfarin", frequency_per_day=1), Medication(name="Aspirin", frequency_per_day=1)]
     plan = ReasoningService(rule_engine=_EmptyRuleEngine()).generate_daily_plan(meds)
 
     assert plan.warnings == []  # injected engine has no rules, so nothing fires
+
+
+# ---------------------------------------------------------------------------
+# Fail-safe: unknown medications must never read as "no interactions"
+# ---------------------------------------------------------------------------
+
+def test_unknown_medication_raises_unknown_medication_error():
+    with pytest.raises(UnknownMedicationError) as exc_info:
+        generate_daily_plan([Medication(name="Zolpidem", frequency_per_day=1)])
+
+    assert exc_info.value.medication_names == ("Zolpidem",)
+
+
+def test_unknown_medication_among_known_ones_is_not_silently_dropped():
+    meds = [
+        Medication(name="Warfarin", frequency_per_day=1),
+        Medication(name="Zolpidem", frequency_per_day=1),
+    ]
+
+    with pytest.raises(UnknownMedicationError) as exc_info:
+        generate_daily_plan(meds)
+
+    assert exc_info.value.medication_name == "Zolpidem"
+
+
+def test_all_unknown_medications_are_reported_together():
+    meds = [
+        Medication(name="Zolpidem"),
+        Medication(name="Warfarin"),
+        Medication(name="Xanax"),
+    ]
+
+    with pytest.raises(UnknownMedicationError) as exc_info:
+        generate_daily_plan(meds)
+
+    assert exc_info.value.medication_names == ("Zolpidem", "Xanax")
+
+
+def test_known_medication_lookup_is_case_insensitive():
+    plan = generate_daily_plan([Medication(name="WARFARIN"), Medication(name="aspirin")])
+
+    assert len(plan.warnings) >= 1
+
+
+def test_empty_list_still_raises_insufficient_data_before_coverage_check():
+    with pytest.raises(InsufficientDataError):
+        generate_daily_plan([])
+
+
+# ---------------------------------------------------------------------------
+# Coverage summary on every plan
+# ---------------------------------------------------------------------------
+
+def test_plan_reports_full_coverage_for_known_medications():
+    meds = [
+        Medication(name="Warfarin", frequency_per_day=1),
+        Medication(name="Aspirin", frequency_per_day=1),
+        Medication(name="Metformin", frequency_per_day=1),
+    ]
+    plan = generate_daily_plan(meds)
+
+    assert plan.coverage is not None
+    assert plan.coverage.is_complete
+    assert plan.coverage.summary == "3 of 3 drugs checked"
+
+
+def test_coverage_counts_distinct_drugs_when_one_is_listed_twice():
+    meds = [
+        Medication(name="Metformin", frequency_per_day=1),
+        Medication(name="metformin", frequency_per_day=1),
+    ]
+
+    assert generate_daily_plan(meds).coverage.summary == "1 of 1 drug checked"

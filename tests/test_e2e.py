@@ -15,6 +15,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import pytest
+
+from models.exceptions import UnknownMedicationError
 from models.schemas import DailyPlan, Medication, Severity, TimingPreference
 from services.reasoning_service import generate_daily_plan
 
@@ -44,6 +47,10 @@ def test_full_pipeline_realistic_patient_case():
     assert isinstance(plan, DailyPlan)
     expected_dose_count = sum(m.frequency_per_day for m in medications)
     assert len(plan.entries) == expected_dose_count
+
+    # -- every drug in the knowledge base was checked, and the plan says so --
+    assert plan.coverage.is_complete
+    assert plan.coverage.summary == f"{len(medications)} of {len(medications)} drugs checked"
 
     # -- schedule is fully chronological ------------------------------------
     times = [_minutes(e) for e in plan.entries]
@@ -84,3 +91,17 @@ def test_full_pipeline_no_interaction_case_still_produces_full_trace():
     assert plan.warnings == []
     assert len(plan.goal_trace) == 2
     assert all(entry.reasoning for entry in plan.entries)
+
+
+def test_full_pipeline_refuses_to_report_all_clear_for_an_unrecognized_drug():
+    """An uncovered drug in an otherwise normal regimen must abort the
+    whole plan -- never produce a schedule that looks interaction-free."""
+    medications = [
+        Medication(name="Metformin", frequency_per_day=2),
+        Medication(name="Zolpidem", frequency_per_day=1),
+    ]
+
+    with pytest.raises(UnknownMedicationError) as exc_info:
+        generate_daily_plan(medications)
+
+    assert exc_info.value.medication_names == ("Zolpidem",)

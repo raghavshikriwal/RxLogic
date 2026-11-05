@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from itertools import combinations
 from pathlib import Path
 
-from models.schemas import Interaction, Medication, Severity
+from models.schemas import Coverage, Interaction, Medication, Severity
 
 RULES_PATH = Path(__file__).resolve().parent.parent / "knowledge" / "interaction_rules.json"
 
@@ -34,10 +34,17 @@ class RuleEngine:
     """Forward-chaining engine: given a set of medications, fires all matching rules."""
 
     def __init__(self, rules_path: Path = RULES_PATH):
-        self.rules: list[InteractionRule] = self._load_rules(rules_path)
-
-    def _load_rules(self, rules_path: Path) -> list[InteractionRule]:
         raw = json.loads(rules_path.read_text(encoding="utf-8"))
+        self.rules: list[InteractionRule] = self._parse_rules(raw)
+        # Medications the knowledge base can reason about. A drug outside
+        # this set has *no coverage*, which is different from "no
+        # interactions" -- callers must not conflate the two.
+        self.known_medications: frozenset[str] = frozenset(
+            name.lower() for name in raw.get("medications", {})
+        )
+
+    @staticmethod
+    def _parse_rules(raw: dict) -> list[InteractionRule]:
         rules = []
         for i, entry in enumerate(raw.get("interaction_rules", [])):
             rules.append(
@@ -51,6 +58,40 @@ class RuleEngine:
                 )
             )
         return rules
+
+    def find_unknown_medications(self, medications: list[Medication]) -> list[str]:
+        """
+        Returns the names of medications the knowledge base does not
+        cover, in input order, de-duplicated (case-insensitively), with
+        the caller's original spelling preserved.
+
+        Normalization is deliberately identical to `_matches` (plain
+        `.lower()`): a name that would fail to match a rule must also be
+        reported as unknown, otherwise it would slip through as a silent
+        "no interactions" result.
+        """
+        unknown: list[str] = []
+        seen: set[str] = set()
+        for medication in medications:
+            key = medication.name.lower()
+            if key in self.known_medications or key in seen:
+                continue
+            seen.add(key)
+            unknown.append(medication.name)
+        return unknown
+
+    def assess_coverage(self, medications: list[Medication]) -> Coverage:
+        """
+        Reports how many distinct medications the knowledge base covers.
+
+        Shares `find_unknown_medications` for the coverage decision so
+        "unknown" has exactly one definition across the engine.
+        """
+        distinct_count = len({medication.name.lower() for medication in medications})
+        return Coverage(
+            total=distinct_count,
+            unchecked=tuple(self.find_unknown_medications(medications)),
+        )
 
     def _matches(self, rule: InteractionRule, name_a: str, name_b: str) -> bool:
         pair = {name_a.lower(), name_b.lower()}

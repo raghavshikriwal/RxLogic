@@ -64,6 +64,38 @@ class ScheduleEntry:
     constraint_ids: list[str] = field(default_factory=list)  # traces to CSP constraints
 
 @dataclass(frozen=True)
+class Coverage:
+    """How much of the user's medication list the knowledge base could check.
+
+    "No interactions flagged" only means something when every drug was
+    actually checked, so every plan carries this alongside its warnings.
+    `total` counts distinct drugs (case-insensitive); `unchecked` lists
+    the ones the knowledge base has no data on, in input order.
+    """
+    total: int
+    unchecked: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.total < 0 or len(self.unchecked) > self.total:
+            raise ValueError(
+                f"Invalid coverage: {len(self.unchecked)} unchecked drug(s) out of {self.total} total"
+            )
+
+    @property
+    def checked(self) -> int:
+        return self.total - len(self.unchecked)
+
+    @property
+    def is_complete(self) -> bool:
+        return not self.unchecked
+
+    @property
+    def summary(self) -> str:
+        noun = "drug" if self.total == 1 else "drugs"
+        return f"{self.checked} of {self.total} {noun} checked"
+
+
+@dataclass(frozen=True)
 class DailyPlan:
     """The planner's final output: a chronologically-ordered schedule,
     surfaced safety warnings, and a full goal-stack resolution trace
@@ -71,3 +103,4 @@ class DailyPlan:
     entries: list[ScheduleEntry]                               # chronological, ready for display
     warnings: list[Interaction] = field(default_factory=list)  # moderate/severe interactions surfaced to the user
     goal_trace: list[str] = field(default_factory=list)        # order in which sub-goals were committed
+    coverage: Optional[Coverage] = None                        # set by ReasoningService; None only if a plan is built outside the pipeline

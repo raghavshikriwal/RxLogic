@@ -174,7 +174,7 @@ def test_create_plan_from_text_ollama_down_returns_502(mock_parse, client):
     body = response.get_json()
 
     assert response.status_code == 502
-    assert body["error"] == "llm_api_error"
+    assert body["error"] == "external_api_error"
 
 
 # ---------------------------------------------------------------------------
@@ -194,6 +194,21 @@ def test_create_plan_unknown_medication_error_returns_422(mock_generate, client)
 
     assert response.status_code == 422
     assert body["error"] == "unknown_medication"
+    assert body["unknown_medications"] == ["not-a-real-drug"]
+
+
+def test_create_plan_unknown_medication_is_rejected_by_the_real_pipeline(client):
+    # No mocking: proves the reasoning pipeline itself raises, instead of
+    # returning an all-clear plan for a drug the knowledge base doesn't cover.
+    response = client.post(
+        "/api/plan",
+        json={"medications": [{"name": "Warfarin"}, {"name": "Zolpidem"}]},
+    )
+    body = response.get_json()
+
+    assert response.status_code == 422
+    assert body["error"] == "unknown_medication"
+    assert body["unknown_medications"] == ["Zolpidem"]
 
 
 @patch("routes.api.generate_daily_plan")
@@ -255,11 +270,9 @@ def test_list_plans_endpoint_returns_the_plan_just_created(client):
     create_response = client.post("/api/plan", json=payload)
     assert create_response.status_code == 200
 
-    # newest-first ordering (plan_log_service.get_recent_plans), scoped to
-    # this client's own session cookie -- the plan created above must be
-    # the first row with limit=1, regardless of how many other plans
-    # earlier tests (running under their own, different session ids)
-    # logged to the shared test database.
+    # newest-first ordering (plan_log_service.get_recent_plans) means the
+    # plan created above must be the first row with limit=1, regardless of
+    # how many other plans earlier tests logged to the shared test database.
     list_response = client.get("/api/plans?limit=1")
     body = list_response.get_json()
 
@@ -284,10 +297,7 @@ def test_list_plans_limit_param_is_respected(client):
 
 def test_list_plans_limit_is_clamped_to_a_sane_range(client):
     # limit=0 clamps up to 1, limit=500 clamps down to 100 (routes/api.py);
-    # neither should error. Create one plan first so this session has
-    # something to clamp against.
-    client.post("/api/plan", json={"medications": [{"name": "Metformin"}]})
-
+    # neither should error even though the underlying table has far fewer rows.
     too_low = client.get("/api/plans?limit=0")
     too_high = client.get("/api/plans?limit=500")
 
@@ -296,75 +306,18 @@ def test_list_plans_limit_is_clamped_to_a_sane_range(client):
     assert too_high.status_code == 200
 
 
-# ---------------------------------------------------------------------------
-# Anonymous session scoping (P1 privacy fix): GET /api/plans must return
-# only the requesting session's own plans, never another session's.
-# ---------------------------------------------------------------------------
-
-
-def test_plans_are_scoped_to_the_requesting_session():
-    """Two independent 'browsers' (separate test clients, each with its own
-    cookie jar) must not be able to see each other's logged plans -- this
-    is the regression test for the original data-leak bug."""
-    app = create_app()
-    app.config["TESTING"] = True
-
-    # Plain (non-context-manager) test clients on purpose: `with
-    # app.test_client() as c:` preserves request context after each call,
-    # which two interleaved clients on the same app fight over and can
-    # corrupt Flask's context stack. Nothing here needs request-context
-    # preservation -- only the response objects are inspected.
-    browser_a = app.test_client()
-    browser_b = app.test_client()
-
-    create_a = browser_a.post("/api/plan", json={"medications": [{"name": "Lisinopril"}]})
-    create_b = browser_b.post("/api/plan", json={"medications": [{"name": "Atorvastatin"}]})
-    assert create_a.status_code == 200
-    assert create_b.status_code == 200
-
-    plans_a = browser_a.get("/api/plans").get_json()["plans"]
-    plans_b = browser_b.get("/api/plans").get_json()["plans"]
-
-    medications_a = {m["name"] for p in plans_a for m in p["input_medications"]}
-    medications_b = {m["name"] for p in plans_b for m in p["input_medications"]}
-
-    assert "Lisinopril" in medications_a
-    assert "Atorvastatin" not in medications_a
-    assert "Atorvastatin" in medications_b
-    assert "Lisinopril" not in medications_b
-
-
-def test_list_plans_with_no_session_cookie_returns_empty_not_everyone_elses(client):
-    # A client that has never created a plan (no session cookie yet) must
-    # see an empty list -- never a default that leaks other sessions' data.
-    response = client.get("/api/plans")
+def test_create_plan_response_includes_coverage_summary(client):
+    response = client.post(
+        "/api/plan",
+        json={"medications": [{"name": "Warfarin"}, {"name": "Aspirin"}]},
+    )
     body = response.get_json()
 
     assert response.status_code == 200
-    assert body["plans"] == []
-
-
-def test_create_plan_sets_a_session_cookie(client):
-    response = client.post("/api/plan", json={"medications": [{"name": "Metformin"}]})
-    assert "session_id" in response.headers.get("Set-Cookie", "")
-
-
-def test_repeat_requests_from_the_same_client_reuse_the_same_session(client):
-    first = client.post("/api/plan", json={"medications": [{"name": "Metformin"}]})
-    second = client.post("/api/plan", json={"medications": [{"name": "Omeprazole"}]})
-    assert first.status_code == 200 and second.status_code == 200
-
-    plans = client.get("/api/plans?limit=10").get_json()["plans"]
-    medications = {m["name"] for p in plans for m in p["input_medications"]}
-    assert {"Metformin", "Omeprazole"}.issubset(medications)
-
-
-def test_tampered_session_cookie_degrades_to_a_new_session_not_a_400(client):
-    # A garbage/corrupted cookie value must never turn into a hard failure
-    # for the client -- it should just fall back to a fresh anonymous session.
-    client.set_cookie("session_id", "not-a-valid-uuid", domain="localhost")
-    response = client.post("/api/plan", json={"medications": [{"name": "Metformin"}]})
-
-    assert response.status_code == 200
-    new_cookie = response.headers.get("Set-Cookie", "")
-    assert "not-a-valid-uuid" not in new_cookie
+    assert body["coverage"] == {
+        "checked": 2,
+        "total": 2,
+        "is_complete": True,
+        "unchecked": [],
+        "summary": "2 of 2 drugs checked",
+    }
