@@ -25,7 +25,7 @@ from models.exceptions import (
     SchemaValidationError,
     UnknownMedicationError,
 )
-from models.schemas import Coverage, DailyPlan, Medication, TimingPreference
+from models.schemas import Coverage, DailyPlan, Medication, NameResolution, TimingPreference
 from services.llm_parser import parse_medications
 from services.plan_log_service import get_recent_plans, log_plan
 from services.reasoning_service import generate_daily_plan
@@ -148,6 +148,15 @@ def _serialize_coverage(coverage: Coverage | None) -> dict[str, Any] | None:
     }
 
 
+def _serialize_resolution(resolution: NameResolution) -> dict[str, Any]:
+    return {
+        "input_name": resolution.input_name,
+        "resolved_to": resolution.canonical_name,
+        "match": resolution.match.value,
+        "score": resolution.score,
+    }
+
+
 def _serialize_plan(plan: DailyPlan) -> dict[str, Any]:
     return {
         "entries": [
@@ -165,6 +174,7 @@ def _serialize_plan(plan: DailyPlan) -> dict[str, Any]:
         ],
         "goal_trace": plan.goal_trace,
         "coverage": _serialize_coverage(plan.coverage),
+        "name_resolutions": [_serialize_resolution(r) for r in plan.resolutions],
     }
 
 

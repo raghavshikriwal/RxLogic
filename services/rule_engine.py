@@ -36,12 +36,14 @@ class RuleEngine:
     def __init__(self, rules_path: Path = RULES_PATH):
         raw = json.loads(rules_path.read_text(encoding="utf-8"))
         self.rules: list[InteractionRule] = self._parse_rules(raw)
-        # Medications the knowledge base can reason about. A drug outside
-        # this set has *no coverage*, which is different from "no
-        # interactions" -- callers must not conflate the two.
-        self.known_medications: frozenset[str] = frozenset(
-            name.lower() for name in raw.get("medications", {})
-        )
+        # generic name -> RxCUI for every medication the knowledge base can
+        # reason about. A drug outside this mapping has *no coverage*, which
+        # is different from "no interactions" -- callers must not conflate
+        # the two.
+        self.medication_rxcuis: dict[str, str] = {
+            name.lower(): str(rxcui) for name, rxcui in raw.get("medications", {}).items()
+        }
+        self.known_medications: frozenset[str] = frozenset(self.medication_rxcuis)
 
     @staticmethod
     def _parse_rules(raw: dict) -> list[InteractionRule]:

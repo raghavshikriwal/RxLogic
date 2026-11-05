@@ -2,9 +2,10 @@ import ScheduleTimeline from './ScheduleTimeline.jsx';
 import WarningsPanel from './WarningsPanel.jsx';
 import GoalTrace from './GoalTrace.jsx';
 import CoverageSummary from './CoverageSummary.jsx';
+import NameCorrections from './NameCorrections.jsx';
 
 /**
- * @param {{entries: object[], warnings: object[], goal_trace: string[], coverage?: object | null}} plan
+ * @param {{entries: object[], warnings: object[], goal_trace: string[], coverage?: object | null, name_resolutions?: object[]}} plan
  *   - the serialized DailyPlan from /api/plan or /api/plan/nl.
  */
 export default function PlanResult({ plan }) {
@@ -26,6 +27,7 @@ export default function PlanResult({ plan }) {
         <div>
           <h2 className="font-clarkson text-heading-sm text-obsidian">Interaction check</h2>
           <div className="mt-40 flex flex-col gap-24">
+            <NameCorrections resolutions={plan.name_resolutions} />
             <CoverageSummary coverage={plan.coverage} />
             <WarningsPanel warnings={plan.warnings} />
           </div>

@@ -89,7 +89,8 @@ def test_custom_rule_engine_can_be_injected():
     class _EmptyRuleEngine(RuleEngine):
         def __init__(self):
             self.rules = []  # skip loading the real knowledge base
-            self.known_medications = frozenset({"warfarin", "aspirin"})
+            self.medication_rxcuis = {"warfarin": "11289", "aspirin": "1191"}
+            self.known_medications = frozenset(self.medication_rxcuis)
 
     meds = [Medication(name="Warfarin", frequency_per_day=1), Medication(name="Aspirin", frequency_per_day=1)]
     plan = ReasoningService(rule_engine=_EmptyRuleEngine()).generate_daily_plan(meds)
@@ -179,3 +180,39 @@ def test_duplicate_entries_are_merged_into_one_medication_with_summed_doses():
     plan = generate_daily_plan(meds)
 
     assert [e.medication for e in plan.entries] == ["metformin", "metformin"]
+
+
+# ---------------------------------------------------------------------------
+# Name normalization
+# ---------------------------------------------------------------------------
+
+def test_brand_name_is_checked_instead_of_rejected_as_unknown():
+    meds = [Medication(name="Coumadin"), Medication(name="Aspirin")]
+
+    plan = generate_daily_plan(meds)
+
+    assert plan.coverage.is_complete
+    assert {plan.warnings[0].medication_a, plan.warnings[0].medication_b} == {"warfarin", "aspirin"}
+    assert [(r.input_name, r.canonical_name) for r in plan.resolutions] == [("Coumadin", "warfarin")]
+
+
+def test_brand_and_generic_of_one_drug_merge_into_single_drug():
+    meds = [Medication(name="Coumadin", frequency_per_day=1), Medication(name="warfarin", frequency_per_day=1)]
+
+    plan = generate_daily_plan(meds)
+
+    assert plan.coverage.total == 1
+    assert len(plan.entries) == 2  # two daily doses of one drug
+
+
+def test_unresolvable_name_still_raises_unknown_medication():
+    with pytest.raises(UnknownMedicationError) as exc_info:
+        generate_daily_plan([Medication(name="Coumadin"), Medication(name="Zolpidem")])
+
+    assert exc_info.value.medication_names == ("Zolpidem",)
+
+
+def test_exact_names_produce_no_resolutions():
+    plan = generate_daily_plan([Medication(name="Metformin")])
+
+    assert plan.resolutions == []

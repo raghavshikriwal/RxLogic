@@ -353,3 +353,24 @@ def test_create_plan_response_includes_coverage_summary(client):
         "unchecked": [],
         "summary": "2 of 2 drugs checked",
     }
+
+
+def test_create_plan_reports_name_resolutions_for_brand_names(client):
+    response = client.post(
+        "/api/plan",
+        json={"medications": [{"name": "Coumadin"}, {"name": "asprin"}]},
+    )
+    body = response.get_json()
+
+    assert response.status_code == 200
+    assert body["coverage"]["is_complete"] is True
+    assert body["name_resolutions"] == [
+        {"input_name": "Coumadin", "resolved_to": "warfarin", "match": "alias", "score": 1.0},
+        {"input_name": "asprin", "resolved_to": "aspirin", "match": "fuzzy", "score": 0.92},
+    ]
+
+
+def test_create_plan_without_corrections_returns_empty_name_resolutions(client):
+    response = client.post("/api/plan", json={"medications": [{"name": "Warfarin"}]})
+
+    assert response.get_json()["name_resolutions"] == []

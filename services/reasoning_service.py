@@ -23,6 +23,7 @@ from dataclasses import replace
 
 from models.exceptions import InsufficientDataError, UnknownMedicationError
 from models.schemas import DailyPlan, Medication
+from services.name_normalizer import NameNormalizer
 from services.planner import Planner
 from services.rule_engine import RuleEngine
 from services.uncertainty import refine_confidence
@@ -49,9 +50,16 @@ def _merge_duplicate_medications(medications: list[Medication]) -> list[Medicati
 class ReasoningService:
     """Orchestrates rule engine -> uncertainty refinement -> planner (-> CSP) into one call."""
 
-    def __init__(self, rule_engine: RuleEngine | None = None):
+    def __init__(
+        self,
+        rule_engine: RuleEngine | None = None,
+        name_normalizer: NameNormalizer | None = None,
+    ):
         # Allow injection for testing; default to the curated knowledge base.
         self.rule_engine = rule_engine or RuleEngine()
+        self.name_normalizer = name_normalizer or NameNormalizer.from_file(
+            self.rule_engine.medication_rxcuis
+        )
 
     def generate_daily_plan(self, medications: list[Medication]) -> DailyPlan:
         """
@@ -65,6 +73,11 @@ class ReasoningService:
         UnknownMedicationError (listing every unrecognized drug) instead
         of being scheduled as if it had no interactions.
 
+        Brand names and near-miss spellings are first mapped to generics
+        (see services.name_normalizer); each such mapping is reported in
+        `plan.resolutions`. Names that cannot be mapped confidently are left
+        as-is and rejected as unknown.
+
         Every returned plan carries a `Coverage` summary (e.g. "6 of 6
         drugs checked") so a clean warnings list is never mistaken for
         "everything was verified".
@@ -72,6 +85,9 @@ class ReasoningService:
         if not medications:
             raise InsufficientDataError("no medications provided to reason about")
 
+        # Brand names and typos become generics first, so "Coumadin" and
+        # "warfarin" are one drug for coverage, merging and rule matching.
+        medications, resolutions = self.name_normalizer.normalize(medications)
         medications = _merge_duplicate_medications(medications)
 
         coverage = self.rule_engine.assess_coverage(medications)
@@ -81,7 +97,7 @@ class ReasoningService:
         interactions = self.rule_engine.check_interactions(medications)
         interactions = refine_confidence(interactions, total_medication_count=len(medications))
         plan = Planner(medications, interactions).build_plan()
-        return replace(plan, coverage=coverage)
+        return replace(plan, coverage=coverage, resolutions=resolutions)
 
 
 def generate_daily_plan(medications: list[Medication]) -> DailyPlan:

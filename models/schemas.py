@@ -23,6 +23,13 @@ class Severity(str, Enum):
     UNKNOWN = "unknown"  # insufficient data — fail-safe default
 
 
+class NameMatch(str, Enum):
+    """How a user-entered medication name was matched to a known generic."""
+    EXACT = "exact"
+    ALIAS = "alias"   # curated brand name or spelling variant
+    FUZZY = "fuzzy"   # near-miss spelling, accepted only when unambiguous
+
+
 class TimingPreference(str, Enum):
     """User's stated preference for when a dose should be taken."""
     MORNING = "morning"
@@ -96,6 +103,16 @@ class Coverage:
 
 
 @dataclass(frozen=True)
+class NameResolution:
+    """Records that a user-entered name was mapped to a known generic, so the
+    correction is shown to the user instead of being applied silently."""
+    input_name: str
+    canonical_name: str
+    match: NameMatch
+    score: float = 1.0                   # similarity; only meaningful for FUZZY
+
+
+@dataclass(frozen=True)
 class DailyPlan:
     """The planner's final output: a chronologically-ordered schedule,
     surfaced safety warnings, and a full goal-stack resolution trace
@@ -103,4 +120,5 @@ class DailyPlan:
     entries: list[ScheduleEntry]                               # chronological, ready for display
     warnings: list[Interaction] = field(default_factory=list)  # moderate/severe interactions surfaced to the user
     goal_trace: list[str] = field(default_factory=list)        # order in which sub-goals were committed
+    resolutions: list[NameResolution] = field(default_factory=list)  # brand/typo names mapped to generics
     coverage: Optional[Coverage] = None                        # set by ReasoningService; None only if a plan is built outside the pipeline
