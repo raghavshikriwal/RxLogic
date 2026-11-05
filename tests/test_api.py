@@ -167,14 +167,24 @@ def test_create_plan_from_text_missing_body_returns_400(client):
 
 
 @patch("routes.api.parse_medications")
-def test_create_plan_from_text_ollama_down_returns_502(mock_parse, client):
+def test_create_plan_from_text_ollama_down_returns_llm_api_error_502(mock_parse, client):
     mock_parse.side_effect = ExternalAPIError(api_name="Ollama", status_code=None)
 
     response = client.post("/api/plan/nl", json={"text": "metformin twice a day"})
     body = response.get_json()
 
     assert response.status_code == 502
-    assert body["error"] == "external_api_error"
+    assert body["error"] == "llm_api_error"
+
+
+@patch("routes.api.parse_medications")
+def test_non_llm_external_api_failure_keeps_external_api_error_code(mock_parse, client):
+    mock_parse.side_effect = ExternalAPIError(api_name="RxNav", status_code=503)
+
+    response = client.post("/api/plan/nl", json={"text": "metformin twice a day"})
+
+    assert response.status_code == 502
+    assert response.get_json()["error"] == "external_api_error"
 
 
 # ---------------------------------------------------------------------------
@@ -298,12 +308,34 @@ def test_list_plans_limit_param_is_respected(client):
 def test_list_plans_limit_is_clamped_to_a_sane_range(client):
     # limit=0 clamps up to 1, limit=500 clamps down to 100 (routes/api.py);
     # neither should error even though the underlying table has far fewer rows.
+    client.post("/api/plan", json={"medications": [{"name": "Metformin"}]})
+    client.post("/api/plan", json={"medications": [{"name": "Omeprazole"}]})
+
     too_low = client.get("/api/plans?limit=0")
     too_high = client.get("/api/plans?limit=500")
 
     assert too_low.status_code == 200
     assert len(too_low.get_json()["plans"]) == 1
     assert too_high.status_code == 200
+
+
+def test_list_plans_is_scoped_to_the_callers_session(client):
+    client.post("/api/plan", json={"medications": [{"name": "Metformin"}]})
+
+    with client.application.test_client() as other_client:
+        assert other_client.get("/api/plans").get_json()["plans"] == []
+
+    assert len(client.get("/api/plans").get_json()["plans"]) == 1
+
+
+def test_malformed_session_cookie_is_replaced_not_trusted(client):
+    client.set_cookie("rxlogic_sid", "not-a-uuid")
+
+    response = client.get("/api/plans")
+
+    assert response.status_code == 200
+    assert "rxlogic_sid=" in response.headers["Set-Cookie"]
+    assert "not-a-uuid" not in response.headers["Set-Cookie"]
 
 
 def test_create_plan_response_includes_coverage_summary(client):

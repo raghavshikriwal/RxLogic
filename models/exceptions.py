@@ -17,9 +17,15 @@ class UnknownMedicationError(RxLogicError):
     Per the fail-safe design rule (Section 9): this must produce an
     explicit 'insufficient data' response, never a silent guess.
     """
-    def __init__(self, medication_name: str):
-        self.medication_name = medication_name
-        super().__init__(f"Unknown medication: '{medication_name}' — insufficient data to reason about it.")
+    def __init__(self, medication_name: str, *additional_names: str):
+        self.medication_names: tuple[str, ...] = (medication_name, *additional_names)
+        listed = ", ".join(f"'{name}'" for name in self.medication_names)
+        super().__init__(f"Unknown medication(s): {listed} — insufficient data to reason about them.")
+
+    @property
+    def medication_name(self) -> str:
+        """First unrecognized medication (kept for single-drug callers)."""
+        return self.medication_names[0]
 
 
 class InsufficientDataError(RxLogicError):

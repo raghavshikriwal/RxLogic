@@ -28,6 +28,24 @@ from services.rule_engine import RuleEngine
 from services.uncertainty import refine_confidence
 
 
+def _merge_duplicate_medications(medications: list[Medication]) -> list[Medication]:
+    """Collapses repeated entries for one drug (case-insensitive) into a
+    single Medication whose daily frequency is the sum of its entries.
+
+    Every downstream stage keys on the medication name, so duplicates
+    must be resolved once, up front. All other fields come from the
+    first entry listed. First-seen order is preserved.
+    """
+    grouped: dict[str, list[Medication]] = {}
+    for medication in medications:
+        grouped.setdefault(medication.name.lower(), []).append(medication)
+
+    return [
+        replace(entries[0], frequency_per_day=sum(m.frequency_per_day for m in entries))
+        for entries in grouped.values()
+    ]
+
+
 class ReasoningService:
     """Orchestrates rule engine -> uncertainty refinement -> planner (-> CSP) into one call."""
 
@@ -54,9 +72,11 @@ class ReasoningService:
         if not medications:
             raise InsufficientDataError("no medications provided to reason about")
 
+        medications = _merge_duplicate_medications(medications)
+
         coverage = self.rule_engine.assess_coverage(medications)
         if not coverage.is_complete:
-            raise UnknownMedicationError(coverage.unchecked[0], coverage.unchecked[1:])
+            raise UnknownMedicationError(*coverage.unchecked)
 
         interactions = self.rule_engine.check_interactions(medications)
         interactions = refine_confidence(interactions, total_medication_count=len(medications))

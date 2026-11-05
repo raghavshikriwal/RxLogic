@@ -10,6 +10,7 @@ between the LLM and the reasoning core.
 from __future__ import annotations
 
 import logging
+import uuid
 from dataclasses import asdict
 from typing import Any
 
@@ -31,6 +32,51 @@ from services.reasoning_service import generate_daily_plan
 
 api = Blueprint("api", __name__, url_prefix="/api")
 logger = logging.getLogger(__name__)
+
+SESSION_COOKIE_NAME = "rxlogic_sid"
+SESSION_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
+_SESSION_ENVIRON_KEY = "rxlogic.session"
+
+# -- anonymous session resolution ---------------------------------------------
+
+
+def _is_valid_session_id(value: str) -> bool:
+    try:
+        return str(uuid.UUID(value)) == value
+    except ValueError:
+        return False
+
+
+def _resolve_session() -> tuple[str, bool]:
+    """Returns (session_id, is_new) for this request, minting a UUID if the
+    cookie is missing or malformed. Cached on the WSGI environ so it is
+    strictly per-request (flask.g can outlive a request under a preserved
+    test context). The cookie carries no identity, only a history scope."""
+    if _SESSION_ENVIRON_KEY not in request.environ:
+        cookie_value = request.cookies.get(SESSION_COOKIE_NAME, "")
+        is_new = not _is_valid_session_id(cookie_value)
+        session_id = str(uuid.uuid4()) if is_new else cookie_value
+        request.environ[_SESSION_ENVIRON_KEY] = (session_id, is_new)
+    return request.environ[_SESSION_ENVIRON_KEY]
+
+
+def _get_session_id() -> str:
+    return _resolve_session()[0]
+
+
+@api.after_request
+def _persist_session_cookie(response):
+    session_id, is_new = request.environ.get(_SESSION_ENVIRON_KEY, (None, False))
+    if is_new:
+        response.set_cookie(
+            SESSION_COOKIE_NAME,
+            session_id,
+            max_age=SESSION_COOKIE_MAX_AGE_SECONDS,
+            httponly=True,
+            samesite="Lax",
+            secure=request.is_secure,
+        )
+    return response
 
 # -- request parsing: JSON -> typed Medication objects -----------------------
 
@@ -76,7 +122,7 @@ def _try_log_plan(medications: list[Medication], plan: DailyPlan, source: str) -
     broken audit trail is visible in ops/monitoring instead of
     disappearing without a trace."""
     try:
-        log_plan(medications, plan, source=source)
+        log_plan(medications, plan, source=source, session_id=_get_session_id())
     except Exception:
         logger.exception(
             "Failed to persist PlanLog row (source=%s, medication_count=%d); "
@@ -169,10 +215,10 @@ def create_plan_from_text() -> tuple[dict[str, Any], int]:
 @api.route("/plans", methods=["GET"])
 @limiter.limit("30 per minute")
 def list_plans() -> tuple[dict[str, Any], int]:
-    """Returns the most recent logged plans, newest first (Section 6.3 auditability)."""
+    """Returns the caller's own most recent logged plans, newest first (Section 6.3 auditability)."""
     limit = request.args.get("limit", default=20, type=int)
     limit = max(1, min(limit, 100))  # clamp to a sane range
-    return jsonify({"plans": get_recent_plans(limit=limit)}), 200
+    return jsonify({"plans": get_recent_plans(session_id=_get_session_id(), limit=limit)}), 200
 
 
 # -- error handling: every RxLogicError -> a specific, predictable response ---

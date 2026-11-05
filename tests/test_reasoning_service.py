@@ -168,3 +168,14 @@ def test_coverage_counts_distinct_drugs_when_one_is_listed_twice():
     ]
 
     assert generate_daily_plan(meds).coverage.summary == "1 of 1 drug checked"
+
+
+def test_duplicate_entries_are_merged_into_one_medication_with_summed_doses():
+    meds = [
+        Medication(name="Metformin", frequency_per_day=1),
+        Medication(name="metformin", frequency_per_day=1),
+    ]
+
+    plan = generate_daily_plan(meds)
+
+    assert [e.medication for e in plan.entries] == ["metformin", "metformin"]
