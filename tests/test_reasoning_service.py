@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pytest
 
 from models.exceptions import InsufficientDataError, UnknownMedicationError
-from models.schemas import Medication, Severity
+from models.schemas import EvidenceStrength, Medication, Severity
 from services.reasoning_service import ReasoningService, generate_daily_plan
 
 
@@ -64,6 +64,7 @@ def test_known_interacting_pair_flows_through_to_plan_warnings():
     warning = plan.warnings[0]
     assert {warning.medication_a, warning.medication_b} == {"warfarin", "aspirin"}
     assert warning.severity == Severity.SEVERE
+    assert warning.evidence == EvidenceStrength.STRONG
     assert warning.rule_id  # traceable back to the source rule
 
 

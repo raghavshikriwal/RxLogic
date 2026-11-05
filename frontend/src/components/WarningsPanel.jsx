@@ -18,6 +18,13 @@ const SEVERITY_LABEL = {
   unknown: 'Unknown risk',
 };
 
+const EVIDENCE_LABEL = {
+  strong: 'Strong evidence',
+  moderate: 'Moderate evidence',
+  limited: 'Limited evidence',
+  unknown: 'Evidence not rated',
+};
+
 /**
  * @param {import('../api.js').Interaction[]} warnings
  */
@@ -49,6 +56,9 @@ export default function WarningsPanel({ warnings }) {
               </span>
               <span className="font-clarkson text-body-sm text-ash">
                 {warning.medication_a} + {warning.medication_b}
+              </span>
+              <span className="font-clarkson text-caption text-slate">
+                {EVIDENCE_LABEL[warning.evidence] ?? EVIDENCE_LABEL.unknown}
               </span>
               <span className="ml-auto font-clarkson text-caption text-slate">
                 {Math.round(warning.confidence * 100)}% confidence

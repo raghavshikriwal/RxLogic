@@ -82,6 +82,7 @@ def test_create_plan_success(client):
     assert len(body["entries"]) == 2
     assert body["warnings"]
     assert body["warnings"][0]["severity"] == "severe"
+    assert body["warnings"][0]["evidence"] == "strong"
     assert {body["warnings"][0]["medication_a"], body["warnings"][0]["medication_b"]} == {"warfarin", "aspirin"}
     assert len(body["goal_trace"]) == 2
 

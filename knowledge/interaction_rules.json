@@ -17,6 +17,7 @@
             "medication_a": "warfarin",
             "medication_b": "aspirin",
             "severity": "severe",
+            "evidence": "strong",
             "description": "Combined use significantly increases risk of bleeding due to additive anticoagulant/antiplatelet effects.",
             "source": "openFDA label / clinical literature"
         },
@@ -24,6 +25,7 @@
             "medication_a": "warfarin",
             "medication_b": "ibuprofen",
             "severity": "severe",
+            "evidence": "strong",
             "description": "NSAIDs increase bleeding risk when combined with warfarin; also raises GI bleed risk independently.",
             "source": "openFDA label / clinical literature"
         },
@@ -31,6 +33,7 @@
             "medication_a": "warfarin",
             "medication_b": "amoxicillin",
             "severity": "moderate",
+            "evidence": "moderate",
             "description": "Antibiotics can disrupt gut flora that synthesize vitamin K, potentiating warfarin's anticoagulant effect and raising INR.",
             "source": "openFDA label / clinical literature"
         },
@@ -38,6 +41,7 @@
             "medication_a": "warfarin",
             "medication_b": "omeprazole",
             "severity": "moderate",
+            "evidence": "moderate",
             "description": "Omeprazole inhibits CYP2C19, slowing clearance of the S-warfarin isomer and increasing INR and bleeding risk.",
             "source": "openFDA label / clinical literature"
         },
@@ -45,6 +49,7 @@
             "medication_a": "warfarin",
             "medication_b": "levothyroxine",
             "severity": "moderate",
+            "evidence": "strong",
             "description": "Thyroid hormone increases clotting factor turnover, potentiating warfarin's anticoagulant effect; INR should be monitored closely after any dose change.",
             "source": "openFDA label / clinical literature"
         },
@@ -52,6 +57,7 @@
             "medication_a": "warfarin",
             "medication_b": "atorvastatin",
             "severity": "mild",
+            "evidence": "limited",
             "description": "Statins can mildly potentiate warfarin's anticoagulant effect via CYP interaction; periodic INR monitoring is generally advised.",
             "source": "clinical literature"
         },
@@ -59,6 +65,7 @@
             "medication_a": "aspirin",
             "medication_b": "ibuprofen",
             "severity": "moderate",
+            "evidence": "strong",
             "description": "Ibuprofen competitively blocks aspirin's irreversible binding to COX-1 on platelets, reducing aspirin's cardioprotective antiplatelet effect.",
             "source": "openFDA label / clinical literature"
         },
@@ -66,6 +73,7 @@
             "medication_a": "lisinopril",
             "medication_b": "ibuprofen",
             "severity": "moderate",
+            "evidence": "strong",
             "description": "NSAIDs blunt the antihypertensive effect of ACE inhibitors and, combined, increase risk of reduced kidney function, especially with volume depletion.",
             "source": "openFDA label / clinical literature"
         },
@@ -73,6 +81,7 @@
             "medication_a": "metoprolol",
             "medication_b": "ibuprofen",
             "severity": "mild",
+            "evidence": "moderate",
             "description": "NSAIDs can reduce the antihypertensive effectiveness of beta-blockers through sodium and fluid retention.",
             "source": "clinical literature"
         },
@@ -80,6 +89,7 @@
             "medication_a": "omeprazole",
             "medication_b": "levothyroxine",
             "severity": "moderate",
+            "evidence": "moderate",
             "description": "Reduced gastric acidity from PPIs impairs levothyroxine absorption; doses should be separated and thyroid function monitored.",
             "source": "openFDA label / clinical literature"
         },
@@ -87,6 +97,7 @@
             "medication_a": "lisinopril",
             "medication_b": "metformin",
             "severity": "mild",
+            "evidence": "limited",
             "description": "ACE inhibitors can modestly increase insulin sensitivity, slightly raising hypoglycemia risk when combined with glucose-lowering agents.",
             "source": "clinical literature"
         },
@@ -94,6 +105,7 @@
             "medication_a": "lisinopril",
             "medication_b": "metoprolol",
             "severity": "mild",
+            "evidence": "moderate",
             "description": "Two antihypertensive agents used together have an additive blood-pressure-lowering effect; monitor for symptomatic hypotension, particularly at treatment initiation.",
             "source": "clinical literature"
         }

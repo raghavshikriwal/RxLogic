@@ -23,6 +23,20 @@ class Severity(str, Enum):
     UNKNOWN = "unknown"  # insufficient data — fail-safe default
 
 
+class EvidenceStrength(str, Enum):
+    """How well documented an interaction is, independent of how dangerous it is.
+
+    Severity answers "how bad is it if this happens?"; evidence strength
+    answers "how sure are we that it happens?". The two vary independently
+    (a rare-but-fatal interaction and a well-proven-but-trivial one are
+    both real), so they are never folded into one field.
+    """
+    STRONG = "strong"          # consistent label warnings / well-replicated clinical data
+    MODERATE = "moderate"      # documented, but mixed or indirect evidence
+    LIMITED = "limited"        # theoretical or thinly supported
+    UNKNOWN = "unknown"        # not recorded -- fail-safe default
+
+
 class NameMatch(str, Enum):
     """How a user-entered medication name was matched to a known generic."""
     EXACT = "exact"
@@ -60,6 +74,7 @@ class Interaction:
     rule_id: str                         # traces back to the firing rule
     description: str
     source: str = "RxNav/openFDA"
+    evidence: EvidenceStrength = EvidenceStrength.UNKNOWN
 
 
 @dataclass(frozen=True)

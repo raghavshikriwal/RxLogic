@@ -84,6 +84,7 @@ def _entry_to_dict(entry) -> dict:
 def _interaction_to_dict(interaction) -> dict:
     data = asdict(interaction)
     data["severity"] = interaction.severity.value
+    data["evidence"] = interaction.evidence.value
     return data
 
 

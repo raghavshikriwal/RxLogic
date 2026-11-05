@@ -10,11 +10,12 @@ has a higher chance of untested/unmodeled interactions the rule engine
 simply has no rule for.
 
 This module refines each Interaction's `confidence` field using a
-Mamdani fuzzy inference system over two inputs (severity, source
-reliability) and a separate polypharmacy penalty, rather than
-collapsing everything to a hardcoded 1.0. It never changes `severity`
-itself -- that stays traceable to the exact rule that fired
-(Section 6.1); only the confidence estimate is adjusted.
+Mamdani fuzzy inference system over two inputs (evidence strength,
+source reliability) and a separate polypharmacy penalty, rather than
+collapsing everything to a hardcoded 1.0. Severity is not an input:
+it measures consequence, not certainty. This layer never changes
+`severity` or `evidence` -- both stay traceable to the exact rule that
+fired (Section 6.1); only the confidence estimate is adjusted.
 """
 
 from __future__ import annotations
@@ -25,15 +26,18 @@ import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 
-from models.schemas import Interaction, Severity
+from models.schemas import EvidenceStrength, Interaction
 
 # -- crisp -> fuzzy input mappings -------------------------------------------
 
-SEVERITY_BASE_SCORE: dict[Severity, float] = {
-    Severity.MILD: 0.3,
-    Severity.MODERATE: 0.6,
-    Severity.SEVERE: 0.9,
-    Severity.UNKNOWN: 0.1,
+# Evidence strength -> crisp score. Severity is deliberately absent: how
+# dangerous an interaction is says nothing about how sure we are that it
+# occurs, so it must not inflate or deflate confidence.
+EVIDENCE_BASE_SCORE: dict[EvidenceStrength, float] = {
+    EvidenceStrength.STRONG: 0.9,
+    EvidenceStrength.MODERATE: 0.6,
+    EvidenceStrength.LIMITED: 0.3,
+    EvidenceStrength.UNKNOWN: 0.1,
 }
 
 # Curated rule sources, ranked by how strong the underlying evidence is.
@@ -56,11 +60,11 @@ MIN_CONFIDENCE_FLOOR = 0.05
 class UncertaintyLayer:
     """
     Mamdani fuzzy inference system estimating interaction confidence
-    from (severity, source reliability), with a polypharmacy penalty
-    applied afterward.
+    from (evidence strength, source reliability), with a polypharmacy
+    penalty applied afterward.
 
     Inputs:
-        severity_score     [0, 1] -- derived from the rule-flagged Severity
+        evidence_score     [0, 1] -- derived from the rule's EvidenceStrength
         source_reliability [0, 1] -- derived from the rule's cited source
     Output:
         confidence          [0, 1] -- refined trust estimate for this
@@ -73,31 +77,31 @@ class UncertaintyLayer:
     # -- fuzzy system construction -------------------------------------------
 
     def _build_control_system(self) -> ctrl.ControlSystem:
-        severity = ctrl.Antecedent(np.linspace(0, 1, 101), "severity")
+        evidence = ctrl.Antecedent(np.linspace(0, 1, 101), "evidence")
         reliability = ctrl.Antecedent(np.linspace(0, 1, 101), "reliability")
         confidence = ctrl.Consequent(np.linspace(0, 1, 101), "confidence")
 
-        for var in (severity, reliability, confidence):
+        for var in (evidence, reliability, confidence):
             var["low"] = fuzz.trimf(var.universe, [0.0, 0.0, 0.5])
             var["medium"] = fuzz.trimf(var.universe, [0.2, 0.5, 0.8])
             var["high"] = fuzz.trimf(var.universe, [0.5, 1.0, 1.0])
 
         rules = [
-            ctrl.Rule(severity["high"] & reliability["high"], confidence["high"]),
-            ctrl.Rule(severity["high"] & reliability["medium"], confidence["high"]),
-            ctrl.Rule(severity["high"] & reliability["low"], confidence["medium"]),
-            ctrl.Rule(severity["medium"] & reliability["high"], confidence["high"]),
-            ctrl.Rule(severity["medium"] & reliability["medium"], confidence["medium"]),
-            ctrl.Rule(severity["medium"] & reliability["low"], confidence["low"]),
-            ctrl.Rule(severity["low"] & reliability["high"], confidence["medium"]),
-            ctrl.Rule(severity["low"] & reliability["medium"], confidence["low"]),
-            ctrl.Rule(severity["low"] & reliability["low"], confidence["low"]),
+            ctrl.Rule(evidence["high"] & reliability["high"], confidence["high"]),
+            ctrl.Rule(evidence["high"] & reliability["medium"], confidence["high"]),
+            ctrl.Rule(evidence["high"] & reliability["low"], confidence["medium"]),
+            ctrl.Rule(evidence["medium"] & reliability["high"], confidence["high"]),
+            ctrl.Rule(evidence["medium"] & reliability["medium"], confidence["medium"]),
+            ctrl.Rule(evidence["medium"] & reliability["low"], confidence["low"]),
+            ctrl.Rule(evidence["low"] & reliability["high"], confidence["medium"]),
+            ctrl.Rule(evidence["low"] & reliability["medium"], confidence["low"]),
+            ctrl.Rule(evidence["low"] & reliability["low"], confidence["low"]),
         ]
         return ctrl.ControlSystem(rules)
 
-    def _fuzzy_confidence(self, severity_score: float, reliability_score: float) -> float:
+    def _fuzzy_confidence(self, evidence_score: float, reliability_score: float) -> float:
         sim = ctrl.ControlSystemSimulation(self._system)
-        sim.input["severity"] = severity_score
+        sim.input["evidence"] = evidence_score
         sim.input["reliability"] = reliability_score
         sim.compute()
         return float(sim.output["confidence"])
@@ -116,17 +120,17 @@ class UncertaintyLayer:
     def refine(self, interactions: list[Interaction], total_medication_count: int) -> list[Interaction]:
         """
         Returns new Interaction objects with `confidence` replaced by the
-        fuzzy-refined estimate. `severity` and every other field are left
-        untouched -- only the confidence estimate changes.
+        fuzzy-refined estimate. `severity`, `evidence` and every other
+        field are left untouched -- only the confidence estimate changes.
         """
         penalty = self._polypharmacy_penalty(total_medication_count)
         refined: list[Interaction] = []
 
         for interaction in interactions:
-            severity_score = SEVERITY_BASE_SCORE[interaction.severity]
+            evidence_score = EVIDENCE_BASE_SCORE[interaction.evidence]
             reliability_score = self._source_reliability(interaction.source)
 
-            raw_confidence = self._fuzzy_confidence(severity_score, reliability_score)
+            raw_confidence = self._fuzzy_confidence(evidence_score, reliability_score)
             final_confidence = max(MIN_CONFIDENCE_FLOOR, min(1.0, raw_confidence - penalty))
 
             refined.append(replace(interaction, confidence=round(final_confidence, 3)))

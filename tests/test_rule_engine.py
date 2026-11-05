@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pytest
 
-from models.schemas import Medication, Severity
+from models.schemas import EvidenceStrength, Medication, Severity
 from services.rule_engine import RULES_PATH, InteractionRule, RuleEngine
 
 
@@ -46,6 +46,7 @@ def rules_file(tmp_path) -> Path:
                 "medication_a": "warfarin",
                 "medication_b": "aspirin",
                 "severity": "severe",
+                "evidence": "strong",
                 "description": "Increased bleeding risk.",
                 "source": "openFDA label",
             },
@@ -101,6 +102,40 @@ def test_missing_severity_defaults_to_unknown(engine):
     # third rule in the fixture omits "severity" entirely
     rule = engine.rules[2]
     assert rule.severity == Severity.UNKNOWN
+
+
+def test_evidence_is_loaded_from_the_rule(engine):
+    assert engine.rules[0].evidence == EvidenceStrength.STRONG
+
+
+def test_missing_evidence_defaults_to_unknown(engine):
+    # the second fixture rule omits "evidence" entirely
+    assert engine.rules[1].evidence == EvidenceStrength.UNKNOWN
+
+
+def test_invalid_evidence_value_is_rejected(tmp_path):
+    path = tmp_path / "bad_rules.json"
+    path.write_text(
+        json.dumps({
+            "interaction_rules": [{
+                "medication_a": "a",
+                "medication_b": "b",
+                "evidence": "certain",
+                "description": "bad evidence label",
+            }]
+        }),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError):
+        RuleEngine(rules_path=path)
+
+
+def test_flagged_interaction_carries_rule_evidence_and_severity_independently(engine):
+    flagged = engine.check_interactions([_med("Warfarin"), _med("Aspirin")])
+
+    assert flagged[0].severity == Severity.SEVERE
+    assert flagged[0].evidence == EvidenceStrength.STRONG
 
 
 def test_missing_source_defaults_to_unknown_string():
@@ -211,6 +246,14 @@ def test_unrelated_medications_fire_no_rules(engine):
 
 def test_single_medication_cannot_fire_any_rule(engine):
     assert engine.check_interactions([_med("Warfarin")]) == []
+
+
+def test_every_real_rule_declares_evidence():
+    # a rule shipped without an evidence rating would silently get the
+    # lowest confidence, so the curated file must never omit it
+    engine = RuleEngine(rules_path=RULES_PATH)
+
+    assert all(rule.evidence != EvidenceStrength.UNKNOWN for rule in engine.rules)
 
 
 def test_empty_medication_list_returns_empty(engine):

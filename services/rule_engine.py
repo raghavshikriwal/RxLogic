@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from itertools import combinations
 from pathlib import Path
 
-from models.schemas import Coverage, Interaction, Medication, Severity
+from models.schemas import Coverage, EvidenceStrength, Interaction, Medication, Severity
 
 RULES_PATH = Path(__file__).resolve().parent.parent / "knowledge" / "interaction_rules.json"
 
@@ -28,6 +28,7 @@ class InteractionRule:
     severity: Severity
     description: str
     source: str
+    evidence: EvidenceStrength = EvidenceStrength.UNKNOWN
 
 
 class RuleEngine:
@@ -57,6 +58,7 @@ class RuleEngine:
                     severity=Severity(entry.get("severity", "unknown")),
                     description=entry["description"],
                     source=entry.get("source", "unknown"),
+                    evidence=EvidenceStrength(entry.get("evidence", "unknown")),
                 )
             )
         return rules
@@ -119,6 +121,7 @@ class RuleEngine:
                             rule_id=rule.rule_id,
                             description=rule.description,
                             source=rule.source,
+                            evidence=rule.evidence,
                         )
                     )
         return flagged
