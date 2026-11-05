@@ -71,12 +71,24 @@ class PlanLog(Base):
     migration on every schema.py change. JSON columns keep this layer
     stable while the reasoning core is actively developed; a Future
     Scope item is normalizing this once the schema is frozen.
+
+    `session_id` scopes each row to the anonymous browser session that
+    created it (see routes/api.py's cookie-based session resolution) --
+    it is a server-minted UUID, never any real user identity. This is
+    what makes GET /api/plans return only the caller's own history
+    instead of every plan ever logged by every visitor. Nullable at
+    the schema level purely so the Alembic migration that adds this
+    column to an already-populated table doesn't require backfilling
+    pre-existing rows; every row written by current application code
+    always populates it.
     """
 
     __tablename__ = "plan_logs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    session_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
 
     source: Mapped[str] = mapped_column(String(16))  # "structured" or "natural_language"
     input_medications: Mapped[list] = mapped_column(JSON)  # list[dict] -- raw Medication fields

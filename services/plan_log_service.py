@@ -16,18 +16,24 @@ from models.database import PlanLog, get_session
 from models.schemas import DailyPlan, Medication
 
 
-def log_plan(medications: list[Medication], plan: DailyPlan, source: str) -> int:
+def log_plan(medications: list[Medication], plan: DailyPlan, source: str, session_id: str) -> int:
     """
     Persists one generate_daily_plan() call as an immutable PlanLog row.
 
     `source` should be "structured" (from /api/plan) or "natural_language"
     (from /api/plan/nl), so logs are queryable by entry point later.
 
+    `session_id` is the caller's anonymous browser-session UUID (see
+    routes/api.py) -- it scopes this row so GET /api/plans can later
+    return only plans created by the same session, not every plan ever
+    logged by every client.
+
     Returns the new row's id. Never raises on its own logic -- a failed
     log write should not be allowed to break a successful plan response,
     so callers should treat this as best-effort (see routes/api.py).
     """
     row = PlanLog(
+        session_id=session_id,
         source=source,
         input_medications=[_medication_to_dict(m) for m in medications],
         entries=[_entry_to_dict(e) for e in plan.entries],
@@ -42,11 +48,14 @@ def log_plan(medications: list[Medication], plan: DailyPlan, source: str) -> int
         return row.id
 
 
-def get_recent_plans(limit: int = 20) -> list[dict]:
-    """Returns the most recent PlanLog rows as plain dicts, newest first."""
+def get_recent_plans(session_id: str, limit: int = 20) -> list[dict]:
+    """Returns the requesting session's most recent PlanLog rows as plain
+    dicts, newest first. Scoped to `session_id` so one caller can never see
+    another caller's medication history -- see PlanLog.session_id."""
     with get_session() as session:
         rows = (
             session.query(PlanLog)
+            .filter(PlanLog.session_id == session_id)
             .order_by(PlanLog.created_at.desc())
             .limit(limit)
             .all()
