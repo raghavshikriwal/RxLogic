@@ -26,6 +26,34 @@ const EVIDENCE_LABEL = {
 };
 
 /**
+ * Formats a gap in minutes for people: 480 -> "8 h", 90 -> "1 h 30 min", 45 -> "45 min".
+ * @param {number} minutes
+ */
+function formatGap(minutes) {
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours === 0) return `${rest} min`;
+  return rest === 0 ? `${hours} h` : `${hours} h ${rest} min`;
+}
+
+/**
+ * One sentence of spacing advice for a warning, or null when its rule records none.
+ * An order-aware rule describes the window around the anchor drug's dose.
+ */
+function spacingAdvice(warning) {
+  const { ordering, separation_minutes: separation } = warning;
+  if (ordering) {
+    const other =
+      warning.medication_a === ordering.anchor ? warning.medication_b : warning.medication_a;
+    return `Take ${other} at least ${formatGap(ordering.after_minutes)} after ${ordering.anchor}, or at least ${formatGap(ordering.before_minutes)} before it.`;
+  }
+  if (separation != null) {
+    return `Keep doses at least ${formatGap(separation)} apart.`;
+  }
+  return null;
+}
+
+/**
  * @param {import('../api.js').Interaction[]} warnings
  */
 export default function WarningsPanel({ warnings }) {
@@ -68,6 +96,10 @@ export default function WarningsPanel({ warnings }) {
             <p className="mt-16 font-clarkson text-base leading-[1.5] text-paper">
               {warning.description}
             </p>
+
+            {spacingAdvice(warning) && (
+              <p className="mt-8 font-clarkson text-body-sm text-ash">{spacingAdvice(warning)}</p>
+            )}
 
             <p className="mt-8 font-clarkson text-caption text-slate">
               Rule {warning.rule_id} · {warning.source}

@@ -1,0 +1,29 @@
+{
+    "source_note": "Per-drug meal guidance, curated from general label guidance. Only drugs with a clear, unconditional label instruction are listed; a drug with no entry has no meal constraint applied. Review before relying on it. See README Scope & Limitations.",
+    "food_rules": [
+        {
+            "medication": "metformin",
+            "requirement": "with_food",
+            "note": "Taken with meals to reduce stomach upset.",
+            "source": "drug label guidance"
+        },
+        {
+            "medication": "levothyroxine",
+            "requirement": "empty_stomach",
+            "note": "Best absorbed on an empty stomach, 30 to 60 minutes before breakfast.",
+            "source": "drug label guidance"
+        },
+        {
+            "medication": "omeprazole",
+            "requirement": "empty_stomach",
+            "note": "Works best taken before a meal, usually 30 to 60 minutes before breakfast.",
+            "source": "drug label guidance"
+        },
+        {
+            "medication": "warfarin",
+            "requirement": "no_restriction",
+            "note": "No meal timing needed, but keep vitamin K intake (leafy greens) consistent from day to day.",
+            "source": "drug label guidance"
+        }
+    ]
+}

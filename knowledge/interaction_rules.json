@@ -66,6 +66,11 @@
             "medication_b": "ibuprofen",
             "severity": "moderate",
             "evidence": "strong",
+            "ordering": {
+                "anchor": "aspirin",
+                "after_minutes": 30,
+                "before_minutes": 480
+            },
             "description": "Ibuprofen competitively blocks aspirin's irreversible binding to COX-1 on platelets, reducing aspirin's cardioprotective antiplatelet effect.",
             "source": "openFDA label / clinical literature"
         },

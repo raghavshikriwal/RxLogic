@@ -17,11 +17,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pytest
 
 from models.exceptions import ConstraintUnsatisfiableError
-from models.schemas import Interaction, Medication, Severity, TimingPreference
+from models.schemas import DoseOrdering, Interaction, Medication, Severity, TimingPreference
 from services.csp_scheduler import (
     DAY_END_MINUTES,
     DAY_START_MINUTES,
-    MIN_INTERACTION_SEPARATION_MINUTES,
+    DEFAULT_INTERACTION_SEPARATION_MINUTES,
     CSPScheduler,
 )
 
@@ -167,7 +167,7 @@ def test_interacting_medications_are_separated():
         - _minutes(by_med["aspirin"])
     )
 
-    assert gap >= MIN_INTERACTION_SEPARATION_MINUTES
+    assert gap >= DEFAULT_INTERACTION_SEPARATION_MINUTES
 
     interacting_entry = by_med["warfarin"]
 
@@ -264,7 +264,7 @@ def test_backtracking_recovers_when_first_candidate_conflicts():
             - _minutes(by_med[med_b])
         )
 
-        assert gap >= MIN_INTERACTION_SEPARATION_MINUTES
+        assert gap >= DEFAULT_INTERACTION_SEPARATION_MINUTES
 
 
 def test_consistent_rejects_a_value_that_violates_the_gap_constraint():
@@ -272,7 +272,7 @@ def test_consistent_rejects_a_value_that_violates_the_gap_constraint():
     Deterministic white-box test for _consistent().
 
     An interacting medication pair must be separated by at least
-    MIN_INTERACTION_SEPARATION_MINUTES.
+    DEFAULT_INTERACTION_SEPARATION_MINUTES.
     """
     meds = [
         Medication(name="Warfarin", frequency_per_day=1),
@@ -458,3 +458,197 @@ def test_reasoning_and_constraint_ids_are_populated():
         constraint.startswith("with_food:")
         for constraint in entry.constraint_ids
     )
+
+
+
+# ---------------------------------------------------------------------------
+# Per-pair separation times
+# ---------------------------------------------------------------------------
+
+def _interaction(med_a: str, med_b: str, separation_minutes: int | None = None) -> Interaction:
+    return Interaction(
+        medication_a=med_a,
+        medication_b=med_b,
+        severity=Severity.MODERATE,
+        confidence=0.9,
+        rule_id=f"{med_a}-{med_b}",
+        description="test interaction",
+        separation_minutes=separation_minutes,
+    )
+
+
+def _gap(by_med: dict, med_a: str, med_b: str) -> int:
+    return abs(_minutes(by_med[med_a]) - _minutes(by_med[med_b]))
+
+
+def test_pair_specific_separation_overrides_the_default():
+    meds = [Medication(name="Aspirin"), Medication(name="Ibuprofen")]
+
+    result = CSPScheduler(meds, [_interaction("aspirin", "ibuprofen", 480)]).solve()
+
+    by_med = {entry.medication: entry for entry in result.entries}
+    assert _gap(by_med, "aspirin", "ibuprofen") >= 480
+
+
+def test_each_pair_in_one_schedule_gets_its_own_gap():
+    meds = [Medication(name="Warfarin"), Medication(name="Aspirin"), Medication(name="Ibuprofen")]
+    interactions = [
+        _interaction("warfarin", "aspirin"),                 # no recorded gap -> default
+        _interaction("aspirin", "ibuprofen", 480),           # pair-specific gap
+    ]
+
+    scheduler = CSPScheduler(meds, interactions)
+    by_med = {entry.medication: entry for entry in scheduler.solve().entries}
+
+    assert scheduler.pair_separation == {
+        frozenset({"warfarin", "aspirin"}): DEFAULT_INTERACTION_SEPARATION_MINUTES,
+        frozenset({"aspirin", "ibuprofen"}): 480,
+    }
+    assert _gap(by_med, "warfarin", "aspirin") >= DEFAULT_INTERACTION_SEPARATION_MINUTES
+    assert _gap(by_med, "aspirin", "ibuprofen") >= 480
+
+
+def test_strictest_gap_wins_when_a_pair_is_flagged_twice():
+    scheduler = CSPScheduler(
+        [Medication(name="Aspirin"), Medication(name="Ibuprofen")],
+        [_interaction("aspirin", "ibuprofen", 240), _interaction("ibuprofen", "aspirin", 480)],
+    )
+
+    assert scheduler.pair_separation == {frozenset({"aspirin", "ibuprofen"}): 480}
+
+
+def test_separation_is_enforced_by_the_consistency_check():
+    meds = [Medication(name="Aspirin"), Medication(name="Ibuprofen")]
+    scheduler = CSPScheduler(meds, [_interaction("aspirin", "ibuprofen", 480)])
+    aspirin = next(v for v in scheduler.variables if v.medication == "aspirin")
+    ibuprofen = next(v for v in scheduler.variables if v.medication == "ibuprofen")
+    assignment = {aspirin.name: 8 * 60}
+
+    assert scheduler._consistent(ibuprofen, 8 * 60 + 479, assignment) is False
+    assert scheduler._consistent(ibuprofen, 8 * 60 + 480, assignment) is True
+
+
+def test_unsatisfiable_separation_fails_safe_instead_of_shortening_the_gap():
+    # Three ibuprofen doses plus an aspirin dose that must sit >= 8 h from
+    # each of them cannot fit in the 06:00-22:00 window. The scheduler must
+    # refuse, not quietly relax the gap.
+    meds = [Medication(name="Aspirin"), Medication(name="Ibuprofen", frequency_per_day=3)]
+
+    with pytest.raises(ConstraintUnsatisfiableError):
+        CSPScheduler(meds, [_interaction("aspirin", "ibuprofen", 480)]).solve()
+
+
+def test_reasoning_names_the_partner_and_its_gap():
+    meds = [Medication(name="Warfarin"), Medication(name="Aspirin"), Medication(name="Ibuprofen")]
+    interactions = [
+        _interaction("warfarin", "aspirin"),
+        _interaction("aspirin", "ibuprofen", 480),
+    ]
+
+    by_med = {e.medication: e for e in CSPScheduler(meds, interactions).solve().entries}
+
+    assert "kept >= 480 min from ibuprofen" in by_med["aspirin"].reasoning
+    assert (
+        f"kept >= {DEFAULT_INTERACTION_SEPARATION_MINUTES} min from warfarin"
+        in by_med["aspirin"].reasoning
+    )
+    assert "kept >= 120 min from aspirin" in by_med["warfarin"].reasoning
+    assert "ibuprofen" not in by_med["warfarin"].reasoning
+
+
+
+# ---------------------------------------------------------------------------
+# Order-aware separation
+# ---------------------------------------------------------------------------
+
+_ASPIRIN_FIRST = DoseOrdering(anchor="aspirin", after_minutes=30, before_minutes=480)
+
+
+def _ordered_interaction(ordering: DoseOrdering = _ASPIRIN_FIRST) -> Interaction:
+    return Interaction(
+        medication_a="aspirin",
+        medication_b="ibuprofen",
+        severity=Severity.MODERATE,
+        confidence=0.9,
+        rule_id="ORDERED",
+        description="test interaction",
+        ordering=ordering,
+    )
+
+
+def _times(result, medication: str) -> list[int]:
+    return [_minutes(e) for e in result.entries if e.medication == medication]
+
+
+def test_ordered_pair_has_no_default_symmetric_gap():
+    scheduler = CSPScheduler(
+        [Medication(name="Aspirin"), Medication(name="Ibuprofen")], [_ordered_interaction()]
+    )
+
+    assert scheduler.pair_separation == {}
+    assert scheduler.pair_ordering == {frozenset({"aspirin", "ibuprofen"}): [_ASPIRIN_FIRST]}
+
+
+def test_ordered_constraint_allows_a_close_dose_after_but_not_a_close_dose_before():
+    scheduler = CSPScheduler(
+        [Medication(name="Aspirin"), Medication(name="Ibuprofen")], [_ordered_interaction()]
+    )
+    aspirin = next(v for v in scheduler.variables if v.medication == "aspirin")
+    ibuprofen = next(v for v in scheduler.variables if v.medication == "ibuprofen")
+    assignment = {aspirin.name: 12 * 60}
+
+    assert scheduler._consistent(ibuprofen, 12 * 60 + 30, assignment) is True    # 30 min after
+    assert scheduler._consistent(ibuprofen, 12 * 60 + 29, assignment) is False
+    assert scheduler._consistent(ibuprofen, 12 * 60 - 60, assignment) is False   # 1 h before
+    assert scheduler._consistent(ibuprofen, 12 * 60 - 480, assignment) is True   # 8 h before
+
+
+def test_ordered_constraint_is_symmetric_in_which_variable_is_assigned_first():
+    scheduler = CSPScheduler(
+        [Medication(name="Aspirin"), Medication(name="Ibuprofen")], [_ordered_interaction()]
+    )
+    aspirin = next(v for v in scheduler.variables if v.medication == "aspirin")
+    ibuprofen = next(v for v in scheduler.variables if v.medication == "ibuprofen")
+    assignment = {ibuprofen.name: 12 * 60}
+
+    assert scheduler._consistent(aspirin, 12 * 60 - 30, assignment) is True   # aspirin 30 min earlier
+    assert scheduler._consistent(aspirin, 12 * 60 + 60, assignment) is False  # aspirin later: ibuprofen is "before"
+    assert scheduler._consistent(aspirin, 12 * 60 + 480, assignment) is True
+
+
+def test_every_ibuprofen_dose_is_placed_safely_relative_to_every_aspirin_dose():
+    meds = [Medication(name="Aspirin", frequency_per_day=2), Medication(name="Ibuprofen", frequency_per_day=2)]
+
+    result = CSPScheduler(meds, [_ordered_interaction()]).solve()
+
+    for aspirin_time in _times(result, "aspirin"):
+        for ibuprofen_time in _times(result, "ibuprofen"):
+            assert _ASPIRIN_FIRST.allows(aspirin_time, ibuprofen_time)
+
+
+def test_order_aware_rule_keeps_multi_dose_regimens_schedulable():
+    # Under a symmetric 8 h gap this regimen was unsatisfiable (422).
+    meds = [Medication(name="Aspirin"), Medication(name="Ibuprofen", frequency_per_day=3)]
+
+    result = CSPScheduler(meds, [_ordered_interaction()]).solve()
+
+    assert len(result.entries) == 4
+
+
+def test_unsatisfiable_ordering_still_fails_safe():
+    # Ibuprofen must sit >= 8 h before or >= 30 min after every aspirin dose;
+    # three aspirin doses spread over the day leave no safe slot for ibuprofen.
+    meds = [Medication(name="Aspirin", frequency_per_day=3), Medication(name="Ibuprofen", frequency_per_day=3)]
+
+    with pytest.raises(ConstraintUnsatisfiableError):
+        CSPScheduler(meds, [_ordered_interaction()]).solve()
+
+
+def test_ordered_reasoning_names_the_window_from_both_sides():
+    meds = [Medication(name="Aspirin"), Medication(name="Ibuprofen")]
+
+    by_med = {e.medication: e for e in CSPScheduler(meds, [_ordered_interaction()]).solve().entries}
+
+    assert "ibuprofen kept >= 30 min after this dose or >= 480 min before it" in by_med["aspirin"].reasoning
+    assert "kept >= 30 min after aspirin or >= 480 min before it" in by_med["ibuprofen"].reasoning
+    assert "interaction_separation" in by_med["ibuprofen"].constraint_ids

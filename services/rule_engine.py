@@ -14,9 +14,53 @@ from dataclasses import dataclass
 from itertools import combinations
 from pathlib import Path
 
-from models.schemas import Coverage, EvidenceStrength, Interaction, Medication, Severity
+from models.schemas import Coverage, DoseOrdering, EvidenceStrength, Interaction, Medication, Severity
 
 RULES_PATH = Path(__file__).resolve().parent.parent / "knowledge" / "interaction_rules.json"
+
+
+def _parse_separation(entry: dict, rule_id: str) -> int | None:
+    """Reads an optional per-pair separation time (minutes) from a rule entry.
+
+    Absent means "no pair-specific guidance". A present value must be a
+    positive integer: a malformed one raises rather than being silently
+    ignored, because a dropped separation would weaken the schedule.
+    """
+    value = entry.get("separation_minutes")
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise ValueError(
+            f"{rule_id}: separation_minutes must be a positive integer, got {value!r}"
+        )
+    return value
+
+
+def _parse_ordering(entry: dict, rule_id: str) -> DoseOrdering | None:
+    """Reads an optional order-aware spacing rule from a rule entry.
+
+    Expected shape: {"anchor": <one of the rule's drugs>, "after_minutes": N,
+    "before_minutes": M}. Malformed input raises rather than being dropped,
+    and so does combining it with `separation_minutes`: two spacing rules on
+    one entry would be ambiguous.
+    """
+    raw = entry.get("ordering")
+    if raw is None:
+        return None
+    if entry.get("separation_minutes") is not None:
+        raise ValueError(f"{rule_id}: use either separation_minutes or ordering, not both")
+
+    anchor = str(raw.get("anchor", "")).lower()
+    if anchor not in (entry["medication_a"].lower(), entry["medication_b"].lower()):
+        raise ValueError(f"{rule_id}: ordering anchor {anchor!r} must be one of the rule's two drugs")
+
+    gaps = {}
+    for key in ("after_minutes", "before_minutes"):
+        value = raw.get(key)
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise ValueError(f"{rule_id}: ordering {key} must be a positive integer, got {value!r}")
+        gaps[key] = value
+    return DoseOrdering(anchor=anchor, **gaps)
 
 
 @dataclass(frozen=True)
@@ -29,6 +73,8 @@ class InteractionRule:
     description: str
     source: str
     evidence: EvidenceStrength = EvidenceStrength.UNKNOWN
+    separation_minutes: int | None = None
+    ordering: DoseOrdering | None = None
 
 
 class RuleEngine:
@@ -59,6 +105,8 @@ class RuleEngine:
                     description=entry["description"],
                     source=entry.get("source", "unknown"),
                     evidence=EvidenceStrength(entry.get("evidence", "unknown")),
+                    separation_minutes=_parse_separation(entry, rule_id=f"RULE_{i:03d}"),
+                    ordering=_parse_ordering(entry, rule_id=f"RULE_{i:03d}"),
                 )
             )
         return rules
@@ -122,6 +170,8 @@ class RuleEngine:
                             description=rule.description,
                             source=rule.source,
                             evidence=rule.evidence,
+                            separation_minutes=rule.separation_minutes,
+                            ordering=rule.ordering,
                         )
                     )
         return flagged

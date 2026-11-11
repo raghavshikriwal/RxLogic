@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pytest
 
-from models.schemas import EvidenceStrength, Medication, Severity
+from models.schemas import DoseOrdering, EvidenceStrength, Medication, Severity
 from services.rule_engine import RULES_PATH, InteractionRule, RuleEngine
 
 
@@ -379,3 +379,97 @@ def test_assess_coverage_of_empty_list_is_zero_of_zero(engine):
 
     assert coverage.total == 0
     assert coverage.is_complete
+
+
+# ---------------------------------------------------------------------------
+# Per-pair separation times
+# ---------------------------------------------------------------------------
+
+def _engine_with_rule(tmp_path, **fields) -> RuleEngine:
+    """Builds an engine around one a+b rule carrying the given extra fields."""
+    rule = {"medication_a": "a", "medication_b": "b", "description": "test rule", **fields}
+    path = tmp_path / "separation_rules.json"
+    path.write_text(json.dumps({"interaction_rules": [rule]}), encoding="utf-8")
+    return RuleEngine(rules_path=path)
+
+
+def test_separation_is_loaded_from_the_rule(tmp_path):
+    engine = _engine_with_rule(tmp_path, separation_minutes=480)
+
+    assert engine.rules[0].separation_minutes == 480
+
+
+def test_missing_separation_defaults_to_none(engine):
+    assert all(rule.separation_minutes is None for rule in engine.rules)
+
+
+@pytest.mark.parametrize("bad_value", [0, -30, 1.5, "120", True])
+def test_invalid_separation_value_is_rejected(tmp_path, bad_value):
+    with pytest.raises(ValueError, match="separation_minutes"):
+        _engine_with_rule(tmp_path, separation_minutes=bad_value)
+
+
+def test_flagged_interaction_carries_the_rule_separation(tmp_path):
+    engine = _engine_with_rule(tmp_path, separation_minutes=240)
+
+    flagged = engine.check_interactions([_med("a"), _med("b")])
+
+    assert flagged[0].separation_minutes == 240
+
+
+def test_real_aspirin_ibuprofen_rule_is_order_aware():
+    # Ibuprofen blocks aspirin's antiplatelet effect unless it is taken at
+    # least 30 min after, or well (8 h) before, the aspirin dose.
+    flagged = RuleEngine().check_interactions([_med("Aspirin"), _med("Ibuprofen")])
+
+    assert flagged[0].ordering == DoseOrdering(anchor="aspirin", after_minutes=30, before_minutes=480)
+    assert flagged[0].separation_minutes is None
+
+
+# ---------------------------------------------------------------------------
+# Order-aware separation
+# ---------------------------------------------------------------------------
+
+_VALID_ORDERING = {"anchor": "a", "after_minutes": 30, "before_minutes": 480}
+
+
+def test_ordering_is_loaded_from_the_rule(tmp_path):
+    engine = _engine_with_rule(tmp_path, ordering=_VALID_ORDERING)
+
+    assert engine.rules[0].ordering == DoseOrdering(anchor="a", after_minutes=30, before_minutes=480)
+
+
+def test_ordering_anchor_is_normalized_to_lowercase(tmp_path):
+    engine = _engine_with_rule(tmp_path, ordering={**_VALID_ORDERING, "anchor": "A"})
+
+    assert engine.rules[0].ordering.anchor == "a"
+
+
+def test_missing_ordering_defaults_to_none(engine):
+    assert all(rule.ordering is None for rule in engine.rules)
+
+
+@pytest.mark.parametrize("anchor", ["c", ""])
+def test_ordering_anchor_must_be_one_of_the_rules_drugs(tmp_path, anchor):
+    with pytest.raises(ValueError, match="anchor"):
+        _engine_with_rule(tmp_path, ordering={**_VALID_ORDERING, "anchor": anchor})
+
+
+@pytest.mark.parametrize("key", ["after_minutes", "before_minutes"])
+@pytest.mark.parametrize("bad_value", [0, -5, 1.5, "30", True, None])
+def test_invalid_ordering_gap_is_rejected(tmp_path, key, bad_value):
+    with pytest.raises(ValueError, match=key):
+        _engine_with_rule(tmp_path, ordering={**_VALID_ORDERING, key: bad_value})
+
+
+def test_ordering_and_separation_on_one_rule_are_rejected(tmp_path):
+    with pytest.raises(ValueError, match="not both"):
+        _engine_with_rule(tmp_path, ordering=_VALID_ORDERING, separation_minutes=120)
+
+
+def test_flagged_interaction_carries_the_rule_ordering(tmp_path):
+    engine = _engine_with_rule(tmp_path, ordering=_VALID_ORDERING)
+
+    flagged = engine.check_interactions([_med("a"), _med("b")])
+
+    assert flagged[0].ordering == DoseOrdering(anchor="a", after_minutes=30, before_minutes=480)

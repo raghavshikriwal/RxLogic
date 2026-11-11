@@ -375,3 +375,46 @@ def test_create_plan_without_corrections_returns_empty_name_resolutions(client):
     response = client.post("/api/plan", json={"medications": [{"name": "Warfarin"}]})
 
     assert response.get_json()["name_resolutions"] == []
+
+
+def test_create_plan_exposes_order_aware_separation(client):
+    payload = {"medications": [{"name": "Aspirin"}, {"name": "Ibuprofen"}]}
+
+    response = client.post("/api/plan", json=payload)
+    warning = response.get_json()["warnings"][0]
+
+    assert response.status_code == 200
+    assert warning["ordering"] == {"anchor": "aspirin", "after_minutes": 30, "before_minutes": 480}
+    assert warning["separation_minutes"] is None
+
+
+def test_create_plan_reports_no_separation_when_the_rule_has_none(client):
+    payload = {"medications": [{"name": "Warfarin"}, {"name": "Aspirin"}]}
+
+    response = client.post("/api/plan", json=payload)
+
+    warning = response.get_json()["warnings"][0]
+    assert warning["separation_minutes"] is None
+    assert warning["ordering"] is None
+
+
+def test_create_plan_reports_food_guidance(client):
+    response = client.post("/api/plan", json={"medications": [{"name": "Metformin"}]})
+    body = response.get_json()
+
+    assert response.status_code == 200
+    assert body["food_guidance"] == [
+        {
+            "medication": "metformin",
+            "requirement": "with_food",
+            "status": "applied",
+            "note": "Taken with meals to reduce stomach upset.",
+            "source": "drug label guidance",
+        }
+    ]
+
+
+def test_create_plan_without_food_rules_returns_empty_food_guidance(client):
+    response = client.post("/api/plan", json={"medications": [{"name": "Aspirin"}]})
+
+    assert response.get_json()["food_guidance"] == []

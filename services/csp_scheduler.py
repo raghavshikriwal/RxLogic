@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from datetime import time
 
 from models.exceptions import ConstraintUnsatisfiableError
-from models.schemas import Interaction, Medication, ScheduleEntry, TimingPreference
+from models.schemas import DoseOrdering, Interaction, Medication, ScheduleEntry, TimingPreference
 
 # --- Scheduling window & granularity ------------------------------------
 
@@ -46,7 +46,7 @@ AWAY_FROM_FOOD_BUFFER_MINUTES = 60   # a with_food=False dose must fall at least
 
 # --- Spacing constraints ---------------------------------------------------
 
-MIN_INTERACTION_SEPARATION_MINUTES = 120     # separate interacting medications by >= 2h
+DEFAULT_INTERACTION_SEPARATION_MINUTES = 120  # applied to interacting pairs whose rule records no specific gap
 SAME_MEDICATION_SPACING_SLACK = 0.8          # leave slack so even spacing isn't forced to one exact grid point
 
 
@@ -87,8 +87,11 @@ class CSPScheduler:
         - same-medication spacing: doses of one medication must be spread
           across the day rather than clustered together.
         - interaction separation: medication pairs flagged by the rule
-          engine must have their doses separated by at least
-          MIN_INTERACTION_SEPARATION_MINUTES.
+          engine must have their doses separated by at least that pair's
+          own `separation_minutes`, or DEFAULT_INTERACTION_SEPARATION_MINUTES
+          when the rule records none. Pairs where dose order matters carry
+          an order-aware `DoseOrdering` instead (safe only >= N min after,
+          or >= M min before, the anchor drug's dose).
     """
 
     def __init__(
@@ -97,16 +100,45 @@ class CSPScheduler:
         interactions: list[Interaction] | None = None,
     ):
         self.medications = medications
-        self.interacting_pairs: set[frozenset[str]] = {
-            frozenset({i.medication_a.lower(), i.medication_b.lower()})
-            for i in (interactions or [])
-        }
+        self.pair_separation: dict[frozenset[str], int] = self._build_pair_separation(
+            interactions or []
+        )
+        self.pair_ordering: dict[frozenset[str], list[DoseOrdering]] = self._build_pair_ordering(
+            interactions or []
+        )
         self.variables: list[DoseVariable] = self._build_variables()
         self.domains: dict[str, Domain] = {
             var.name: self._initial_domain(var) for var in self.variables
         }
 
     # -- setup ------------------------------------------------------------
+
+    @staticmethod
+    def _build_pair_separation(interactions: list[Interaction]) -> dict[frozenset[str], int]:
+        """Symmetric gap (minutes) per interacting pair. If several rules flag
+        the same pair, the strictest (largest) gap wins. A pair governed by an
+        order-aware rule gets no default gap: its ordering is its spacing rule."""
+        separation: dict[frozenset[str], int] = {}
+        for interaction in interactions:
+            gap = interaction.separation_minutes
+            if gap is None and interaction.ordering is None:
+                gap = DEFAULT_INTERACTION_SEPARATION_MINUTES
+            if gap is None:
+                continue
+            pair = frozenset({interaction.medication_a.lower(), interaction.medication_b.lower()})
+            separation[pair] = max(gap, separation.get(pair, 0))
+        return separation
+
+    @staticmethod
+    def _build_pair_ordering(interactions: list[Interaction]) -> dict[frozenset[str], list[DoseOrdering]]:
+        """Order-aware rules per interacting pair; every one of them must hold."""
+        ordering: dict[frozenset[str], list[DoseOrdering]] = {}
+        for interaction in interactions:
+            if interaction.ordering is None:
+                continue
+            pair = frozenset({interaction.medication_a.lower(), interaction.medication_b.lower()})
+            ordering.setdefault(pair, []).append(interaction.ordering)
+        return ordering
 
     def _build_variables(self) -> list[DoseVariable]:
         variables: list[DoseVariable] = []
@@ -149,23 +181,40 @@ class CSPScheduler:
         window = DAY_END_MINUTES - DAY_START_MINUTES
         return int((window / dose_count) * SAME_MEDICATION_SPACING_SLACK)
 
-    def _min_gap_between(self, var_a: DoseVariable, var_b: DoseVariable) -> int | None:
-        """Returns the required minimum gap (minutes) between two variables,
-        or None if no spacing constraint applies to this pair."""
+    def _constrained(self, var_a: DoseVariable, var_b: DoseVariable) -> bool:
+        """True if any spacing constraint links these two variables."""
         if var_a.medication == var_b.medication:
-            return self._same_medication_min_gap(var_a.medication)
-        if frozenset({var_a.medication, var_b.medication}) in self.interacting_pairs:
-            return MIN_INTERACTION_SEPARATION_MINUTES
-        return None
+            return True
+        pair = frozenset({var_a.medication, var_b.medication})
+        return pair in self.pair_separation or pair in self.pair_ordering
+
+    def _compatible(self, var_a: DoseVariable, time_a: int, var_b: DoseVariable, time_b: int) -> bool:
+        """The single pairwise constraint check, shared by consistency
+        checking and forward checking: do these two dose times satisfy
+        every spacing rule that links them?"""
+        if var_a.medication == var_b.medication:
+            return abs(time_a - time_b) >= self._same_medication_min_gap(var_a.medication)
+
+        pair = frozenset({var_a.medication, var_b.medication})
+        gap = self.pair_separation.get(pair)
+        if gap is not None and abs(time_a - time_b) < gap:
+            return False
+
+        for ordering in self.pair_ordering.get(pair, ()):
+            if var_a.medication == ordering.anchor:
+                allowed = ordering.allows(anchor_minutes=time_a, other_minutes=time_b)
+            else:
+                allowed = ordering.allows(anchor_minutes=time_b, other_minutes=time_a)
+            if not allowed:
+                return False
+        return True
 
     def _consistent(self, var: DoseVariable, value: int, assignment: dict[str, int]) -> bool:
         by_name = {v.name: v for v in self.variables}
-        for other_name, other_value in assignment.items():
-            other_var = by_name[other_name]
-            min_gap = self._min_gap_between(var, other_var)
-            if min_gap is not None and abs(value - other_value) < min_gap:
-                return False
-        return True
+        return all(
+            self._compatible(var, value, by_name[other_name], other_value)
+            for other_name, other_value in assignment.items()
+        )
 
     # -- search: backtracking + forward checking -----------------------------
 
@@ -227,11 +276,12 @@ class CSPScheduler:
             if other.name in assignment or other.name == var.name:
                 continue
 
-            min_gap = self._min_gap_between(var, other)
-            if min_gap is None:
+            if not self._constrained(var, other):
                 continue
 
-            new_domains[other.name] = [t for t in new_domains[other.name] if abs(t - value) >= min_gap]
+            new_domains[other.name] = [
+                t for t in new_domains[other.name] if self._compatible(var, value, other, t)
+            ]
             if not new_domains[other.name]:
                 return None
 
@@ -253,11 +303,33 @@ class CSPScheduler:
             )
         return CSPResult(entries=entries)
 
+    def _interaction_notes(self, var: DoseVariable) -> list[str]:
+        """One human-readable spacing note per interaction rule `var` is in,
+        sorted by partner then text so explanations are deterministic."""
+        notes: list[tuple[str, str]] = []
+        for pair, gap in self.pair_separation.items():
+            if var.medication in pair:
+                partner = next(iter(pair - {var.medication}))
+                notes.append((partner, f"kept >= {gap} min from {partner} (interaction)"))
+        for pair, orderings in self.pair_ordering.items():
+            if var.medication not in pair:
+                continue
+            partner = next(iter(pair - {var.medication}))
+            for ordering in orderings:
+                window = f">= {ordering.after_minutes} min after"
+                early = f">= {ordering.before_minutes} min before"
+                if var.medication == ordering.anchor:
+                    text = f"{partner} kept {window} this dose or {early} it (interaction)"
+                else:
+                    text = f"kept {window} {ordering.anchor} or {early} it (interaction)"
+                notes.append((partner, text))
+        return [text for _, text in sorted(notes)]
+
     def _constraint_ids(self, var: DoseVariable) -> list[str]:
         ids = [f"timing_preference:{var.timing_preference.value}"]
         if var.with_food is not None:
             ids.append(f"with_food:{var.with_food}")
-        if any(var.medication in pair for pair in self.interacting_pairs):
+        if self._interaction_notes(var):
             ids.append("interaction_separation")
         return ids
 
@@ -271,6 +343,5 @@ class CSPScheduler:
             parts.append("kept near a meal time (with_food=True)")
         elif var.with_food is False:
             parts.append("kept away from meal times (with_food=False)")
-        if any(var.medication in pair for pair in self.interacting_pairs):
-            parts.append(f"spaced >= {MIN_INTERACTION_SEPARATION_MINUTES} min from an interacting medication")
+        parts.extend(self._interaction_notes(var))
         return ", ".join(parts) + "."

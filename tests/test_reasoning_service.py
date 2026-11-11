@@ -16,7 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import pytest
 
 from models.exceptions import InsufficientDataError, UnknownMedicationError
-from models.schemas import EvidenceStrength, Medication, Severity
+from models.schemas import EvidenceStrength, FoodStatus, Medication, Severity
+from services.csp_scheduler import AWAY_FROM_FOOD_BUFFER_MINUTES, MEAL_TIMES_MINUTES, WITH_FOOD_TOLERANCE_MINUTES
 from services.reasoning_service import ReasoningService, generate_daily_plan
 
 
@@ -217,3 +218,39 @@ def test_exact_names_produce_no_resolutions():
     plan = generate_daily_plan([Medication(name="Metformin")])
 
     assert plan.resolutions == []
+
+
+# ---------------------------------------------------------------------------
+# Per-drug food rules
+# ---------------------------------------------------------------------------
+
+def _minutes(entry) -> int:
+    return entry.scheduled_time.hour * 60 + entry.scheduled_time.minute
+
+
+def test_with_food_rule_places_doses_near_meals_when_user_left_it_open():
+    plan = generate_daily_plan([Medication(name="Metformin", frequency_per_day=2)])
+
+    for entry in plan.entries:
+        assert any(abs(_minutes(entry) - meal) <= WITH_FOOD_TOLERANCE_MINUTES for meal in MEAL_TIMES_MINUTES)
+    assert plan.food_guidance[0].status == FoodStatus.APPLIED
+
+
+def test_empty_stomach_rule_keeps_doses_away_from_meals():
+    plan = generate_daily_plan([Medication(name="Levothyroxine")])
+
+    for entry in plan.entries:
+        assert all(abs(_minutes(entry) - meal) >= AWAY_FROM_FOOD_BUFFER_MINUTES for meal in MEAL_TIMES_MINUTES)
+
+
+def test_conflicting_user_choice_wins_and_is_reported():
+    plan = generate_daily_plan([Medication(name="Levothyroxine", with_food=True)])
+
+    assert any(abs(_minutes(plan.entries[0]) - meal) <= WITH_FOOD_TOLERANCE_MINUTES for meal in MEAL_TIMES_MINUTES)
+    assert plan.food_guidance[0].status == FoodStatus.CONFLICTS_WITH_INPUT
+
+
+def test_plan_without_any_food_rule_has_no_food_guidance():
+    plan = generate_daily_plan([Medication(name="Aspirin")])
+
+    assert plan.food_guidance == []

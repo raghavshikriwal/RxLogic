@@ -2,6 +2,8 @@
 Top-level reasoning service -- the single entry point into the symbolic core.
 
 Wires together the three independent reasoning stages behind one call:
+    0. FoodRules.apply()                -> fills open meal constraints from
+                                            per-drug food rules
     1. RuleEngine.check_interactions()  -> flags known interaction pairs
     2. refine_confidence()              -> fuzzy-refines each interaction's
                                             confidence score (Section 4.1
@@ -23,6 +25,7 @@ from dataclasses import replace
 
 from models.exceptions import InsufficientDataError, UnknownMedicationError
 from models.schemas import DailyPlan, Medication
+from services.food_rules import FoodRules
 from services.name_normalizer import NameNormalizer
 from services.planner import Planner
 from services.rule_engine import RuleEngine
@@ -54,12 +57,14 @@ class ReasoningService:
         self,
         rule_engine: RuleEngine | None = None,
         name_normalizer: NameNormalizer | None = None,
+        food_rules: FoodRules | None = None,
     ):
         # Allow injection for testing; default to the curated knowledge base.
         self.rule_engine = rule_engine or RuleEngine()
         self.name_normalizer = name_normalizer or NameNormalizer.from_file(
             self.rule_engine.medication_rxcuis
         )
+        self.food_rules = food_rules or FoodRules()
 
     def generate_daily_plan(self, medications: list[Medication]) -> DailyPlan:
         """
@@ -94,10 +99,14 @@ class ReasoningService:
         if not coverage.is_complete:
             raise UnknownMedicationError(*coverage.unchecked)
 
+        # Per-drug meal rules fill in a with_food the user left open (and flag
+        # conflicts with one they set), before the scheduler sees the list.
+        medications, food_guidance = self.food_rules.apply(medications)
+
         interactions = self.rule_engine.check_interactions(medications)
         interactions = refine_confidence(interactions, total_medication_count=len(medications))
         plan = Planner(medications, interactions).build_plan()
-        return replace(plan, coverage=coverage, resolutions=resolutions)
+        return replace(plan, coverage=coverage, resolutions=resolutions, food_guidance=food_guidance)
 
 
 def generate_daily_plan(medications: list[Medication]) -> DailyPlan:

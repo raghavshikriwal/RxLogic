@@ -59,25 +59,32 @@ RxLogic is layered so the symbolic reasoning core has no dependency on the neura
                                      ▼
                  ┌─────────────────────────────────────────────┐
                  │   Layer 2 · Knowledge Layer (Symbolic)       │
-                 │   knowledge/interaction_rules.json            │
-                 │   services/drug_data_client.py                │
-                 │   Curated interaction rules + cached RxNav /  │
-                 │   openFDA lookups (RxCUI resolution)          │
+                 │   knowledge/interaction_rules.json           │
+                 │   knowledge/food_rules.json                  │
+                 │   knowledge/drug_aliases.json                │
+                 │   services/drug_data_client.py               │
+                 │   Curated interaction, meal and brand-name   │
+                 │   rules + cached RxNav / openFDA lookups     │
                  └───────────────────┬───────────────────────────┘
                                      ▼
                  ┌─────────────────────────────────────────────┐
                  │   Layer 3 · Reasoning Core (Symbolic)        │
-                 │   services/reasoning_service.py  (orchestrator)│
-                 │                                                │
-                 │   1. rule_engine.py    forward-chaining        │
-                 │      → flags known interaction pairs           │
-                 │   2. uncertainty.py    Mamdani fuzzy inference │
-                 │      → refines each flag's confidence          │
-                 │   3. planner.py        goal-stack planning     │
-                 │      └─ csp_scheduler.py  backtracking + MRV   │
-                 │         + forward checking → dose times        │
+                 │   services/reasoning_service.py (orchestrator)│
+                 │                                              │
+                 │   0. name_normalizer.py  brand/typo → generic │
+                 │      → unknown drugs are rejected (fail-safe) │
+                 │   1. food_rules.py       per-drug meal rules  │
+                 │      → fills open with_food, flags conflicts  │
+                 │   2. rule_engine.py      forward-chaining     │
+                 │      → flags known interaction pairs          │
+                 │   3. uncertainty.py      Mamdani fuzzy        │
+                 │      → refines each flag's confidence         │
+                 │   4. planner.py          goal-stack planning  │
+                 │      └─ csp_scheduler.py  backtracking + MRV  │
+                 │         + forward checking → dose times       │
                  └───────────────────┬───────────────────────────┘
-                                     │  DailyPlan (entries, warnings, goal_trace)
+                                     │  DailyPlan (entries, warnings, goal_trace,
+                                     │  coverage, name_resolutions, food_guidance)
                                      ▼
                  ┌─────────────────────────────────────────────┐
                  │   Layer 4 · Application Layer                │
@@ -97,21 +104,24 @@ RxLogic is layered so the symbolic reasoning core has no dependency on the neura
 
 1. User submits medications — either structured JSON (`POST /api/plan`) or free text (`POST /api/plan/nl`).
 2. If free text: the LLM parser extracts a structured medication list and validates it against the schema.
-3. The rule engine forward-chains over every medication pair, flagging known interactions.
-4. The uncertainty layer refines each flagged interaction's confidence via fuzzy inference over severity and source reliability.
-5. The CSP scheduler encodes dose timing, meal windows, and interaction-driven separation as constraints, and solves for a feasible schedule via backtracking search with MRV variable ordering and forward checking.
-6. The planner resolves the goal stack (highest-severity medications committed first) against the CSP solution and records the resolution order.
-7. The API serializes the plan and best-effort logs it to the database — a logging failure never turns a successful plan into a 500.
-8. The response includes the schedule, every warning, and a full `goal_trace` — nothing is a black box.
+3. Names are normalized: brand names and near-miss spellings are mapped to generics (`Coumadin → warfarin`, `asprin → aspirin`), and duplicate entries for one drug are merged.
+4. Coverage is checked. Any drug the knowledge base doesn't cover raises `unknown_medication` (422) listing every unrecognized drug, instead of producing a plan that looks all-clear.
+5. Per-drug food rules fill in any `with_food` the user left open (metformin with food, levothyroxine on an empty stomach). A choice the user made themselves is never overridden; a conflict with the rule is reported.
+6. The rule engine forward-chains over every medication pair, flagging known interactions with their severity, evidence strength and, where recorded, a pair-specific separation time.
+7. The uncertainty layer refines each flagged interaction's confidence via fuzzy inference over evidence strength and source reliability (severity is deliberately not an input: how dangerous is not how sure).
+8. The CSP scheduler encodes dose timing, meal windows, and interaction-driven separation as constraints, and solves for a feasible schedule via backtracking search with MRV variable ordering and forward checking. Each interacting pair is separated by its own gap, or a 120-minute default when its rule records none; where dose order matters (aspirin and ibuprofen), the rule is order-aware: the other drug is safe only a set time after, or a longer time before, the anchor drug's dose.
+9. The planner resolves the goal stack (severity first, then evidence strength) against the CSP solution and records the resolution order.
+10. The API serializes the plan and best-effort logs it to the database — a logging failure never turns a successful plan into a 500.
+11. The response includes the schedule, every warning, a `goal_trace`, a coverage summary, the name corrections made, and the food guidance applied — nothing is a black box.
 
 ## 3. Syllabus Alignment
 
 | Unit | Topic Area | Where It Lives |
 |---|---|---|
 | 1 | Problem spaces, production systems | Scheduling framed as a state-space problem: state = current schedule, operators = placing/shifting a dose, goal test = zero conflicts |
-| 2 | Search & CSP techniques | `services/csp_scheduler.py` — backtracking search, MRV heuristic, forward checking |
-| 3 | Knowledge representation, forward chaining | `services/rule_engine.py` + `knowledge/interaction_rules.json` — curated predicate-style interaction facts, forward-chained per medication pair |
-| 4 | Reasoning under uncertainty | `services/uncertainty.py` — Mamdani fuzzy inference system over severity and source reliability |
+| 2 | Search & CSP techniques | `services/csp_scheduler.py` — backtracking search, MRV heuristic, forward checking; per-pair separation constraints |
+| 3 | Knowledge representation, forward chaining | `services/rule_engine.py` + `knowledge/interaction_rules.json` — curated predicate-style interaction facts, forward-chained per medication pair; `services/food_rules.py` + `knowledge/food_rules.json` — per-drug meal rules |
+| 4 | Reasoning under uncertainty | `services/uncertainty.py` — Mamdani fuzzy inference system over evidence strength and source reliability |
 | 5 | Planning, goal-stack planning, intelligent agents | `services/planner.py` — goal-stack assembly, risk-ordered; the system as a whole follows perceive → reason → act → explain |
 
 ## 4. Tech Stack
@@ -136,12 +146,14 @@ RxLogic-main/
 ├── app.py                       # Flask application factory
 ├── extensions.py                # Shared extension instances (rate limiter)
 ├── models/
-│   ├── schemas.py                # Medication, Interaction, ScheduleEntry, DailyPlan
+│   ├── schemas.py                # Medication, Interaction, ScheduleEntry, Coverage, NameResolution, FoodGuidance, DailyPlan
 │   ├── exceptions.py             # Typed domain exceptions (fail-safe, never bare Exception)
 │   └── database.py               # SQLAlchemy engine, PlanLog model
 ├── services/
 │   ├── llm_parser.py             # NL → structured Medication (Ollama, optional)
-│   ├── rule_engine.py            # Forward-chaining interaction detection
+│   ├── name_normalizer.py        # Brand name / typo → generic, shown to the user
+│   ├── food_rules.py             # Per-drug meal rules → with_food constraint
+│   ├── rule_engine.py            # Forward-chaining interaction detection + coverage check
 │   ├── uncertainty.py            # Fuzzy-logic confidence refinement
 │   ├── csp_scheduler.py          # Dose-timing CSP: backtracking + MRV + forward checking
 │   ├── planner.py                # Goal-stack planning → final DailyPlan
@@ -151,14 +163,17 @@ RxLogic-main/
 ├── routes/
 │   └── api.py                    # Thin REST controllers, JSON ↔ typed schema boundary
 ├── knowledge/
-│   ├── interaction_rules.json     # Curated interaction rule base + resolved RxCUIs
+│   ├── interaction_rules.json     # Curated interaction rules (severity, evidence, separation) + resolved RxCUIs
+│   ├── food_rules.json            # Curated per-drug meal rules
+│   ├── drug_aliases.json          # Curated brand names and spelling variants
 │   └── cache/                     # Cached RxNav/openFDA responses (regenerable)
+├── alembic/                        # Database migrations (see §7.1)
 ├── scripts/
 │   └── build_knowledge_base.py    # One-off script to resolve seed medications to RxCUIs
-├── tests/                          # 10 test modules — every reasoning stage + API + DB
+├── tests/                          # 13 test modules — every reasoning stage + API + DB
 ├── frontend/                       # React + Vite + Tailwind demo UI
 │   └── src/
-│       ├── components/             # MedicationForm, ScheduleTimeline, WarningsPanel, GoalTrace, Hero, NavBar
+│       ├── components/             # MedicationForm, ScheduleTimeline, WarningsPanel, CoverageSummary, NameCorrections, FoodGuidance, GoalTrace, PlanResult, Hero, NavBar
 │       └── pages/                  # HomePage, HistoryPage
 ├── requirements.txt
 └── Procfile                        # gunicorn app:app
@@ -187,16 +202,27 @@ All routes are under `/api`, rate-limited per endpoint, and return a specific er
 }
 ```
 
-Returns a chronologically ordered schedule, every flagged interaction with its severity and confidence, and a `goal_trace` showing the exact order in which medications were resolved.
+Returns a JSON object with:
+
+| Field | Contents |
+|---|---|
+| `entries` | Chronological schedule: `medication`, `scheduled_time`, `reasoning`, `constraint_ids` |
+| `warnings` | Each flagged interaction: `severity`, `evidence`, `confidence`, `separation_minutes` and `ordering` (each `null` when the rule records none), `rule_id`, `description`, `source` |
+| `goal_trace` | The exact order in which medications were resolved |
+| `coverage` | `checked`, `total`, `is_complete`, `unchecked`, `summary` (e.g. "6 of 6 drugs checked") |
+| `name_resolutions` | Each name changed before checking: `input_name`, `resolved_to`, `match` (`alias` or `fuzzy`), `score` |
+| `food_guidance` | Each drug with a meal rule: `requirement`, `status` (`applied`, `matches_input`, `conflicts_with_input`, `informational`), `note` |
+
+`severity` (how dangerous) and `evidence` (how well documented) are separate fields on purpose; `confidence` is derived from evidence, not severity.
 
 **Error responses**, all `RxLogicError` subclasses mapped to specific HTTP codes:
 
 | Error | Status | Cause |
 |---|---|---|
 | `schema_validation_error` | 400 | Malformed request body or LLM output that fails schema validation |
-| `unknown_medication` | 422 | Medication can't be resolved against the knowledge base |
+| `unknown_medication` | 422 | One or more medications can't be matched to the knowledge base, even after name normalization. The response lists every one in `unknown_medications`; no plan is returned |
 | `insufficient_data` | 422 | Empty medication list — nothing to reason about |
-| `no_feasible_schedule` | 422 | CSP has no solution under the given constraints |
+| `no_feasible_schedule` | 422 | CSP has no solution under the given constraints (for example, too many doses of one drug to fit its required separation or meal windows). The scheduler refuses rather than shortening a gap |
 | `external_api_error` | 502 | RxNav / openFDA drug-data lookup failed |
 | `llm_api_error` | 502 | Ollama (LLM parser) unreachable or errored — kept distinct from `external_api_error` so the client can point the user toward structured input specifically, rather than a generic "try again" |
 
@@ -211,7 +237,7 @@ pip install -r requirements.txt
 python app.py                     # serves on http://localhost:5000
 ```
 
-By default the backend uses an in-memory SQLite database. To use PostgreSQL, set `DATABASE_URL` in `.env` (a Neon `postgres://` URL is normalized to `postgresql://` automatically).
+By default the backend uses an in-memory SQLite database. To use PostgreSQL, set `DATABASE_URL` in `.env` (a Neon `postgres://` URL is normalized to `postgresql://` automatically). Tables are created automatically on startup; for an existing database, apply schema changes with `alembic upgrade head` (migrations live in `alembic/versions/`).
 
 ### 7.2 Frontend
 
@@ -266,8 +292,11 @@ This section is treated as a first-class part of the system design, not an after
 
 - **This is an educational demonstrator**, illustrating neuro-symbolic reasoning applied to a safety-adjacent domain. It is not a substitute for professional medical or pharmacist advice and is not intended for real-world medication decisions.
 - The interaction rule base is **curated, not exhaustive** — it currently covers 12 rules across 10 seed medications ([`knowledge/interaction_rules.json`](knowledge/interaction_rules.json)) and does not account for patient-specific factors such as age, weight, renal or hepatic function, or pregnancy.
+- **Curated values are unreviewed.** The evidence ratings, the one order-aware spacing rule (ibuprofen at least 30 minutes after, or 8 hours before, aspirin) and the per-drug meal rules in [`knowledge/food_rules.json`](knowledge/food_rules.json) were assigned from general pharmacology and label knowledge, not by a clinician. Drugs whose meal guidance is conditional or formulation-dependent have no food rule and are scheduled without a meal constraint.
+- **Name matching is best-effort.** Brand names come from a curated alias list. Near-miss spellings are matched conservatively and always shown to the user to confirm, and anything not matched confidently is rejected as unknown rather than guessed.
+- **Plan history is partial.** Logged plans store the schedule, warnings and goal trace; coverage, name corrections and food guidance are returned live but not persisted.
 - **RxNav's live Drug-Drug Interaction API was discontinued by NLM in January 2024.** RxLogic only uses RxNav for RxCUI resolution (still live) and openFDA for label data; interaction *rules* themselves are manually curated, sourced from openFDA labeling and clinical literature, not pulled live.
-- Unknown medications or insufficient rule coverage produce an explicit `insufficient_data` / `unknown_medication` response — **never a silent guess or false negative.**
+- Unknown medications or insufficient rule coverage produce an explicit `insufficient_data` / `unknown_medication` response — **never a silent guess or false negative.** Every plan also reports a coverage summary, so an empty warnings list is never mistaken for "everything was checked".
 - Every interaction warning and every scheduling decision is traceable to the specific rule or constraint that produced it (`rule_id`, `constraint_ids`, `goal_trace`) — the system's reasoning can be audited, not just trusted.
 - A visible disclaimer should be shown in the application UI and stated upfront in any demo or presentation of this project.
 
@@ -278,7 +307,7 @@ pytest                            # run the full suite
 pytest --cov=services --cov=models --cov=routes   # with coverage
 ```
 
-Ten test modules cover the rule engine, uncertainty layer, CSP scheduler, planner, LLM parser, drug data client, database layer, API routes, and a full end-to-end pipeline run — each reasoning module is independently testable with zero dependency on the LLM or the API layer, matching the architectural separation above.
+Thirteen test modules cover the schemas, rule engine, name normalizer, food rules, uncertainty layer, CSP scheduler, planner, reasoning service, LLM parser, drug data client, database layer, API routes, and a full end-to-end pipeline run — each reasoning module is independently testable with zero dependency on the LLM or the API layer, matching the architectural separation above.
 
 ### Live Ollama verification (manual)
 
@@ -302,13 +331,17 @@ With both in place, all three cases in `live_llm_smoke_test.py` complete cleanly
 
 - **Strict schema boundary.** `models/schemas.py`'s frozen dataclasses are the *only* thing that crosses layer boundaries. The reasoning core never imports SQLAlchemy; the persistence layer never imports the reasoning core's types; the LLM never talks to the reasoning engine with raw text.
 - **Fail-safe over confident-but-wrong.** Every failure mode — unknown medication, unsatisfiable constraints, malformed LLM output, empty input — raises a specific typed exception from `models/exceptions.py`, never a bare `Exception`.
-- **No black-box output.** Every interaction is traceable to a `rule_id`; every dose placement carries `constraint_ids` and a human-readable `reasoning` string; every plan carries a `goal_trace` of the exact resolution order.
+- **No black-box output.** Every interaction is traceable to a `rule_id`; every dose placement carries `constraint_ids` and a human-readable `reasoning` string; every plan carries a `goal_trace` of the exact resolution order, and every name correction and food rule applied is shown to the user instead of being applied silently.
 - **The LLM is provably optional.** Remove `services/llm_parser.py` entirely and `services/reasoning_service.py` still fully works via structured input — this is enforced by the module boundary, not just documentation.
 - **Type hints, dataclasses, and named constants throughout** — no magic numbers, no untyped dicts passed between layers.
 
 ## 11. Future Scope
 
-- Expand the knowledge base with a larger, clinician-reviewed interaction dataset.
+- Expand the knowledge base with a larger, clinician-reviewed interaction dataset, including a clinical review of the evidence ratings, separation times and food rules.
+- Partial coverage: return a plan for the drugs that are known, with the unknown ones clearly flagged as unchecked (today any unknown drug rejects the whole request).
+- Order-aware spacing rules for more pairs, once a clinician has confirmed which pairs depend on dose order (today only aspirin + ibuprofen does).
+- Formulation-aware food rules (for example, immediate- vs extended-release).
+- Persist coverage, name corrections and food guidance in the plan log.
 - Add patient-specific parameters (age, weight, renal function) to the reasoning layer.
 - Extend the fuzzy uncertainty layer into a full dynamic Bayesian network for time-varying risk as medications are added or removed.
 - Add a notification/reminder subsystem for real adherence tracking (explicitly out of scope for this build).

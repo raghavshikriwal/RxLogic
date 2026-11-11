@@ -3,9 +3,10 @@ import WarningsPanel from './WarningsPanel.jsx';
 import GoalTrace from './GoalTrace.jsx';
 import CoverageSummary from './CoverageSummary.jsx';
 import NameCorrections from './NameCorrections.jsx';
+import FoodGuidance from './FoodGuidance.jsx';
 
 /**
- * @param {{entries: object[], warnings: object[], goal_trace: string[], coverage?: object | null, name_resolutions?: object[]}} plan
+ * @param {{entries: object[], warnings: object[], goal_trace: string[], coverage?: object | null, name_resolutions?: object[], food_guidance?: object[]}} plan
  *   - the serialized DailyPlan from /api/plan or /api/plan/nl.
  */
 export default function PlanResult({ plan }) {
@@ -30,6 +31,7 @@ export default function PlanResult({ plan }) {
             <NameCorrections resolutions={plan.name_resolutions} />
             <CoverageSummary coverage={plan.coverage} />
             <WarningsPanel warnings={plan.warnings} />
+            <FoodGuidance guidance={plan.food_guidance} />
           </div>
         </div>
       </div>
