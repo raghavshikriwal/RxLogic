@@ -8,29 +8,31 @@ const NAV_LINKS = [
   { to: '/history', label: 'History', end: false },
 ];
 
-const MOBILE_LINKS = [...NAV_LINKS, { to: '/#build-a-plan', label: 'New plan', end: false }];
-
+const MOBILE_LINKS = [...NAV_LINKS, { to: '/#build-a-plan', label: 'Create a plan', end: false }];
 const DESKTOP_QUERY = '(min-width: 768px)';
 
+function closeOnNavigation(setMenuOpen) {
+  return () => setMenuOpen(false);
+}
+
 /**
- * Global navigation.
- * - Translucent, blurred bar that gains a hairline once the page scrolls.
- * - Below `md`, links move into a full-screen menu with a morphing toggle.
- *   The menu closes on route change, Escape, and when the viewport widens;
- *   page scroll is locked while it is open.
+ * Responsive application navigation.
+ * Keeps the existing routes and destinations while improving active states,
+ * mobile-menu dismissal, and the visual hierarchy of the app shell.
  */
 export default function NavBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const scrolled = useScrolled();
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
 
   useEffect(() => {
     setMenuOpen(false);
-  }, [pathname]);
+  }, [pathname, hash]);
 
   useEffect(() => {
     if (!menuOpen) return undefined;
 
+    const previousOverflow = document.body.style.overflow;
     const onKeyDown = (event) => {
       if (event.key === 'Escape') setMenuOpen(false);
     };
@@ -44,42 +46,32 @@ export default function NavBar() {
     media.addEventListener('change', onChange);
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', onKeyDown);
       media.removeEventListener('change', onChange);
     };
   }, [menuOpen]);
 
-  const barSurface =
-    scrolled || menuOpen
-      ? 'border-hairline/70 bg-paper/80 backdrop-blur-xl backdrop-saturate-[180%]'
-      : 'border-transparent bg-paper/0';
+  const surfaceClass = scrolled || menuOpen ? 'app-header--scrolled' : '';
 
   return (
-    <header
-      className={`sticky top-0 z-50 h-nav border-b transition-[background-color,border-color] duration-400 ease-apple ${barSurface}`}
-    >
-      <div className="mx-auto flex h-full max-w-page items-center justify-between px-24">
-        <Link
-          to="/"
-          aria-label="RxLogic home"
-          className="flex items-center gap-8 font-display text-caption font-semibold text-ink"
-        >
-          <Logo />
-          RxLogic
+    <header className={`app-header ${surfaceClass}`}>
+      <div className="app-header__inner">
+        <Link to="/" aria-label="RxLogic home" className="app-brand">
+          <Logo className="app-brand__mark" />
+          <span className="app-brand__name">RxLogic</span>
+          <span className="app-brand__descriptor">Medication reasoning</span>
         </Link>
 
-        <nav className="hidden items-center gap-32 md:flex" aria-label="Primary">
-          <ul className="flex items-center gap-32">
+        <nav className="app-nav app-nav--desktop" aria-label="Primary navigation">
+          <ul className="app-nav__links">
             {NAV_LINKS.map(({ to, label, end }) => (
               <li key={to}>
                 <NavLink
                   to={to}
                   end={end}
                   className={({ isActive }) =>
-                    `text-micro transition-colors duration-300 ease-apple ${
-                      isActive ? 'text-ink' : 'text-deep-gray hover:text-ink'
-                    }`
+                    `app-nav__link${isActive ? ' is-active' : ''}`
                   }
                 >
                   {label}
@@ -87,63 +79,54 @@ export default function NavBar() {
               </li>
             ))}
           </ul>
-          <Link
-            to="/#build-a-plan"
-            className="rounded-pill bg-electric-blue px-12 py-4 text-micro font-medium text-paper transition-colors duration-300 ease-apple hover:bg-blue-hover active:bg-blue-press"
-          >
+          <Link to="/#build-a-plan" className="app-nav__action">
+            <span aria-hidden="true">＋</span>
             New plan
           </Link>
         </nav>
 
         <button
           type="button"
-          className="-mr-8 flex h-44 w-44 items-center justify-center md:hidden"
-          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          className={`app-menu-toggle${menuOpen ? ' is-open' : ''}`}
+          aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={menuOpen}
-          aria-controls="mobile-menu"
+          aria-controls="mobile-navigation"
           onClick={() => setMenuOpen((open) => !open)}
         >
-          <span className="relative block h-12 w-20" aria-hidden="true">
-            <span
-              className={`absolute left-0 h-[1.5px] w-20 bg-ink transition-all duration-400 ease-apple ${
-                menuOpen ? 'top-[5px] rotate-45' : 'top-0'
-              }`}
-            />
-            <span
-              className={`absolute left-0 h-[1.5px] w-20 bg-ink transition-all duration-400 ease-apple ${
-                menuOpen ? 'top-[5px] -rotate-45' : 'top-[10px]'
-              }`}
-            />
-          </span>
+          <span />
+          <span />
         </button>
       </div>
 
       <div
-        id="mobile-menu"
-        className={`fixed inset-x-0 top-[var(--nav-height)] h-[calc(100dvh-var(--nav-height))] bg-paper/95 backdrop-blur-xl transition-[opacity,visibility] duration-400 ease-apple md:hidden ${
-          menuOpen ? 'visible opacity-100' : 'invisible opacity-0'
-        }`}
+        id="mobile-navigation"
+        className={`app-mobile-menu${menuOpen ? ' is-open' : ''}`}
+        aria-hidden={!menuOpen}
       >
-        <nav className="px-24 pt-24" aria-label="Mobile">
+        <nav className="app-mobile-menu__content" aria-label="Mobile navigation">
+          <p className="app-mobile-menu__eyebrow">Navigate RxLogic</p>
           <ul>
             {MOBILE_LINKS.map(({ to, label, end }, index) => (
-              <li
-                key={to}
-                className={`border-b border-hairline/70 transition-[opacity,transform] duration-600 ease-apple-out ${
-                  menuOpen ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0'
-                }`}
-                style={{ transitionDelay: menuOpen ? `${80 + index * 60}ms` : '0ms' }}
-              >
+              <li key={to}>
                 <NavLink
                   to={to}
                   end={end}
-                  className="block py-16 font-display text-body-lg font-semibold text-ink"
+                  tabIndex={menuOpen ? 0 : -1}
+                  onClick={closeOnNavigation(setMenuOpen)}
+                  className={({ isActive }) =>
+                    `app-mobile-menu__link${isActive ? ' is-active' : ''}`
+                  }
+                  style={{ transitionDelay: menuOpen ? `${index * 55}ms` : '0ms' }}
                 >
-                  {label}
+                  <span>{label}</span>
+                  <span className="app-mobile-menu__arrow" aria-hidden="true">↗</span>
                 </NavLink>
               </li>
             ))}
           </ul>
+          <p className="app-mobile-menu__note">
+            An educational demonstrator of explainable medication scheduling.
+          </p>
         </nav>
       </div>
     </header>

@@ -1,3 +1,4 @@
+
 import { useId, useState } from 'react';
 import { createPlan, createPlanFromText } from '../api.js';
 
@@ -9,54 +10,197 @@ const TIMING_OPTIONS = [
   { value: 'night', label: 'Night' },
 ];
 
-const EMPTY_MEDICATION = () => ({
-  key: crypto.randomUUID(),
-  name: '',
-  dosage_mg: '',
-  frequency_per_day: 1,
-  timing_preference: 'no_preference',
-  with_food: '',
-});
+const FOOD_OPTIONS = [
+  { value: '', label: 'Not specified' },
+  { value: 'true', label: 'With food' },
+  { value: 'false', label: 'Without food' },
+];
 
-/** Strips the form's string-typed fields down to the JSON shape /api/plan expects. */
+function createMedication() {
+  return {
+    key: crypto.randomUUID(),
+    name: '',
+    dosage_mg: '',
+    frequency_per_day: '1',
+    timing_preference: 'no_preference',
+    with_food: '',
+  };
+}
+
+function hasInput(medication) {
+  return (
+    medication.name.trim() !== '' ||
+    medication.dosage_mg !== ''
+  );
+}
+
 function toPayload(medications) {
   return medications
-    .filter((m) => m.name.trim().length > 0)
-    .map((m) => ({
-      name: m.name.trim(),
-      dosage_mg: m.dosage_mg === '' ? null : Number(m.dosage_mg),
-      frequency_per_day: Number(m.frequency_per_day) || 1,
-      timing_preference: m.timing_preference,
-      with_food: m.with_food === '' ? null : m.with_food === 'true',
+    .filter((medication) => medication.name.trim() !== '')
+    .map((medication) => ({
+      name: medication.name.trim(),
+      dosage_mg:
+        medication.dosage_mg === ''
+          ? null
+          : Number(medication.dosage_mg),
+      frequency_per_day: Number(medication.frequency_per_day),
+      timing_preference: medication.timing_preference,
+      with_food:
+        medication.with_food === ''
+          ? null
+          : medication.with_food === 'true',
     }));
 }
 
-/**
- * @param {(plan: object) => void} onPlanReady - called with the DailyPlan
- *   response so the parent can render ScheduleTimeline / WarningsPanel.
- * @param {(error: import('../api.js').ApiError) => void} onError
- */
-export default function MedicationForm({ onPlanReady, onError }) {
+function validateMedications(medications) {
+  const errors = {};
+
+  const activeRows = medications.filter(hasInput);
+
+  if (activeRows.length === 0) {
+    return {
+      form: 'Please enter at least one medication.',
+      rows: {},
+    };
+  }
+
+  activeRows.forEach((medication) => {
+    const rowErrors = {};
+
+    const dosage =
+      medication.dosage_mg === ''
+        ? null
+        : Number(medication.dosage_mg);
+
+    const frequency = Number(
+      medication.frequency_per_day
+    );
+
+    if (!medication.name.trim()) {
+      rowErrors.name = 'Medication name is required.';
+    }
+
+    if (
+      dosage !== null &&
+      (!Number.isFinite(dosage) || dosage < 0)
+    ) {
+      rowErrors.dosage_mg = 'Enter a valid non-negative dosage.';
+    }
+
+    if (
+      !Number.isInteger(frequency) ||
+      frequency < 1 ||
+      frequency > 6
+    ) {
+      rowErrors.frequency_per_day =
+        'Enter a whole number between 1 and 6.';
+    }
+
+    if (Object.keys(rowErrors).length > 0) {
+      errors[medication.key] = rowErrors;
+    }
+  });
+
+  return {
+    form: Object.keys(errors).length
+      ? 'Please correct the highlighted fields.'
+      : '',
+    rows: errors,
+  };
+}
+
+export default function MedicationForm({
+  onPlanReady,
+  onError,
+}) {
   const [mode, setMode] = useState('structured');
-  const [medications, setMedications] = useState([EMPTY_MEDICATION()]);
+
+  const [medications, setMedications] = useState([
+    createMedication(),
+  ]);
+
   const [freeText, setFreeText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [validation, setValidation] = useState({
+    form: '',
+    rows: {},
+  });
+
   const headingId = useId();
 
   function updateMedication(key, field, value) {
-    setMedications((rows) => rows.map((row) => (row.key === key ? { ...row, [field]: value } : row)));
+    setMedications((rows) =>
+      rows.map((row) =>
+        row.key === key
+          ? { ...row, [field]: value }
+          : row
+      )
+    );
+
+    setValidation((current) => ({
+      form: '',
+      rows: {
+        ...current.rows,
+        [key]: {
+          ...current.rows[key],
+          [field]: '',
+        },
+      },
+    }));
   }
 
   function addMedication() {
-    setMedications((rows) => [...rows, EMPTY_MEDICATION()]);
+    setMedications((rows) => [
+      ...rows,
+      createMedication(),
+    ]);
   }
 
   function removeMedication(key) {
-    setMedications((rows) => (rows.length > 1 ? rows.filter((row) => row.key !== key) : rows));
+    setMedications((rows) =>
+      rows.length > 1
+        ? rows.filter((row) => row.key !== key)
+        : rows
+    );
+
+    setValidation((current) => {
+      const rows = { ...current.rows };
+      delete rows[key];
+
+      return {
+        ...current,
+        rows,
+      };
+    });
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (isSubmitting) return;
+
+    if (mode === 'structured') {
+      const result = validateMedications(medications);
+
+      setValidation(result);
+
+      if (result.form) return;
+    } else {
+      if (!freeText.trim()) {
+        setValidation({
+          form: 'Please describe your medication details.',
+          rows: {},
+        });
+        return;
+      }
+
+      setValidation({
+        form: '',
+        rows: {},
+      });
+    }
+
     setIsSubmitting(true);
     onError(null);
 
@@ -65,9 +209,10 @@ export default function MedicationForm({ onPlanReady, onError }) {
         mode === 'structured'
           ? await createPlan(toPayload(medications))
           : await createPlanFromText(freeText.trim());
+
       onPlanReady(plan);
-    } catch (err) {
-      onError(err);
+    } catch (error) {
+      onError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -75,31 +220,67 @@ export default function MedicationForm({ onPlanReady, onError }) {
 
   const canSubmit =
     mode === 'structured'
-      ? medications.some((m) => m.name.trim().length > 0)
+      ? medications.some(hasInput)
       : freeText.trim().length > 0;
 
   return (
-    <section id="build-a-plan" className="border-b border-fog bg-paper py-80">
+    <section
+      id="build-a-plan"
+      className="border-b border-fog bg-paper py-80"
+    >
       <div className="mx-auto max-w-page px-24">
-        <div className="flex flex-wrap items-end justify-between gap-24">
-          <h2 id={headingId} className="font-clarkson text-heading-sm text-obsidian">
-            Build a plan
-          </h2>
 
-          <div role="tablist" aria-label="Input mode" className="flex gap-8 rounded-full bg-fog p-8">
+        {/* Section heading */}
+
+        <div className="flex flex-wrap items-end justify-between gap-24">
+          <div>
+            <p className="mb-8 font-clarkson text-caption font-semibold uppercase tracking-wider text-teal">
+              Medication details
+            </p>
+
+            <h2
+              id={headingId}
+              className="font-clarkson text-heading-sm text-obsidian"
+            >
+              Build a plan
+            </h2>
+          </div>
+
+          {/* Input mode selector */}
+
+          <div
+            role="tablist"
+            aria-label="Medication input method"
+            className="flex gap-8 rounded-full bg-fog p-8"
+          >
             {[
-              { value: 'structured', label: 'Add medications' },
-              { value: 'free_text', label: 'Describe in words' },
+              {
+                value: 'structured',
+                label: 'Add medications',
+              },
+              {
+                value: 'free_text',
+                label: 'Describe in words',
+              },
             ].map((tab) => (
               <button
                 key={tab.value}
                 type="button"
                 role="tab"
                 aria-selected={mode === tab.value}
-                onClick={() => setMode(tab.value)}
+                onClick={() => {
+                  setMode(tab.value);
+
+                  setValidation({
+                    form: '',
+                    rows: {},
+                  });
+                }}
                 className={[
                   'rounded-full px-16 py-8 font-clarkson text-body-sm font-medium transition-colors duration-200 ease-editorial',
-                  mode === tab.value ? 'bg-obsidian text-paper' : 'text-ash hover:text-obsidian',
+                  mode === tab.value
+                    ? 'bg-obsidian text-paper'
+                    : 'text-ash hover:text-obsidian',
                 ].join(' ')}
               >
                 {tab.label}
@@ -108,24 +289,43 @@ export default function MedicationForm({ onPlanReady, onError }) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} aria-labelledby={headingId} className="mt-40">
+        {/* Form */}
+
+        <form
+          onSubmit={handleSubmit}
+          aria-labelledby={headingId}
+          noValidate
+          className="mt-40"
+        >
           {mode === 'structured' ? (
             <div className="flex flex-col gap-16">
-              {medications.map((med, index) => (
+
+              {medications.map((medication, index) => (
                 <MedicationRow
-                  key={med.key}
-                  medication={med}
+                  key={medication.key}
+                  medication={medication}
                   index={index}
                   canRemove={medications.length > 1}
-                  onChange={(field, value) => updateMedication(med.key, field, value)}
-                  onRemove={() => removeMedication(med.key)}
+                  errors={
+                    validation.rows[medication.key] || {}
+                  }
+                  onChange={(field, value) =>
+                    updateMedication(
+                      medication.key,
+                      field,
+                      value
+                    )
+                  }
+                  onRemove={() =>
+                    removeMedication(medication.key)
+                  }
                 />
               ))}
 
               <button
                 type="button"
                 onClick={addMedication}
-                className="self-start rounded-full border border-fog px-16 py-8 font-clarkson text-body-sm text-obsidian transition-colors duration-200 ease-editorial hover:border-obsidian"
+                className="self-start rounded-full border border-fog px-16 py-8 font-clarkson text-body-sm text-obsidian transition-colors duration-200 ease-editorial hover:border-teal hover:text-teal"
               >
                 + Add another medication
               </button>
@@ -133,97 +333,256 @@ export default function MedicationForm({ onPlanReady, onError }) {
           ) : (
             <label className="block">
               <span className="mb-8 block font-clarkson text-body-sm text-ash">
-                List your medications the way you'd say them out loud — dosage and timing included if you know them.
+                Describe your medication details, including
+                names, prescribed dosage and timing if known.
               </span>
+
               <textarea
                 value={freeText}
-                onChange={(e) => setFreeText(e.target.value)}
-                rows={4}
-                placeholder="Metformin 500mg twice a day, and 10mg atorvastatin at night."
-                className="w-full rounded-lg border border-fog bg-paper px-16 py-16 font-clarkson text-base text-obsidian placeholder:text-slate focus:border-obsidian"
+                onChange={(event) => {
+                  setFreeText(event.target.value);
+
+                  setValidation({
+                    form: '',
+                    rows: {},
+                  });
+                }}
+                rows={5}
+                maxLength={4000}
+                aria-label="Medication description"
+                placeholder="Describe your medication details here..."
+                className="w-full rounded-xl border border-fog bg-paper px-16 py-16 font-clarkson text-base text-obsidian placeholder:text-slate focus:border-teal"
               />
+
+              <span className="mt-8 block text-right font-clarkson text-caption text-slate">
+                {freeText.length}/4000
+              </span>
             </label>
           )}
 
-          <button
-            type="submit"
-            disabled={!canSubmit || isSubmitting}
-            className="mt-32 rounded-none bg-charcoal px-32 py-16 font-clarkson text-body-sm text-paper transition-colors duration-200 ease-editorial hover:bg-obsidian disabled:cursor-not-allowed disabled:bg-fog disabled:text-slate"
-          >
-            {isSubmitting ? 'Generating plan…' : 'Generate plan'}
-          </button>
+          {/* Validation message */}
+
+          {validation.form && (
+            <p
+              className="mt-16 rounded-lg border border-amber-200 bg-amber-50 px-16 py-12 text-body-sm text-amber-900"
+              role="alert"
+            >
+              {validation.form}
+            </p>
+          )}
+
+          {/* Submit */}
+
+          <div className="mt-24 flex flex-wrap items-center gap-16">
+            <button
+              type="submit"
+              disabled={!canSubmit || isSubmitting}
+              aria-busy={isSubmitting}
+              className="btn-primary min-w-44"
+            >
+              {isSubmitting
+                ? 'Generating plan…'
+                : 'Generate plan'}
+            </button>
+
+            <p className="max-w-xl text-caption text-slate">
+              Educational demonstrator only. Review medication
+              details with a qualified healthcare professional.
+            </p>
+          </div>
         </form>
       </div>
     </section>
   );
 }
 
-function MedicationRow({ medication, index, canRemove, onChange, onRemove }) {
+function MedicationRow({
+  medication,
+  index,
+  canRemove,
+  errors,
+  onChange,
+  onRemove,
+}) {
   const rowId = useId();
 
-  return (
-    <fieldset className="grid grid-cols-1 gap-16 rounded-lg border border-fog p-24 sm:grid-cols-[2fr_1fr_1fr_1fr_auto]">
-      <legend className="sr-only">Medication {index + 1}</legend>
+  function fieldClass(hasError) {
+    return [
+      'w-full rounded-lg border bg-paper px-16 py-10 font-clarkson text-base text-obsidian',
+      'placeholder:text-slate focus:border-teal',
+      hasError ? 'border-red-500' : 'border-fog',
+    ].join(' ');
+  }
 
-      <label className="block">
-        <span className="mb-8 block font-clarkson text-caption text-slate">Name</span>
+  function showError(field) {
+    if (!errors[field]) return null;
+
+    return (
+      <span
+        id={`${rowId}-${field}-error`}
+        className="mt-4 block text-caption text-red-700"
+      >
+        {errors[field]}
+      </span>
+    );
+  }
+
+  return (
+    <fieldset className="grid grid-cols-1 gap-16 rounded-xl border border-fog bg-white p-16 sm:p-24 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]">
+      <legend className="sr-only">
+        Medication {index + 1}
+      </legend>
+
+      {/* Name */}
+
+      <label className="block min-w-0">
+        <span className="mb-8 block font-clarkson text-caption text-slate">
+          Medication name
+        </span>
+
         <input
           type="text"
-          required
           value={medication.name}
-          onChange={(e) => onChange('name', e.target.value)}
+          onChange={(event) =>
+            onChange('name', event.target.value)
+          }
           placeholder="e.g. Metformin"
-          id={`${rowId}-name`}
-          className="w-full rounded-lg border border-fog px-16 py-8 font-clarkson text-base text-obsidian placeholder:text-slate focus:border-obsidian"
+          autoComplete="off"
+          aria-invalid={Boolean(errors.name)}
+          aria-describedby={
+            errors.name
+              ? `${rowId}-name-error`
+              : undefined
+          }
+          className={fieldClass(errors.name)}
         />
+
+        {showError('name')}
       </label>
 
-      <label className="block">
-        <span className="mb-8 block font-clarkson text-caption text-slate">Dosage (mg)</span>
+      {/* Dosage */}
+
+      <label className="block min-w-0">
+        <span className="mb-8 block font-clarkson text-caption text-slate">
+          Dosage (mg)
+        </span>
+
         <input
           type="number"
           min="0"
           step="any"
+          inputMode="decimal"
           value={medication.dosage_mg}
-          onChange={(e) => onChange('dosage_mg', e.target.value)}
-          className="w-full rounded-lg border border-fog px-16 py-8 font-clarkson text-base text-obsidian focus:border-obsidian"
+          onChange={(event) =>
+            onChange('dosage_mg', event.target.value)
+          }
+          placeholder="Optional"
+          aria-invalid={Boolean(errors.dosage_mg)}
+          aria-describedby={
+            errors.dosage_mg
+              ? `${rowId}-dosage_mg-error`
+              : undefined
+          }
+          className={fieldClass(errors.dosage_mg)}
         />
+
+        {showError('dosage_mg')}
       </label>
 
-      <label className="block">
-        <span className="mb-8 block font-clarkson text-caption text-slate">Times per day</span>
+      {/* Frequency */}
+
+      <label className="block min-w-0">
+        <span className="mb-8 block font-clarkson text-caption text-slate">
+          Times per day
+        </span>
+
         <input
           type="number"
           min="1"
           max="6"
+          step="1"
+          inputMode="numeric"
           value={medication.frequency_per_day}
-          onChange={(e) => onChange('frequency_per_day', e.target.value)}
-          className="w-full rounded-lg border border-fog px-16 py-8 font-clarkson text-base text-obsidian focus:border-obsidian"
+          onChange={(event) =>
+            onChange(
+              'frequency_per_day',
+              event.target.value
+            )
+          }
+          aria-invalid={Boolean(errors.frequency_per_day)}
+          aria-describedby={
+            errors.frequency_per_day
+              ? `${rowId}-frequency_per_day-error`
+              : undefined
+          }
+          className={fieldClass(errors.frequency_per_day)}
         />
+
+        {showError('frequency_per_day')}
       </label>
 
-      <label className="block">
-        <span className="mb-8 block font-clarkson text-caption text-slate">Preferred timing</span>
+      {/* Preferred timing */}
+
+      <label className="block min-w-0">
+        <span className="mb-8 block font-clarkson text-caption text-slate">
+          Preferred timing
+        </span>
+
         <select
           value={medication.timing_preference}
-          onChange={(e) => onChange('timing_preference', e.target.value)}
-          className="w-full rounded-lg border border-fog bg-paper px-16 py-8 font-clarkson text-base text-obsidian focus:border-obsidian"
+          onChange={(event) =>
+            onChange(
+              'timing_preference',
+              event.target.value
+            )
+          }
+          className={fieldClass(false)}
         >
-          {TIMING_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          {TIMING_OPTIONS.map((option) => (
+            <option
+              key={option.value}
+              value={option.value}
+            >
+              {option.label}
             </option>
           ))}
         </select>
       </label>
 
-      <div className="flex items-end justify-start sm:justify-center">
+      {/* Food instruction */}
+
+      <label className="block min-w-0">
+        <span className="mb-8 block font-clarkson text-caption text-slate">
+          Food instruction
+        </span>
+
+        <select
+          value={medication.with_food}
+          onChange={(event) =>
+            onChange('with_food', event.target.value)
+          }
+          className={fieldClass(false)}
+        >
+          {FOOD_OPTIONS.map((option) => (
+            <option
+              key={option.value}
+              value={option.value}
+            >
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {/* Remove */}
+
+      <div className="flex items-end">
         <button
           type="button"
           onClick={onRemove}
           disabled={!canRemove}
           aria-label={`Remove medication ${index + 1}`}
-          className="rounded-full border border-fog px-16 py-8 font-clarkson text-caption text-ash transition-colors duration-200 ease-editorial hover:border-obsidian hover:text-obsidian disabled:cursor-not-allowed disabled:opacity-40"
+          className="min-h-44 rounded-full border border-fog px-16 py-8 font-clarkson text-caption text-ash transition-colors duration-200 ease-editorial hover:border-red-400 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Remove
         </button>

@@ -9,7 +9,7 @@ export default function App() {
   const { pathname } = useLocation();
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="app-shell flex min-h-screen flex-col">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-16 focus:top-8 focus:z-[60] focus:rounded-pill focus:bg-ink focus:px-16 focus:py-8 focus:text-caption focus:text-paper"

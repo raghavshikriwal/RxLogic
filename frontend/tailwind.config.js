@@ -27,7 +27,20 @@ export default {
       'faded-surface': '#fafafc',
       paper: '#ffffff',
 
-      // Interaction
+      // RxLogic semantic brand palette
+      'deep-navy': '#14263d',
+      'intelligent-teal': '#087f8c',
+      'soft-ivory': '#f7f8f6',
+      'pale-blue': '#eaf1f5',
+      'slate-gray': '#667587',
+
+      // Accessible status colours (never communicate status by colour alone)
+      'status-success': '#16845b',
+      'status-warning': '#b7791f',
+      'status-danger': '#c13d45',
+      'status-info': '#3478b9',
+
+      // Interaction (legacy blue retained for existing components)
       'electric-blue': '#0071e3',
       'blue-hover': '#0077ed',
       'blue-press': '#0067cc',
@@ -59,6 +72,7 @@ export default {
     },
     fontFamily: {
       display: [
+        'Manrope',
         '"SF Pro Display"',
         'Inter',
         'ui-sans-serif',
@@ -70,6 +84,7 @@ export default {
         'sans-serif',
       ],
       sans: [
+        'Inter',
         '"SF Pro Text"',
         'Inter',
         'ui-sans-serif',
@@ -136,6 +151,10 @@ export default {
       full: '9999px',
     },
     extend: {
+      boxShadow: {
+        'soft-card': '0 8px 30px rgba(20, 38, 61, 0.06)',
+        'soft-popover': '0 18px 50px rgba(20, 38, 61, 0.12)',
+      },
       maxWidth: { page: '1200px' },
       height: { nav: '48px' },
       transitionTimingFunction: {
