@@ -22,6 +22,8 @@ defined (Section 4.1).
 from __future__ import annotations
 
 from dataclasses import replace
+import os
+from pathlib import Path
 
 from models.exceptions import InsufficientDataError, UnknownMedicationError
 from models.schemas import DailyPlan, Medication
@@ -52,6 +54,16 @@ def _merge_duplicate_medications(medications: list[Medication]) -> list[Medicati
 
 class ReasoningService:
     """Orchestrates rule engine -> uncertainty refinement -> planner (-> CSP) into one call."""
+
+    @classmethod
+    def from_active_release(cls, knowledge_root: Path | None = None) -> "ReasoningService":
+        """Build the service from one integrity-verified active release only."""
+        rule_engine = RuleEngine.from_active_release(knowledge_root)
+        food_rules = FoodRules.from_active_release(knowledge_root)
+        if rule_engine.knowledge_release != food_rules.knowledge_release:
+            from services.knowledge_release import KnowledgeReleaseError
+            raise KnowledgeReleaseError("interaction and food knowledge releases do not match")
+        return cls(rule_engine=rule_engine, food_rules=food_rules)
 
     def __init__(
         self,
@@ -110,6 +122,21 @@ class ReasoningService:
 
 
 def generate_daily_plan(medications: list[Medication]) -> DailyPlan:
-    """Module-level convenience wrapper around ReasoningService, for callers
-    that don't need to inject a custom RuleEngine (e.g. the API layer)."""
-    return ReasoningService().generate_daily_plan(medications)
+    """Build the configured knowledge runtime, then generate a plan.
+
+    Runtime configuration is validated before request-level input validation,
+    so an empty request cannot mask an unsafe or invalid knowledge setup.
+    Active-release mode never falls back to legacy development datasets.
+    """
+    mode = os.getenv("RXLOGIC_KNOWLEDGE_MODE", "legacy_development").strip().lower()
+    if mode == "legacy_development":
+        service = ReasoningService()
+    elif mode == "active_release":
+        configured_root = os.getenv("RXLOGIC_KNOWLEDGE_ROOT")
+        knowledge_root = Path(configured_root) if configured_root else None
+        service = ReasoningService.from_active_release(knowledge_root)
+    else:
+        raise ValueError(
+            "RXLOGIC_KNOWLEDGE_MODE must be 'legacy_development' or 'active_release'"
+        )
+    return service.generate_daily_plan(medications)

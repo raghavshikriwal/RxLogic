@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0.0",
+  "sources": [
+    {
+      "source_id": "SRC-LEGACY-C83BCBEC78",
+      "publisher": "clinical literature",
+      "source_type": "legacy_source_label",
+      "document_title": null,
+      "document_version": null,
+      "publication_date": null,
+      "retrieved_at": null,
+      "jurisdiction": null,
+      "locator": null,
+      "verification_status": "unverified",
+      "notes": "Migrated from a free-text source label in the original dataset. This is not a verified document citation.",
+      "source_quality_assessment": "not_assessed",
+      "source_quality_rationale": ""
+    },
+    {
+      "source_id": "SRC-LEGACY-C00D96B655",
+      "publisher": "drug label guidance",
+      "source_type": "legacy_source_label",
+      "document_title": null,
+      "document_version": null,
+      "publication_date": null,
+      "retrieved_at": null,
+      "jurisdiction": null,
+      "locator": null,
+      "verification_status": "unverified",
+      "notes": "Migrated from a free-text source label in the original dataset. This is not a verified document citation.",
+      "source_quality_assessment": "not_assessed",
+      "source_quality_rationale": ""
+    },
+    {
+      "source_id": "SRC-LEGACY-04153214F4",
+      "publisher": "openFDA label / clinical literature",
+      "source_type": "legacy_source_label",
+      "document_title": null,
+      "document_version": null,
+      "publication_date": null,
+      "retrieved_at": null,
+      "jurisdiction": null,
+      "locator": null,
+      "verification_status": "unverified",
+      "notes": "Migrated from a free-text source label in the original dataset. This is not a verified document citation.",
+      "source_quality_assessment": "not_assessed",
+      "source_quality_rationale": ""
+    }
+  ]
+}

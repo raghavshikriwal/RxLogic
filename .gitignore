@@ -32,3 +32,4 @@ knowledge/cache/*.json
 Thumbs.db
 .vscode/
 .idea/.env
+\n# --- Evidence ingestion artifacts (review staging; never commit source snapshots) ---\nknowledge/ingestion/staging/\n

@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0.0",
+  "record_id": "EVD-31AA8FD73D4FF79E",
+  "source_id": "SRC-INGEST-663BA26ACD21",
+  "metadata": {
+    "publisher": "U.S. National Library of Medicine DailyMed",
+    "source_type": "dailymed_spl",
+    "document_title": "DailyMed SPL search: metformin",
+    "canonical_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls.json?drug_name=metformin&name_type=both&page=1&pagesize=10",
+    "publication_date": null,
+    "jurisdiction": "US"
+  },
+  "retrieved_at": "2026-11-12T19:36:39Z",
+  "content_sha256": "d3afa65f6e4b6045c097fbf8da002c7d5a1ffe5208010fa969c4bc1557620468",
+  "content_bytes": 2377,
+  "review_status": "pending_clinical_review",
+  "promotion_status": "staged_only",
+  "payload": {
+    "data": [
+      {
+        "spl_version": 4,
+        "published_date": "Nov 11, 2026",
+        "title": "GLIPIZIDE AND METFORMIN HCL TABLET, FILM COATED [CHARTWELL RX, LLC]",
+        "setid": "ac018f64-fd9d-4b3c-b0ac-ca305b8df635"
+      },
+      {
+        "spl_version": 6,
+        "published_date": "Nov 11, 2026",
+        "title": "METFORMIN HYDROCHLORIDE TABLET, EXTENDED RELEASE [BRYANT RANCH PREPACK]",
+        "setid": "f2318509-9a49-4c99-a08b-22381f17aacd"
+      },
+      {
+        "spl_version": 10,
+        "published_date": "Nov 09, 2026",
+        "title": "METFORMIN HYDROCHLORIDE SOLUTION [VISTAPHARM, LLC]",
+        "setid": "e087ce3b-8d7f-43a3-8d20-54513da7617d"
+      },
+      {
+        "spl_version": 3,
+        "published_date": "Nov 06, 2026",
+        "title": "METFORMIN HYDROCHLORIDE TABLET, FILM COATED [BRYANT RANCH PREPACK]",
+        "setid": "fb296500-55cb-45ce-be0c-59aa2e3d4624"
+      },
+      {
+        "spl_version": 29,
+        "published_date": "Nov 04, 2026",
+        "title": "METFORMIN HYDROCHLORIDE TABLET, FILM COATED METFORMIN HYDROCHLORIDE TABLET, EXTENDED RELEASE [ASCEND LABORATORIES, LLC]",
+        "setid": "0ff1ba75-3c86-4baf-a6b1-1bb883839866"
+      },
+      {
+        "spl_version": 3,
+        "published_date": "Nov 02, 2026",
+        "title": "METFORMIN HYDROCHLORIDE TABLET, FILM COATED [NUCARE PHARMACEUTICCALS,INC.]",
+        "setid": "55062171-7581-0630-e063-6394a90ac088"
+      },
+      {
+        "spl_version": 3,
+        "published_date": "Oct 29, 2026",
+        "title": "METFORMIN HYDROCHLORIDE TABLET, FILM COATED [NUCARE PHARMACEUTICALS, INC.]",
+        "setid": "583f2a2e-a9d7-f266-e063-6294a90ad0ab"
+      },
+      {
+        "spl_version": 5,
+        "published_date": "Oct 29, 2026",
+        "title": "METFORMIN HYDROCHLORIDE TABLET, FILM COATED, EXTENDED RELEASE [MICRO LABS LIMITED]",
+        "setid": "cc070735-5e8d-4bb3-9caa-e84d29bb8943"
+      },
+      {
+        "spl_version": 22,
+        "published_date": "Oct 28, 2026",
+        "title": "METFORMIN HYDROCHLORIDE TABLET [REMEDYREPACK INC.]",
+        "setid": "30658e19-8e6e-49aa-a007-e414224797c5"
+      },
+      {
+        "spl_version": 1,
+        "published_date": "Oct 28, 2026",
+        "title": "METFORMIN HYDROCHLORIDE TABLET, FILM COATED [REMEDYREPACK INC.]",
+        "setid": "55b25f66-a0a3-4e2e-9c4a-6354f41072fa"
+      }
+    ],
+    "metadata": {
+      "db_published_date": "Nov 11, 2026 08:02:44PM EST",
+      "elements_per_page": 10,
+      "current_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls.json?drug_name=metformin&name_type=both&pagesize=10&page=1",
+      "next_page_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls.json?drug_name=metformin&name_type=both&pagesize=10&page=2",
+      "total_elements": 559,
+      "total_pages": 56,
+      "current_page": 1,
+      "previous_page": "null",
+      "previous_page_url": "null",
+      "next_page": 2
+    }
+  }
+}

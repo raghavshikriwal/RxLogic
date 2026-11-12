@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "records": [
+    {
+      "record_id": "EVD-13A5B4DB880792E9",
+      "source_id": "SRC-INGEST-3F6B003E068C",
+      "content_sha256": "ac3fb85e50fc3eae3d5857b17e107dfe711232b96d70952693e7fcc9aa667b6b",
+      "artifact": "SRC-INGEST-3F6B003E068C/ac3fb85e50fc3eae3d5857b17e107dfe711232b96d70952693e7fcc9aa667b6b.json",
+      "retrieved_at": "2026-11-12T19:36:36Z",
+      "review_status": "pending_clinical_review",
+      "promotion_status": "staged_only"
+    },
+    {
+      "record_id": "EVD-97CB2AD08B7C2FD4",
+      "source_id": "SRC-INGEST-564F834A9440",
+      "content_sha256": "95fcdba7b28f98515aec946d5a7552261aaa20e37a3a4ab840439054057beb78",
+      "artifact": "SRC-INGEST-564F834A9440/95fcdba7b28f98515aec946d5a7552261aaa20e37a3a4ab840439054057beb78.json",
+      "retrieved_at": "2026-11-12T19:36:33Z",
+      "review_status": "pending_clinical_review",
+      "promotion_status": "staged_only"
+    },
+    {
+      "record_id": "EVD-31AA8FD73D4FF79E",
+      "source_id": "SRC-INGEST-663BA26ACD21",
+      "content_sha256": "d3afa65f6e4b6045c097fbf8da002c7d5a1ffe5208010fa969c4bc1557620468",
+      "artifact": "SRC-INGEST-663BA26ACD21/d3afa65f6e4b6045c097fbf8da002c7d5a1ffe5208010fa969c4bc1557620468.json",
+      "retrieved_at": "2026-11-12T19:36:39Z",
+      "review_status": "pending_clinical_review",
+      "promotion_status": "staged_only"
+    }
+  ]
+}

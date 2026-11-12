@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0.0",
+  "record_id": "EVD-97CB2AD08B7C2FD4",
+  "source_id": "SRC-INGEST-564F834A9440",
+  "metadata": {
+    "publisher": "U.S. National Library of Medicine",
+    "source_type": "rxnorm_concept",
+    "document_title": "RxNorm concept lookup: metformin",
+    "canonical_url": "https://rxnav.nlm.nih.gov/REST/rxcui.json?name=metformin",
+    "publication_date": null,
+    "jurisdiction": "US"
+  },
+  "retrieved_at": "2026-11-12T19:36:33Z",
+  "content_sha256": "95fcdba7b28f98515aec946d5a7552261aaa20e37a3a4ab840439054057beb78",
+  "content_bytes": 35,
+  "review_status": "pending_clinical_review",
+  "promotion_status": "staged_only",
+  "payload": {
+    "idGroup": {
+      "rxnormId": [
+        "6809"
+      ]
+    }
+  }
+}

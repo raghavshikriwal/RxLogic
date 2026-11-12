@@ -259,7 +259,7 @@ RxLogic-main/
 │   │   └── index.css              # Global styles
 │   ├── package.json               # Frontend scripts/dependencies
 │   └── vite.config.js              # Vite development configuration
-├── tests/                         # 14 pytest test modules
+├── tests/                         # 24 pytest test modules
 ├── alembic/                       # Database migration environment/history
 ├── scripts/                       # Knowledge-base maintenance scripts
 ├── .github/workflows/             # CI test workflow
@@ -456,19 +456,19 @@ Check `.env.example`, `app.py`, and `services/llm_parser.py` for the authoritati
 
 ## 10. Testing and verification evidence
 
-RxLogic has an automated pytest suite across **14 test modules**. The results below distinguish the full-suite run, focused test runs, and manually executed live-model verification. Counts from focused runs overlap with the full suite and must not be added together as separate unique tests.
+RxLogic has an automated pytest suite across **24 test modules**. The results below distinguish the latest user-verified full-suite run, earlier historical runs, focused test runs, and manually executed live-model verification. Counts from focused runs overlap with the full suite and must not be added together as separate unique tests.
 
-### 10.1 Full automated suite — latest user-provided run
+### 10.1 Full automated suite — latest user-provided verification
 
 | Measure | Result |
 |---|---:|
 | Command | `python -m pytest -v` |
-| Collected / passed | **262 / 262** |
+| Collected / passed | **337 / 337** |
 | Failed | **0** |
-| Duration | **90.62 seconds** |
-| Platform reported by pytest | Windows (`win32`), Python 3.12.10, pytest 8.3.3 |
+| Duration | **16.41 seconds** |
+| Platform reported by pytest | Windows, Python 3.12.10, pytest 8.3.3 |
 
-This result was captured from a local PowerShell run on November 12, 2026. It is evidence for that source state and environment; rerun the suite after subsequent code changes.
+This is the user-reported full-suite result for the Task 06 Stage 5 snapshot, verified from PowerShell on November 13, 2026. It is not a fresh run of every later snapshot; rerun the suite after subsequent code changes. The earlier 262-test result from November 12 and Stage 4 result of 336 passed are historical and superseded by this run. Task 07 changes have not yet received a complete Windows run.
 
 ### 10.2 Focused verification runs discussed during project review
 
@@ -480,7 +480,7 @@ This result was captured from a local PowerShell run on November 12, 2026. It is
 | API routes | `python -m pytest tests/test_api.py -v` | **32 passed** |
 | Database URL behavior | `python -m pytest tests/test_database.py -v` | **2 passed** |
 | End-to-end pipeline | `python -m pytest tests/test_e2e.py -v` | **3 passed** |
-| Full automated suite | `python -m pytest -v` | **262 passed** |
+| Earlier full-suite run (historical) | `python -m pytest -v` | **262 passed** |
 
 The focused API, database, and end-to-end runs total 37 passed test cases in those selected modules. The 95 interaction tests and other focused runs are also included in the full-suite result; they are not additional unique tests beyond the 262.
 
@@ -521,18 +521,28 @@ python live_llm_smoke_test.py
 
 ### 10.5 What the tests cover
 
-The 14 test modules exercise the following areas:
+The 24 test modules exercise the following areas:
 
 | Test module | Primary focus |
 |---|---|
-| `test_api.py` | Health/root routes, request validation, structured and text plan endpoints, error mapping, session-scoped history, and response fields |
+| `test_api.py` | Health/root routes, request validation, structured and text plan endpoints, error mapping, session-scoped history, and knowledge status |
 | `test_architecture_boundaries.py` | Separation between parser, reasoning core, and external/network dependencies |
+| `test_clinical_knowledge.py` | Task 07 assertion schemas, conflict gates, source-quality rationale, and release inclusion for the new clinical knowledge domains |
 | `test_csp_scheduler.py` | Dose spacing, timing preferences, meal windows, interaction constraints, ordering, backtracking, and unsatisfiable cases |
 | `test_database.py` | Database URL normalization |
 | `test_drug_data_client.py` | RxCUI/label lookup behavior, caching, and external-service failure handling |
 | `test_e2e.py` | Full reasoning pipeline scenarios and fail-safe handling of unknown names |
+| `test_evidence_ingestion.py` | Evidence source validation, hashing, idempotency, and staging |
+| `test_evidence_review.py` | Evidence inspection and append-only reviewer decisions |
 | `test_food_rules.py` | Food-rule validation, application, conflicts, and missing-rule behavior |
+| `test_knowledge_curation.py` | Candidate creation, evidence linkage, and independent clinical decisions |
+| `test_knowledge_coverage.py` | Pairwise and per-domain coverage inventories; not-evaluated and conflict semantics |
+| `test_knowledge_management_cli.py` | Governance CLI commands, path overrides, and safe error handling |
+| `test_knowledge_release.py` | Immutable release assembly, promotion, rollback, manifests, and audit-chain integrity |
+| `test_knowledge_runtime.py` | Active-release runtime selection and fail-closed configuration behavior |
+| `test_knowledge_validation.py` | Knowledge dataset and manifest validation |
 | `test_llm_parser.py` | JSON parsing, defaults, schema validation, and Ollama error handling |
+| `test_medical_source_client.py` | Official medical-source connector behavior, response limits, and failure handling |
 | `test_name_normalizer.py` | Exact names, aliases, fuzzy matching safeguards, and normalization |
 | `test_planner.py` | Goal ordering, trace generation, and warning propagation |
 | `test_reasoning_service.py` | Orchestration, interaction flow, coverage, duplicate handling, and food guidance |
@@ -613,12 +623,12 @@ Do not enter personal health information into a classroom demo. Use synthetic ex
 
 ## 14. Future improvements
 
-- Independent clinical review and governance for any expanded knowledge base (without presenting the educational application as a clinical product).
+- Authenticated staff identity, multi-party approval, and signed attestations for remote knowledge governance; current CLI actor roles are audit assertions, not authentication.
 - Broader automated tests for real database connectivity, migrations, persistence across restarts, and failure recovery.
 - Dedicated frontend component, accessibility, and browser-based end-to-end tests.
 - Deployment smoke tests for hosted API health, frontend/API integration, and database connectivity.
 - A reproducible full-project coverage baseline and CI coverage reporting.
-- More explicit data provenance/versioning for curated knowledge files and cached external data.
+- Externally anchored or digitally signed audit records, authenticated staff identity, dual-control authorization, and operational backup/restore exercises for knowledge releases. The local Stage 4 hash chain is tamper-evident, not a digital signature.
 - Better observability, structured logs, and deployment diagnostics.
 - Additional documentation and a reproducible evaluation/demo script using synthetic inputs only.
 
@@ -634,3 +644,147 @@ Released under the [MIT License](LICENSE). See the license file for the complete
 ---
 
 *Documentation status: updated to record the project structure and verification evidence discussed on November 12, 2026. Re-run the commands and refresh the results after any relevant source-code, dependency, or environment change.*
+
+
+## Knowledge dataset governance (Task 02)
+
+The bundled knowledge files use a versioned schema and stable rule identifiers.
+`knowledge/manifest.json` identifies the current development release, while
+`knowledge/evidence_sources.json` stores source records referenced by each
+clinical assertion. Migrated legacy source labels are marked **unverified**;
+they are not bibliographic citations. Every migrated assertion is marked
+`needs_clinical_review`.
+
+Run the offline structural validator from the repository root:
+
+```bash
+python -m services.knowledge_validation
+python -m scripts.audit_task07 --output reports\task07_acceptance_audit.json
+```
+
+A passing result confirms structural integrity and referential consistency
+only. It does **not** establish clinical accuracy, completeness, or approval
+for patient care. RxLogic remains an educational demonstrator.
+
+
+---
+
+## Evidence source ingestion (Task 03)
+
+RxLogic includes an offline evidence-staging utility for locally downloaded JSON
+snapshots from approved primary-source domains. It records source metadata,
+retrieval time, and a SHA-256 content digest, and stores each snapshot in a
+content-addressed review queue.
+
+The utility **does not** fetch arbitrary URLs, infer drug interactions, update
+runtime knowledge rules, or approve clinical assertions. Every imported record
+remains `pending_clinical_review` and `staged_only`. See
+[`knowledge/ingestion/README.md`](knowledge/ingestion/README.md) for the trust
+boundary and CLI usage.
+
+Run the focused tests with:
+
+```powershell
+python -m pytest tests/test_evidence_ingestion.py -q
+```
+
+Passing ingestion tests verifies software behavior only; it is not clinical
+validation and does not make RxLogic suitable for patient care.
+
+---
+
+## Task 07 — Clinical knowledge expansion and evidence governance
+
+Task 07 extends the governed knowledge model with typed assertion families for drug–food/component interactions, contraindications, source-backed dosage references, and administration instructions. It also separates source verification, source quality, assertion evidence strength, evidence direction, applicability, and conflict status. The new records use the existing evidence-ingestion, evidence-review, independent clinical-approval, immutable-release, and explicit-promotion workflow.
+
+The coverage report is generated from the current development datasets:
+
+```powershell
+python -m scripts.audit_knowledge_coverage
+python -m scripts.audit_knowledge_coverage --output reports\knowledge_coverage.json
+python -m services.knowledge_validation
+python -m scripts.audit_task07 --output reports\task07_acceptance_audit.json
+```
+
+The baseline ten-medication inventory has 45 possible unordered drug pairs: 12 have legacy assertions and 33 are not evaluated. Four medications have legacy meal-timing rules and six are not evaluated. No clinical contraindication, dosage, administration, or drug–food component assertion was invented to fill those gaps. Missing knowledge remains `not_evaluated`; it is never interpreted as safe or as proof that no interaction exists.
+
+Create a candidate only from evidence currently accepted for curation:
+
+```powershell
+python -m scripts.manage_knowledge candidate-create --type contraindication --rule-file .\candidate.json --evidence-id EVD-... --author-id knowledge-author --rationale "Human-authored rationale"
+python -m scripts.manage_knowledge candidates
+python -m scripts.manage_knowledge candidate-decide KNC-... --decision approved --reviewer-id pharmacist-1 --reviewer-role clinical_pharmacist --rationale "Independent clinical review rationale"
+```
+
+Task 07 candidate types are `drug_food_interaction`, `contraindication`, `dosage_reference`, and `administration_instruction`; existing `interaction_rule` and `food_rule` types remain supported. Task 07 candidates require explicit conflict assessment before approval. Assessed source quality requires a written rationale. See [`docs/TASK_07_ACCEPTANCE_AUDIT.md`](docs/TASK_07_ACCEPTANCE_AUDIT.md), [`docs/TASK_07_CHANGELOG.md`](docs/TASK_07_CHANGELOG.md), [`docs/TASK_07_CANDIDATE_SCHEMA.md`](docs/TASK_07_CANDIDATE_SCHEMA.md), [`docs/EVIDENCE_QUALITY_FRAMEWORK.md`](docs/EVIDENCE_QUALITY_FRAMEWORK.md), and `tests/test_clinical_knowledge.py` for required fields and workflow constraints.
+
+Approved candidates are included in `clinical_assertions.json` inside a new immutable release. Release creation does not activate it; promotion remains an explicit steward/administrator operation with the existing audit chain. The active-release loader verifies the clinical assertion schema and dataset hash. Existing patient-plan reasoning does not yet consume the new contraindication, dosage, or administration records. Dosage records are non-patient-specific source references only; no dose calculator or automated contraindication decision is enabled.
+
+`clinical_use_permitted` remains `false`. Structural validation and passing software tests do not establish clinical accuracy, completeness, or fitness for patient care. RxLogic remains an educational demonstrator.
+
+Task 07 implementation-environment checks: **76 focused evidence/governance tests passed** and **272 tests passed** in the broader available regression subset. The full suite could not be collected in that environment because Flask and scikit-fuzzy are not installed; one architecture-boundary subprocess test also depends on scikit-fuzzy. These partial results are not a full-suite pass. Run the complete suite in the project's Windows environment before accepting the Task 07 snapshot. See [`docs/TASK_07_ACCEPTANCE_AUDIT.md`](docs/TASK_07_ACCEPTANCE_AUDIT.md) for the exact exclusions and audit limitations.
+
+## Controlled knowledge releases (Task 06)
+
+Task 06 adds a human-governed path from source evidence to candidate assertions
+and then to immutable, explicitly promoted knowledge releases:
+
+1. Evidence must be ingested and independently reviewed as `accepted_for_curation`.
+2. A knowledge author creates a candidate linked to integrity-verified evidence.
+3. A qualified clinical reviewer (not the candidate author) records an approval.
+4. A release is assembled from selected, currently approved candidates. Creating
+   a release does not activate it.
+5. A knowledge steward or administrator explicitly promotes the release.
+6. Runtime active-release mode verifies the active pointer, manifest, and dataset
+   hashes and refuses to fall back to the legacy development datasets.
+
+The release-management CLI is available from the project root:
+
+```powershell
+python -m scripts.manage_knowledge candidates
+python -m scripts.manage_knowledge releases
+python -m scripts.manage_knowledge status
+python -m scripts.manage_knowledge inspect RXK-YYYYMMDDTHHMMSSZ-XXXXXXXX
+```
+
+For the full create/promote/rollback workflow and path overrides, see
+[`docs/TASK_06_CHANGELOG.md`](docs/TASK_06_CHANGELOG.md). Set
+`RXLOGIC_KNOWLEDGE_MODE=active_release` only after a genuine release has been
+reviewed and promoted. The default `legacy_development` mode remains explicitly
+unreviewed. `GET /api/knowledge/status` reports the configured knowledge mode.
+
+The current API has no authenticated staff identity system, so release mutation
+is intentionally not exposed as HTTP endpoints. CLI actor IDs/roles are audit
+assertions, not authentication; host access must be restricted to authorized
+staff. Even a promoted governance release is **not** clinical validation or
+authorization for patient-care use (`clinical_use_permitted` remains false).
+
+
+### Task 06 Stage 4 — audit-chain hardening
+
+The local release-promotion log now uses a SHA-256 hash chain and two-phase
+intent/completion events. Active-release loading verifies the chain and checks
+that the active pointer is bound to a completed promotion or rollback event.
+Release manifests must declare the exact expected dataset set and explicitly
+prohibit unreviewed runtime records and clinical-use claims. See
+[`docs/TASK_06_CHANGELOG.md`](docs/TASK_06_CHANGELOG.md) for limitations: local
+hashes do not provide signer identity or protect against a privileged actor
+rewriting the complete local chain. Older unchained logs require reviewed
+migration; do not bypass this check by editing audit files.
+
+
+### Task 06 Stage 5 — final acceptance audit
+
+Stage 5 consolidates the final governance acceptance checklist and corrects the
+test inventory and verification history above. The user subsequently verified
+Stage 5 on Windows: the focused governance/runtime suite passed **58 tests** and
+the complete suite passed **337 tests in 16.41 seconds**. The earlier Stage 4
+result of 336 passed is historical. The Task 07 snapshot has additional tests
+and must receive its own complete Windows verification.
+
+The acceptance boundary remains explicit: no clinical candidate is approved
+by automation, no release is activated by creation, runtime loading is
+fail-closed, and a promoted governance release is not clinical validation.
+See [`docs/TASK_06_STAGE_5_ACCEPTANCE_AUDIT.md`](docs/TASK_06_STAGE_5_ACCEPTANCE_AUDIT.md)
+for the complete checklist, verified evidence, and remaining operational
+requirements.

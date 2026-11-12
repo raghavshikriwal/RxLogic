@@ -75,10 +75,34 @@ class InteractionRule:
     evidence: EvidenceStrength = EvidenceStrength.UNKNOWN
     separation_minutes: int | None = None
     ordering: DoseOrdering | None = None
+    evidence_source_ids: tuple[str, ...] = ()
+    review_status: str = "needs_clinical_review"
+    jurisdiction: str = "unspecified"
 
 
 class RuleEngine:
     """Forward-chaining engine: given a set of medications, fires all matching rules."""
+
+    @classmethod
+    def from_active_release(cls, knowledge_root: Path | None = None) -> "RuleEngine":
+        """Load interaction rules only from the explicitly active approved release.
+
+        This loader fails closed when no release is active; it never falls back
+        to the legacy development dataset.
+        """
+        from services.knowledge_release import DEFAULT_KNOWLEDGE_ROOT, load_active_release
+
+        bundle = load_active_release(knowledge_root or DEFAULT_KNOWLEDGE_ROOT)
+        # Keep parsing logic centralized while avoiding a temporary dataset file.
+        instance = cls.__new__(cls)
+        raw = bundle["interaction_rules"]
+        instance.rules = instance._parse_rules(raw)
+        instance.medication_rxcuis = {
+            name.lower(): str(rxcui) for name, rxcui in raw.get("medications", {}).items()
+        }
+        instance.known_medications = frozenset(instance.medication_rxcuis)
+        instance.knowledge_release = bundle["manifest"]["knowledge_release"]
+        return instance
 
     def __init__(self, rules_path: Path = RULES_PATH):
         raw = json.loads(rules_path.read_text(encoding="utf-8"))
@@ -98,15 +122,18 @@ class RuleEngine:
         for i, entry in enumerate(raw.get("interaction_rules", [])):
             rules.append(
                 InteractionRule(
-                    rule_id=f"RULE_{i:03d}",
+                    rule_id=entry.get("rule_id", f"RULE_{i:03d}"),
                     medication_a=entry["medication_a"].lower(),
                     medication_b=entry["medication_b"].lower(),
                     severity=Severity(entry.get("severity", "unknown")),
                     description=entry["description"],
                     source=entry.get("source", "unknown"),
                     evidence=EvidenceStrength(entry.get("evidence", "unknown")),
-                    separation_minutes=_parse_separation(entry, rule_id=f"RULE_{i:03d}"),
-                    ordering=_parse_ordering(entry, rule_id=f"RULE_{i:03d}"),
+                    separation_minutes=_parse_separation(entry, rule_id=entry.get("rule_id", f"RULE_{i:03d}")),
+                    ordering=_parse_ordering(entry, rule_id=entry.get("rule_id", f"RULE_{i:03d}")),
+                    evidence_source_ids=tuple(entry.get("evidence_source_ids", ())),
+                    review_status=entry.get("review_status", "needs_clinical_review"),
+                    jurisdiction=entry.get("jurisdiction", "unspecified"),
                 )
             )
         return rules
@@ -172,6 +199,9 @@ class RuleEngine:
                             evidence=rule.evidence,
                             separation_minutes=rule.separation_minutes,
                             ordering=rule.ordering,
+                            evidence_source_ids=rule.evidence_source_ids,
+                            review_status=rule.review_status,
+                            jurisdiction=rule.jurisdiction,
                         )
                     )
         return flagged

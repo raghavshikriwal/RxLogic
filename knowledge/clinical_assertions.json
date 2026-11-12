@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0.0",
+  "knowledge_release": "rxlogic-seed-2026-11-13",
+  "source_note": "No Task 07 clinical assertions have been added. Empty arrays mean not assessed, not absence of risk or a negative finding.",
+  "drug_food_interactions": [],
+  "contraindications": [],
+  "dosage_references": [],
+  "administration_instructions": []
+}

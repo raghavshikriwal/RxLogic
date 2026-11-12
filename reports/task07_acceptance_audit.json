@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "audit_type": "task07_knowledge_governance_structural_audit_not_clinical_validation",
+  "knowledge_release": "rxlogic-seed-2026-11-13",
+  "passed": true,
+  "checks": {
+    "knowledge_structurally_valid": true,
+    "development_runtime_policy_is_explicit": true,
+    "clinical_use_prohibited": true,
+    "dosage_records_are_non_patient_specific": true,
+    "clinical_assertions_are_approved": true
+  },
+  "validation_errors": [],
+  "clinical_assertion_counts": {
+    "drug_food_interactions": 0,
+    "contraindications": 0,
+    "dosage_references": 0,
+    "administration_instructions": 0
+  },
+  "unsafe_patient_specific_dosage_assertion_ids": [],
+  "unapproved_clinical_assertion_ids": [],
+  "coverage_summary": {
+    "medication_count": 10,
+    "drug_drug_interactions": {
+      "total": 45,
+      "assertion_present_unreviewed": 12,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 33,
+      "conflicting_evidence": 0
+    },
+    "drug_food_guidance": {
+      "total": 10,
+      "assertion_present_unreviewed": 4,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 6,
+      "conflicting_evidence": 0
+    },
+    "contraindications": {
+      "total": 10,
+      "assertion_present_unreviewed": 0,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 10,
+      "conflicting_evidence": 0
+    },
+    "dosage_references": {
+      "total": 10,
+      "assertion_present_unreviewed": 0,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 10,
+      "conflicting_evidence": 0
+    },
+    "administration_instructions": {
+      "total": 10,
+      "assertion_present_unreviewed": 0,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 10,
+      "conflicting_evidence": 0
+    },
+    "drug_food_component_interactions": {
+      "total": 10,
+      "assertion_present_unreviewed": 0,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 10,
+      "conflicting_evidence": 0
+    }
+  },
+  "limitations": [
+    "This is a structural and governance audit, not clinical validation.",
+    "Coverage gaps are not negative findings and must not be interpreted as safety.",
+    "New clinical assertion datasets are not yet consumed by patient-plan reasoning.",
+    "Local CLI actor roles are audit assertions, not authenticated staff identities.",
+    "No clinical-use authorization is granted by this audit."
+  ]
+}

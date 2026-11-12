@@ -418,3 +418,42 @@ def test_create_plan_without_food_rules_returns_empty_food_guidance(client):
     response = client.post("/api/plan", json={"medications": [{"name": "Aspirin"}]})
 
     assert response.get_json()["food_guidance"] == []
+
+
+def test_knowledge_status_reports_development_mode(client, monkeypatch):
+    monkeypatch.delenv("RXLOGIC_KNOWLEDGE_MODE", raising=False)
+    response = client.get("/api/knowledge/status")
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["mode"] == "legacy_development"
+    assert payload["clinical_use_permitted"] is False
+
+
+def test_knowledge_status_fails_closed_when_active_release_missing(client, monkeypatch, tmp_path):
+    monkeypatch.setenv("RXLOGIC_KNOWLEDGE_MODE", "active_release")
+    monkeypatch.setenv("RXLOGIC_KNOWLEDGE_ROOT", str(tmp_path))
+    response = client.get("/api/knowledge/status")
+    assert response.status_code == 503
+    assert response.get_json()["error"] == "approved_knowledge_unavailable"
+
+
+def test_knowledge_status_rejects_unknown_mode(client, monkeypatch):
+    monkeypatch.setenv("RXLOGIC_KNOWLEDGE_MODE", "automatic")
+    response = client.get("/api/knowledge/status")
+    assert response.status_code == 503
+    assert response.get_json()["status"] == "invalid_configuration"
+
+
+def test_plan_endpoint_fails_closed_when_active_release_is_missing(client, monkeypatch, tmp_path):
+    monkeypatch.setenv("RXLOGIC_KNOWLEDGE_MODE", "active_release")
+    monkeypatch.setenv("RXLOGIC_KNOWLEDGE_ROOT", str(tmp_path))
+    response = client.post("/api/plan", json={"medications": [{"name": "Aspirin"}]})
+    assert response.status_code == 503
+    assert response.get_json()["error"] == "approved_knowledge_unavailable"
+
+
+def test_plan_endpoint_rejects_unknown_runtime_mode(client, monkeypatch):
+    monkeypatch.setenv("RXLOGIC_KNOWLEDGE_MODE", "automatic")
+    response = client.post("/api/plan", json={"medications": [{"name": "Aspirin"}]})
+    assert response.status_code == 503
+    assert response.get_json()["error"] == "invalid_knowledge_configuration"

@@ -1,0 +1,843 @@
+{
+  "schema_version": "1.1.0",
+  "knowledge_release": "rxlogic-seed-2026-11-13",
+  "inventory_type": "development_knowledge_coverage_not_clinical_validation",
+  "medication_count": 10,
+  "drug_drug_interactions": {
+    "counts": {
+      "total": 45,
+      "assertion_present_unreviewed": 12,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 33,
+      "conflicting_evidence": 0
+    },
+    "pairs": [
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "aspirin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "atorvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "ibuprofen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "levothyroxine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-AMOXICILLIN-WARFARIN",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-04153214F4",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "atorvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "ibuprofen",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-ASPIRIN-IBUPROFEN",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-04153214F4",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "levothyroxine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-ASPIRIN-WARFARIN",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-04153214F4",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "ibuprofen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "levothyroxine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-ATORVASTATIN-WARFARIN",
+        "evidence_strength": "limited",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-C83BCBEC78",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "ibuprofen",
+        "medication_b": "levothyroxine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "ibuprofen",
+        "medication_b": "lisinopril",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-IBUPROFEN-LISINOPRIL",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-04153214F4",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "ibuprofen",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "ibuprofen",
+        "medication_b": "metoprolol",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-IBUPROFEN-METOPROLOL",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-C83BCBEC78",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "ibuprofen",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "ibuprofen",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-IBUPROFEN-WARFARIN",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-04153214F4",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "levothyroxine",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "levothyroxine",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "levothyroxine",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "levothyroxine",
+        "medication_b": "omeprazole",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-LEVOTHYROXINE-OMEPRAZOLE",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-04153214F4",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "levothyroxine",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-LEVOTHYROXINE-WARFARIN",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-04153214F4",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "lisinopril",
+        "medication_b": "metformin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-LISINOPRIL-METFORMIN",
+        "evidence_strength": "limited",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-C83BCBEC78",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "lisinopril",
+        "medication_b": "metoprolol",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-LISINOPRIL-METOPROLOL",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-C83BCBEC78",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "lisinopril",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "lisinopril",
+        "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metformin",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metformin",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metformin",
+        "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metoprolol",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metoprolol",
+        "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "omeprazole",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-OMEPRAZOLE-WARFARIN",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-04153214F4",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      }
+    ]
+  },
+  "drug_food_guidance": {
+    "counts": {
+      "total": 10,
+      "assertion_present_unreviewed": 4,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 6,
+      "conflicting_evidence": 0
+    },
+    "medications": [
+      {
+        "medication": "amoxicillin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "aspirin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "atorvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "ibuprofen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "levothyroxine",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "FOOD-LEVOTHYROXINE",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-C00D96B655",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "metformin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "FOOD-METFORMIN",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-C00D96B655",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "omeprazole",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "FOOD-OMEPRAZOLE",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-C00D96B655",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "FOOD-WARFARIN",
+        "evidence": [
+          {
+            "source_id": "SRC-LEGACY-C00D96B655",
+            "source_verification_state": "unverified",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      }
+    ]
+  },
+  "drug_food_interactions": {
+    "counts": {
+      "total": 10,
+      "assertion_present_unreviewed": 0,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 10,
+      "conflicting_evidence": 0
+    },
+    "medications": [
+      {
+        "medication": "amoxicillin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "aspirin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "atorvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "ibuprofen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "levothyroxine",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "lisinopril",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "metformin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "metoprolol",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "omeprazole",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "warfarin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      }
+    ],
+    "enumeration_status": "medication_level_only",
+    "component_denominator": null,
+    "reason": "A governed food/component taxonomy has not been established; counts indicate whether a medication has any recorded assertion, not exhaustive ingredient-pair coverage."
+  },
+  "contraindications": {
+    "counts": {
+      "total": 10,
+      "assertion_present_unreviewed": 0,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 10,
+      "conflicting_evidence": 0
+    },
+    "medications": [
+      {
+        "medication": "amoxicillin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "aspirin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "atorvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "ibuprofen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "levothyroxine",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "lisinopril",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "metformin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "metoprolol",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "omeprazole",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "warfarin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      }
+    ]
+  },
+  "dosage_references": {
+    "counts": {
+      "total": 10,
+      "assertion_present_unreviewed": 0,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 10,
+      "conflicting_evidence": 0
+    },
+    "medications": [
+      {
+        "medication": "amoxicillin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "aspirin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "atorvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "ibuprofen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "levothyroxine",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "lisinopril",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "metformin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "metoprolol",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "omeprazole",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "warfarin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      }
+    ]
+  },
+  "administration_instructions": {
+    "counts": {
+      "total": 10,
+      "assertion_present_unreviewed": 0,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 10,
+      "conflicting_evidence": 0
+    },
+    "medications": [
+      {
+        "medication": "amoxicillin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "aspirin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "atorvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "ibuprofen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "levothyroxine",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "lisinopril",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "metformin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "metoprolol",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "omeprazole",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "warfarin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      }
+    ]
+  },
+  "evidence_appraisal": {
+    "source_count": 3,
+    "source_quality_assessed": 0,
+    "source_quality_not_assessed": 3,
+    "note": "Source identity/integrity, source quality, and assertion evidence strength are distinct attributes."
+  },
+  "interpretation": [
+    "not_evaluated means no assessment is recorded; it does not mean no interaction, no contraindication, or safe use.",
+    "assertion_present_unreviewed means an assertion exists but has not passed independent clinical approval.",
+    "conflicting_evidence requires explicit resolution; the report does not choose one source automatically.",
+    "Dosage references are source summaries, not patient-specific prescriptions or dose calculations.",
+    "This report describes the shipped development dataset only; it is not an exhaustive drug-safety assessment."
+  ]
+}

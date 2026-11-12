@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "knowledge_release": "rxlogic-seed-2026-11-13",
+  "release_status": "development_unreviewed",
+  "created_date": "2026-11-13",
+  "datasets": {
+    "interaction_rules": {
+      "path": "interaction_rules.json",
+      "schema_version": "2.0.0"
+    },
+    "food_rules": {
+      "path": "food_rules.json",
+      "schema_version": "2.0.0"
+    },
+    "evidence_sources": {
+      "path": "evidence_sources.json",
+      "schema_version": "1.0.0"
+    },
+    "clinical_assertions": {
+      "path": "clinical_assertions.json",
+      "schema_version": "1.0.0"
+    }
+  },
+  "publication_policy": {
+    "runtime_may_load_unreviewed_records": true,
+    "clinical_use_permitted": false,
+    "note": "Existing records are retained for educational/demo compatibility. Every migrated assertion remains needs_clinical_review; legacy source labels are not verified citations."
+  }
+}

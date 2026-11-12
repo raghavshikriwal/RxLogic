@@ -1,118 +1,192 @@
 {
-    "source_note": "RxNav's live Drug-Drug Interaction API was permanently discontinued by NLM in Jan 2024. This file is a manually curated rule set based on well-documented, publicly known interactions (ONC High-Priority style pairs), cross-referenced against openFDA label warnings. See README Scope & Limitations.",
-    "medications": {
-        "metformin": "6809",
-        "aspirin": "1191",
-        "lisinopril": "29046",
-        "atorvastatin": "83367",
-        "warfarin": "11289",
-        "ibuprofen": "5640",
-        "omeprazole": "7646",
-        "metoprolol": "6918",
-        "amoxicillin": "723",
-        "levothyroxine": "10582"
+  "source_note": "RxNav's live Drug-Drug Interaction API was permanently discontinued by NLM in Jan 2024. This file is a manually curated rule set based on well-documented, publicly known interactions (ONC High-Priority style pairs), cross-referenced against openFDA label warnings. See README Scope & Limitations.",
+  "medications": {
+    "metformin": "6809",
+    "aspirin": "1191",
+    "lisinopril": "29046",
+    "atorvastatin": "83367",
+    "warfarin": "11289",
+    "ibuprofen": "5640",
+    "omeprazole": "7646",
+    "metoprolol": "6918",
+    "amoxicillin": "723",
+    "levothyroxine": "10582"
+  },
+  "interaction_rules": [
+    {
+      "medication_a": "warfarin",
+      "medication_b": "aspirin",
+      "severity": "severe",
+      "evidence": "strong",
+      "description": "Combined use significantly increases risk of bleeding due to additive anticoagulant/antiplatelet effects.",
+      "source": "openFDA label / clinical literature",
+      "rule_id": "DDI-ASPIRIN-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-LEGACY-04153214F4"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
     },
-    "interaction_rules": [
-        {
-            "medication_a": "warfarin",
-            "medication_b": "aspirin",
-            "severity": "severe",
-            "evidence": "strong",
-            "description": "Combined use significantly increases risk of bleeding due to additive anticoagulant/antiplatelet effects.",
-            "source": "openFDA label / clinical literature"
-        },
-        {
-            "medication_a": "warfarin",
-            "medication_b": "ibuprofen",
-            "severity": "severe",
-            "evidence": "strong",
-            "description": "NSAIDs increase bleeding risk when combined with warfarin; also raises GI bleed risk independently.",
-            "source": "openFDA label / clinical literature"
-        },
-        {
-            "medication_a": "warfarin",
-            "medication_b": "amoxicillin",
-            "severity": "moderate",
-            "evidence": "moderate",
-            "description": "Antibiotics can disrupt gut flora that synthesize vitamin K, potentiating warfarin's anticoagulant effect and raising INR.",
-            "source": "openFDA label / clinical literature"
-        },
-        {
-            "medication_a": "warfarin",
-            "medication_b": "omeprazole",
-            "severity": "moderate",
-            "evidence": "moderate",
-            "description": "Omeprazole inhibits CYP2C19, slowing clearance of the S-warfarin isomer and increasing INR and bleeding risk.",
-            "source": "openFDA label / clinical literature"
-        },
-        {
-            "medication_a": "warfarin",
-            "medication_b": "levothyroxine",
-            "severity": "moderate",
-            "evidence": "strong",
-            "description": "Thyroid hormone increases clotting factor turnover, potentiating warfarin's anticoagulant effect; INR should be monitored closely after any dose change.",
-            "source": "openFDA label / clinical literature"
-        },
-        {
-            "medication_a": "warfarin",
-            "medication_b": "atorvastatin",
-            "severity": "mild",
-            "evidence": "limited",
-            "description": "Statins can mildly potentiate warfarin's anticoagulant effect via CYP interaction; periodic INR monitoring is generally advised.",
-            "source": "clinical literature"
-        },
-        {
-            "medication_a": "aspirin",
-            "medication_b": "ibuprofen",
-            "severity": "moderate",
-            "evidence": "strong",
-            "ordering": {
-                "anchor": "aspirin",
-                "after_minutes": 30,
-                "before_minutes": 480
-            },
-            "description": "Ibuprofen competitively blocks aspirin's irreversible binding to COX-1 on platelets, reducing aspirin's cardioprotective antiplatelet effect.",
-            "source": "openFDA label / clinical literature"
-        },
-        {
-            "medication_a": "lisinopril",
-            "medication_b": "ibuprofen",
-            "severity": "moderate",
-            "evidence": "strong",
-            "description": "NSAIDs blunt the antihypertensive effect of ACE inhibitors and, combined, increase risk of reduced kidney function, especially with volume depletion.",
-            "source": "openFDA label / clinical literature"
-        },
-        {
-            "medication_a": "metoprolol",
-            "medication_b": "ibuprofen",
-            "severity": "mild",
-            "evidence": "moderate",
-            "description": "NSAIDs can reduce the antihypertensive effectiveness of beta-blockers through sodium and fluid retention.",
-            "source": "clinical literature"
-        },
-        {
-            "medication_a": "omeprazole",
-            "medication_b": "levothyroxine",
-            "severity": "moderate",
-            "evidence": "moderate",
-            "description": "Reduced gastric acidity from PPIs impairs levothyroxine absorption; doses should be separated and thyroid function monitored.",
-            "source": "openFDA label / clinical literature"
-        },
-        {
-            "medication_a": "lisinopril",
-            "medication_b": "metformin",
-            "severity": "mild",
-            "evidence": "limited",
-            "description": "ACE inhibitors can modestly increase insulin sensitivity, slightly raising hypoglycemia risk when combined with glucose-lowering agents.",
-            "source": "clinical literature"
-        },
-        {
-            "medication_a": "lisinopril",
-            "medication_b": "metoprolol",
-            "severity": "mild",
-            "evidence": "moderate",
-            "description": "Two antihypertensive agents used together have an additive blood-pressure-lowering effect; monitor for symptomatic hypotension, particularly at treatment initiation.",
-            "source": "clinical literature"
-        }
-    ]
+    {
+      "medication_a": "warfarin",
+      "medication_b": "ibuprofen",
+      "severity": "severe",
+      "evidence": "strong",
+      "description": "NSAIDs increase bleeding risk when combined with warfarin; also raises GI bleed risk independently.",
+      "source": "openFDA label / clinical literature",
+      "rule_id": "DDI-IBUPROFEN-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-LEGACY-04153214F4"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
+    },
+    {
+      "medication_a": "warfarin",
+      "medication_b": "amoxicillin",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "Antibiotics can disrupt gut flora that synthesize vitamin K, potentiating warfarin's anticoagulant effect and raising INR.",
+      "source": "openFDA label / clinical literature",
+      "rule_id": "DDI-AMOXICILLIN-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-LEGACY-04153214F4"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
+    },
+    {
+      "medication_a": "warfarin",
+      "medication_b": "omeprazole",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "Omeprazole inhibits CYP2C19, slowing clearance of the S-warfarin isomer and increasing INR and bleeding risk.",
+      "source": "openFDA label / clinical literature",
+      "rule_id": "DDI-OMEPRAZOLE-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-LEGACY-04153214F4"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
+    },
+    {
+      "medication_a": "warfarin",
+      "medication_b": "levothyroxine",
+      "severity": "moderate",
+      "evidence": "strong",
+      "description": "Thyroid hormone increases clotting factor turnover, potentiating warfarin's anticoagulant effect; INR should be monitored closely after any dose change.",
+      "source": "openFDA label / clinical literature",
+      "rule_id": "DDI-LEVOTHYROXINE-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-LEGACY-04153214F4"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
+    },
+    {
+      "medication_a": "warfarin",
+      "medication_b": "atorvastatin",
+      "severity": "mild",
+      "evidence": "limited",
+      "description": "Statins can mildly potentiate warfarin's anticoagulant effect via CYP interaction; periodic INR monitoring is generally advised.",
+      "source": "clinical literature",
+      "rule_id": "DDI-ATORVASTATIN-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-LEGACY-C83BCBEC78"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
+    },
+    {
+      "medication_a": "aspirin",
+      "medication_b": "ibuprofen",
+      "severity": "moderate",
+      "evidence": "strong",
+      "ordering": {
+        "anchor": "aspirin",
+        "after_minutes": 30,
+        "before_minutes": 480
+      },
+      "description": "Ibuprofen competitively blocks aspirin's irreversible binding to COX-1 on platelets, reducing aspirin's cardioprotective antiplatelet effect.",
+      "source": "openFDA label / clinical literature",
+      "rule_id": "DDI-ASPIRIN-IBUPROFEN",
+      "evidence_source_ids": [
+        "SRC-LEGACY-04153214F4"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
+    },
+    {
+      "medication_a": "lisinopril",
+      "medication_b": "ibuprofen",
+      "severity": "moderate",
+      "evidence": "strong",
+      "description": "NSAIDs blunt the antihypertensive effect of ACE inhibitors and, combined, increase risk of reduced kidney function, especially with volume depletion.",
+      "source": "openFDA label / clinical literature",
+      "rule_id": "DDI-IBUPROFEN-LISINOPRIL",
+      "evidence_source_ids": [
+        "SRC-LEGACY-04153214F4"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
+    },
+    {
+      "medication_a": "metoprolol",
+      "medication_b": "ibuprofen",
+      "severity": "mild",
+      "evidence": "moderate",
+      "description": "NSAIDs can reduce the antihypertensive effectiveness of beta-blockers through sodium and fluid retention.",
+      "source": "clinical literature",
+      "rule_id": "DDI-IBUPROFEN-METOPROLOL",
+      "evidence_source_ids": [
+        "SRC-LEGACY-C83BCBEC78"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
+    },
+    {
+      "medication_a": "omeprazole",
+      "medication_b": "levothyroxine",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "Reduced gastric acidity from PPIs impairs levothyroxine absorption; doses should be separated and thyroid function monitored.",
+      "source": "openFDA label / clinical literature",
+      "rule_id": "DDI-LEVOTHYROXINE-OMEPRAZOLE",
+      "evidence_source_ids": [
+        "SRC-LEGACY-04153214F4"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
+    },
+    {
+      "medication_a": "lisinopril",
+      "medication_b": "metformin",
+      "severity": "mild",
+      "evidence": "limited",
+      "description": "ACE inhibitors can modestly increase insulin sensitivity, slightly raising hypoglycemia risk when combined with glucose-lowering agents.",
+      "source": "clinical literature",
+      "rule_id": "DDI-LISINOPRIL-METFORMIN",
+      "evidence_source_ids": [
+        "SRC-LEGACY-C83BCBEC78"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
+    },
+    {
+      "medication_a": "lisinopril",
+      "medication_b": "metoprolol",
+      "severity": "mild",
+      "evidence": "moderate",
+      "description": "Two antihypertensive agents used together have an additive blood-pressure-lowering effect; monitor for symptomatic hypotension, particularly at treatment initiation.",
+      "source": "clinical literature",
+      "rule_id": "DDI-LISINOPRIL-METOPROLOL",
+      "evidence_source_ids": [
+        "SRC-LEGACY-C83BCBEC78"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "unspecified"
+    }
+  ],
+  "schema_version": "2.0.0",
+  "knowledge_release": "rxlogic-seed-2026-11-13"
 }

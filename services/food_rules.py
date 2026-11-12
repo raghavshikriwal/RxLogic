@@ -38,10 +38,24 @@ class FoodRule:
     requirement: FoodRequirement
     note: str = ""
     source: str = ""
+    rule_id: str = ""
+    evidence_source_ids: tuple[str, ...] = ()
+    review_status: str = "needs_clinical_review"
 
 
 class FoodRules:
     """Looks up each drug's food rule and applies it to a medication list."""
+
+    @classmethod
+    def from_active_release(cls, knowledge_root: Path | None = None) -> "FoodRules":
+        """Load food rules only from the active approved release (fail closed)."""
+        from services.knowledge_release import DEFAULT_KNOWLEDGE_ROOT, load_active_release
+
+        bundle = load_active_release(knowledge_root or DEFAULT_KNOWLEDGE_ROOT)
+        instance = cls.__new__(cls)
+        instance.rules = instance._parse_rules(bundle["food_rules"])
+        instance.knowledge_release = bundle["manifest"]["knowledge_release"]
+        return instance
 
     def __init__(self, rules_path: Path = FOOD_RULES_PATH):
         raw = json.loads(rules_path.read_text(encoding="utf-8"))
@@ -59,6 +73,9 @@ class FoodRules:
                 requirement=FoodRequirement(entry["requirement"]),
                 note=entry.get("note", ""),
                 source=entry.get("source", ""),
+                rule_id=entry.get("rule_id", f"FOOD-{name.upper()}"),
+                evidence_source_ids=tuple(entry.get("evidence_source_ids", ())),
+                review_status=entry.get("review_status", "needs_clinical_review"),
             )
         return rules
 
@@ -86,6 +103,9 @@ class FoodRules:
                     status=status,
                     note=rule.note,
                     source=rule.source,
+                    rule_id=rule.rule_id,
+                    evidence_source_ids=rule.evidence_source_ids,
+                    review_status=rule.review_status,
                 )
             )
         return resolved, guidance

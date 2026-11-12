@@ -122,6 +122,9 @@ class Interaction:
     # Order-aware alternative to separation_minutes, for pairs where the
     # sequence of doses matters. None when the pair has no such rule.
     ordering: Optional[DoseOrdering] = None
+    evidence_source_ids: tuple[str, ...] = ()
+    review_status: str = "needs_clinical_review"
+    jurisdiction: str = "unspecified"
 
 
 @dataclass(frozen=True)
@@ -183,6 +186,9 @@ class FoodGuidance:
     status: FoodStatus
     note: str = ""
     source: str = ""
+    rule_id: str = ""
+    evidence_source_ids: tuple[str, ...] = ()
+    review_status: str = "needs_clinical_review"
 
 
 @dataclass(frozen=True)

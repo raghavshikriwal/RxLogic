@@ -10,6 +10,8 @@ between the LLM and the reasoning core.
 from __future__ import annotations
 
 import logging
+import os
+from pathlib import Path
 import uuid
 from dataclasses import asdict
 from typing import Any
@@ -37,6 +39,7 @@ from models.schemas import (
 from services.llm_parser import parse_medications
 from services.plan_log_service import get_recent_plans, log_plan
 from services.reasoning_service import generate_daily_plan
+from services.knowledge_release import DEFAULT_KNOWLEDGE_ROOT, KnowledgeReleaseError, load_active_release
 
 api = Blueprint("api", __name__, url_prefix="/api")
 logger = logging.getLogger(__name__)
@@ -210,6 +213,28 @@ def health() -> tuple[dict[str, Any], int]:
     return jsonify({"status": "ok"}), 200
 
 
+@api.route("/knowledge/status", methods=["GET"])
+def knowledge_status() -> tuple[dict[str, Any], int]:
+    """Expose runtime knowledge mode without exposing governance mutations."""
+    mode = os.getenv("RXLOGIC_KNOWLEDGE_MODE", "legacy_development").strip().lower()
+    if mode == "legacy_development":
+        return jsonify({"mode": mode, "status": "development_unreviewed",
+                        "clinical_use_permitted": False,
+                        "warning": "Legacy development knowledge is not a clinically approved release."}), 200
+    if mode != "active_release":
+        return jsonify({"mode": mode, "status": "invalid_configuration"}), 503
+    try:
+        root = Path(os.getenv("RXLOGIC_KNOWLEDGE_ROOT", str(DEFAULT_KNOWLEDGE_ROOT)))
+        bundle = load_active_release(root)
+        manifest = bundle["manifest"]
+        return jsonify({"mode": mode, "status": "active_release",
+                        "knowledge_release": manifest["knowledge_release"],
+                        "clinical_use_permitted": False}), 200
+    except KnowledgeReleaseError as exc:
+        return jsonify({"mode": mode, "status": "unavailable",
+                        "error": "approved_knowledge_unavailable", "message": str(exc)}), 503
+
+
 @api.route("/plan", methods=["POST"])
 @limiter.limit("20 per minute")
 def create_plan() -> tuple[dict[str, Any], int]:
@@ -218,7 +243,14 @@ def create_plan() -> tuple[dict[str, Any], int]:
         raise SchemaValidationError(raw_output="<no body>", validation_errors="request body must be JSON")
 
     medications = _parse_medications(payload)
-    plan = generate_daily_plan(medications)
+    try:
+        plan = generate_daily_plan(medications)
+    except KnowledgeReleaseError as exc:
+        return jsonify({"error": "approved_knowledge_unavailable", "message": str(exc)}), 503
+    except ValueError as exc:
+        if "RXLOGIC_KNOWLEDGE_MODE" in str(exc):
+            return jsonify({"error": "invalid_knowledge_configuration", "message": str(exc)}), 503
+        raise
     _try_log_plan(medications, plan, source="structured")
     return jsonify(_serialize_plan(plan)), 200
 
@@ -241,7 +273,14 @@ def create_plan_from_text() -> tuple[dict[str, Any], int]:
         raise SchemaValidationError(raw_output=str(payload), validation_errors="'text' must be a non-empty string")
 
     medications = parse_medications(user_text)
-    plan = generate_daily_plan(medications)
+    try:
+        plan = generate_daily_plan(medications)
+    except KnowledgeReleaseError as exc:
+        return jsonify({"error": "approved_knowledge_unavailable", "message": str(exc)}), 503
+    except ValueError as exc:
+        if "RXLOGIC_KNOWLEDGE_MODE" in str(exc):
+            return jsonify({"error": "invalid_knowledge_configuration", "message": str(exc)}), 503
+        raise
     _try_log_plan(medications, plan, source="natural_language")
     return jsonify(_serialize_plan(plan)), 200
 
@@ -292,6 +331,16 @@ def handle_external_api_error(err: ExternalAPIError):
     # past this handler instead of collapsing both into one code.
     error_code = "llm_api_error" if err.api_name == "Ollama" else "external_api_error"
     return jsonify({"error": error_code, "message": str(err)}), 502
+
+
+@api.errorhandler(KnowledgeReleaseError)
+def handle_knowledge_release_error(err: KnowledgeReleaseError):
+    return jsonify({"error": "approved_knowledge_unavailable", "message": str(err)}), 503
+
+
+@api.errorhandler(ValueError)
+def handle_configuration_error(err: ValueError):
+    return jsonify({"error": "configuration_error", "message": str(err)}), 503
 
 
 @api.errorhandler(RxLogicError)
