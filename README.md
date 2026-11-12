@@ -1,358 +1,636 @@
 # RxLogic
 
-**A neuro-symbolic AI agent for medication scheduling and drug-interaction reasoning.**
+**An explainable neuro-symbolic AI demonstrator for medication-interaction reasoning and constraint-based schedule generation.**
 
 [![Tests](https://github.com/raghavshikriwal/RxLogic/actions/workflows/tests.yml/badge.svg)](https://github.com/raghavshikriwal/RxLogic/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](runtime.txt)
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://rxlogic-ataf.onrender.com)
 
-**[Live demo →](https://rxlogic-ataf.onrender.com)** — note: the deployed instance has no Ollama backend, so free-text ("Describe in words") input is unavailable there by design; structured input works fully. See [§7.3](#73-natural-language-input-optional) and [§1](#1-why-this-project) for why that's expected, not a bug.
+**[Open the live demonstration](https://rxlogic-ataf.onrender.com)**
 
-A small, locally-hosted LLM handles natural-language *understanding* at the edges of the system. Every actual decision — interaction detection, risk confidence, dose scheduling, conflict resolution — is made by classical, explainable AI: a forward-chaining rule engine, a fuzzy-logic uncertainty layer, a constraint-satisfaction scheduler, and a goal-stack planner. Disable the LLM entirely and the system still works, end to end, from a structured form.
+> **Important deployment note:** The deployed Render instance does not host Ollama. Its structured medication-entry workflow is available; natural-language parsing requires a locally running Ollama service and is therefore not available on that hosted instance.
 
-> ⚠️ **Educational demonstrator, not a medical device.** RxLogic illustrates neuro-symbolic reasoning applied to a safety-adjacent domain. It is not a substitute for a pharmacist or physician and must not be used for real medication decisions. See [§8 Scope, Safety & Limitations](#8-scope-safety--limitations).
+> **Educational demonstrator only — not a medical device.** RxLogic is a software engineering and AI coursework demonstration. It is not clinically validated, is not a substitute for a qualified healthcare professional, and must never be used to choose, change, time, start, stop, or combine real medication. All examples and test cases are synthetic demonstrations.
 
----
-
-## Table of Contents
-
-1. [Why This Project](#1-why-this-project)
-2. [Architecture](#2-architecture)
-3. [Syllabus Alignment](#3-syllabus-alignment)
-4. [Tech Stack](#4-tech-stack)
-5. [Project Structure](#5-project-structure)
-6. [API Reference](#6-api-reference)
-7. [Getting Started](#7-getting-started)
-8. [Scope, Safety & Limitations](#8-scope-safety--limitations)
-9. [Testing](#9-testing)
-10. [Design Principles](#10-design-principles)
-11. [Future Scope](#11-future-scope)
-12. [License](#license)
+RxLogic separates optional neural language understanding from its deterministic symbolic reasoning core. A local LLM can convert a natural-language description into typed input. The actual interaction-rule evaluation, uncertainty refinement, constraint solving, planning, and explanation are performed by conventional, inspectable software. The structured-input workflow does not require an LLM.
 
 ---
 
-## 1. Why This Project
+## Contents
 
-Most student AI projects pick one syllabus unit and build a demo around it — a search visualizer, a chatbot wrapper, a CNN classifier. RxLogic instead treats **medication scheduling** as a single problem that genuinely requires four different classical AI techniques to work together, with an LLM used only as an optional, replaceable input layer:
+1. [Project overview](#1-project-overview)
+2. [Key capabilities](#2-key-capabilities)
+3. [Architecture and data flow](#3-architecture-and-data-flow)
+4. [Frontend experience and user input](#4-frontend-experience-and-user-input)
+5. [Technology stack](#5-technology-stack)
+6. [Repository structure](#6-repository-structure)
+7. [API overview](#7-api-overview)
+8. [Local setup](#8-local-setup)
+9. [Running the application](#9-running-the-application)
+10. [Testing and verification evidence](#10-testing-and-verification-evidence)
+11. [Deployment notes](#11-deployment-notes)
+12. [Safety, scope, and known limitations](#12-safety-scope-and-known-limitations)
+13. [Design decisions](#13-design-decisions)
+14. [Future improvements](#14-future-improvements)
+15. [License and project information](#15-license-and-project-information)
 
-- **Knowledge representation & inference** — drug interactions as forward-chaining rules
-- **Reasoning under uncertainty** — fuzzy logic over interaction confidence, not a binary flag
-- **Constraint satisfaction** — dose timing as a CSP solved with backtracking + forward checking
-- **Planning** — a goal-stack planner assembling the final schedule, risk-ordered
+---
 
-The litmus test for whether this is genuine neuro-symbolic AI rather than "LLM in, answer out": **disable the LLM and submit structured input via a plain form instead of free text — the system produces the exact same schedule, warnings, and explanations.** Only the natural-language convenience is lost. `services/reasoning_service.py` has zero import of, or dependency on, the LLM layer.
+## 1. Project overview
 
-## 2. Architecture
+RxLogic demonstrates how multiple classical AI techniques can cooperate in one explainable pipeline. It is designed around a deliberately safety-adjacent example domain so that the project can demonstrate rule-based knowledge representation, reasoning under uncertainty, constraint satisfaction, planning, and transparent output.
 
-RxLogic is layered so the symbolic reasoning core has no dependency on the neural layer — the LLM sits only at the input boundary, and everything downstream operates on strictly typed data.
+The project combines:
 
+- **Knowledge representation and inference:** curated medication-pair rules evaluated by a forward-chaining rule engine.
+- **Reasoning under uncertainty:** a Mamdani fuzzy-logic layer that refines confidence using evidence strength and source reliability.
+- **Constraint satisfaction:** a dose-time scheduler using backtracking, a minimum-remaining-values (MRV) variable-ordering heuristic, and forward checking.
+- **Goal-stack planning:** a planner that resolves scheduling goals and records its resolution trace.
+- **Optional natural-language understanding:** a local Ollama model that extracts structured fields from text; it does not make the downstream decisions.
+- **A web interface and API:** a React frontend communicates with a Flask backend and displays the pipeline's structured results.
+
+A core architectural property is that the symbolic reasoning pipeline can run using structured input without calling the LLM. The LLM is an input convenience, not the authority for interaction decisions or schedule construction.
+
+## 2. Key capabilities
+
+### Reasoning and planning
+
+- Normalize supported brand aliases and selected spelling variants to canonical names.
+- Reject medication names that are not covered by the shipped knowledge base rather than silently treating them as safe.
+- Evaluate curated interaction rules across medication pairs.
+- Keep interaction severity, evidence strength, and derived confidence conceptually separate.
+- Apply available food-related constraints and report conflicts with user-provided fields.
+- Generate a feasible schedule subject to configured timing and separation constraints, or return a typed unsatisfiable result.
+- Include rule identifiers, constraint identifiers, reasoning text, and a goal-resolution trace in the output.
+
+### Application experience
+
+- Structured medication-entry form with add/remove rows and field validation.
+- Optional natural-language input mode when the backend can reach a local Ollama instance.
+- Result presentation for the generated schedule, interaction warnings, coverage, name corrections, food guidance, and goal trace.
+- Plan-history page backed by the API's plan-list endpoint.
+- Responsive React layout built with Tailwind CSS.
+
+### Backend and persistence
+
+- Flask REST API with request validation and endpoint rate limits.
+- Typed domain schemas and explicit domain exceptions.
+- SQLAlchemy persistence with SQLite for local/test use and PostgreSQL configuration for deployment.
+- Best-effort plan logging: a logging failure is designed not to turn an otherwise successful plan response into an API failure.
+- Cached external drug-data lookups through the RxNav RxCUI and openFDA label-data integrations.
+
+## 3. Architecture and data flow
+
+The system is organized around a strict boundary between language parsing and symbolic reasoning.
+
+```text
+React + Vite frontend
+        |
+        | structured request or natural-language request
+        v
+Flask API (routes/api.py)
+        |
+        +---- structured input -------------------------------+
+        |                                                      |
+        +---- free text --> Ollama --> LLM parser --> schema --+
+                                                               |
+                                                               v
+                                                Typed Medication objects
+                                                               |
+                                                               v
+                                                Reasoning service
+                                                               |
+                 +----------------------+----------------------+-------------------+
+                 |                      |                      |                   |
+                 v                      v                      v                   v
+          Name normalizer          Food rules             Rule engine        Coverage check
+          aliases/variants         meal constraints       forward chaining  unknown-name guard
+                 |                      |                      |
+                 +----------------------+----------------------+
+                                                               |
+                                                               v
+                                                   Fuzzy uncertainty layer
+                                                               |
+                                                               v
+                                                   Goal-stack planner
+                                                               |
+                                                               v
+                                                   CSP dose scheduler
+                                                   backtracking + MRV
+                                                   + forward checking
+                                                               |
+                                                               v
+                                                   Explainable DailyPlan
+                                                               |
+                                      +------------------------+------------------+
+                                      |                                           |
+                                      v                                           v
+                              API response / React UI                     Plan log storage
+                                                                         SQLite / PostgreSQL
 ```
-                 ┌─────────────────────────────────────────────┐
-                 │   Layer 1 · Interaction Layer (Neural)       │
-                 │   services/llm_parser.py                     │
-                 │   Free text ──(Ollama / phi3:mini)──▶ JSON   │
-                 │   validated against the Medication schema    │
-                 │   before it ever reaches the reasoning core  │
-                 └───────────────────┬───────────────────────────┘
-                                     │  typed Medication objects
-                                     ▼
-                 ┌─────────────────────────────────────────────┐
-                 │   Layer 2 · Knowledge Layer (Symbolic)       │
-                 │   knowledge/interaction_rules.json           │
-                 │   knowledge/food_rules.json                  │
-                 │   knowledge/drug_aliases.json                │
-                 │   services/drug_data_client.py               │
-                 │   Curated interaction, meal and brand-name   │
-                 │   rules + cached RxNav / openFDA lookups     │
-                 └───────────────────┬───────────────────────────┘
-                                     ▼
-                 ┌─────────────────────────────────────────────┐
-                 │   Layer 3 · Reasoning Core (Symbolic)        │
-                 │   services/reasoning_service.py (orchestrator)│
-                 │                                              │
-                 │   0. name_normalizer.py  brand/typo → generic │
-                 │      → unknown drugs are rejected (fail-safe) │
-                 │   1. food_rules.py       per-drug meal rules  │
-                 │      → fills open with_food, flags conflicts  │
-                 │   2. rule_engine.py      forward-chaining     │
-                 │      → flags known interaction pairs          │
-                 │   3. uncertainty.py      Mamdani fuzzy        │
-                 │      → refines each flag's confidence         │
-                 │   4. planner.py          goal-stack planning  │
-                 │      └─ csp_scheduler.py  backtracking + MRV  │
-                 │         + forward checking → dose times       │
-                 └───────────────────┬───────────────────────────┘
-                                     │  DailyPlan (entries, warnings, goal_trace,
-                                     │  coverage, name_resolutions, food_guidance)
-                                     ▼
-                 ┌─────────────────────────────────────────────┐
-                 │   Layer 4 · Application Layer                │
-                 │   routes/api.py (Flask blueprint, rate-limited)│
-                 │   frontend/ (React + Vite + Tailwind)          │
-                 └───────────────────┬───────────────────────────┘
-                                     ▼
-                 ┌─────────────────────────────────────────────┐
-                 │   Layer 5 · Persistence Layer                │
-                 │   models/database.py · services/plan_log_service.py│
-                 │   SQLite (dev/test) / PostgreSQL (prod)       │
-                 │   Immutable, auditable log of every plan       │
-                 └─────────────────────────────────────────────┘
-```
 
-**End-to-end data flow:**
+### Pipeline stages
 
-1. User submits medications — either structured JSON (`POST /api/plan`) or free text (`POST /api/plan/nl`).
-2. If free text: the LLM parser extracts a structured medication list and validates it against the schema.
-3. Names are normalized: brand names and near-miss spellings are mapped to generics (`Coumadin → warfarin`, `asprin → aspirin`), and duplicate entries for one drug are merged.
-4. Coverage is checked. Any drug the knowledge base doesn't cover raises `unknown_medication` (422) listing every unrecognized drug, instead of producing a plan that looks all-clear.
-5. Per-drug food rules fill in any `with_food` the user left open (metformin with food, levothyroxine on an empty stomach). A choice the user made themselves is never overridden; a conflict with the rule is reported.
-6. The rule engine forward-chains over every medication pair, flagging known interactions with their severity, evidence strength and, where recorded, a pair-specific separation time.
-7. The uncertainty layer refines each flagged interaction's confidence via fuzzy inference over evidence strength and source reliability (severity is deliberately not an input: how dangerous is not how sure).
-8. The CSP scheduler encodes dose timing, meal windows, and interaction-driven separation as constraints, and solves for a feasible schedule via backtracking search with MRV variable ordering and forward checking. Each interacting pair is separated by its own gap, or a 120-minute default when its rule records none; where dose order matters (aspirin and ibuprofen), the rule is order-aware: the other drug is safe only a set time after, or a longer time before, the anchor drug's dose.
-9. The planner resolves the goal stack (severity first, then evidence strength) against the CSP solution and records the resolution order.
-10. The API serializes the plan and best-effort logs it to the database — a logging failure never turns a successful plan into a 500.
-11. The response includes the schedule, every warning, a `goal_trace`, a coverage summary, the name corrections made, and the food guidance applied — nothing is a black box.
+1. The user submits either structured fields or a natural-language description.
+2. For natural-language input only, the LLM parser requests structured output from Ollama and validates it against the application's schema.
+3. The name normalizer resolves supported aliases and selected close variants; unresolved names are surfaced as unknown.
+4. Coverage is evaluated against the project's curated knowledge base. An unknown medication does not receive an all-clear result.
+5. Food-rule processing applies configured guidance where the input leaves the field unspecified and reports conflicts rather than silently hiding them.
+6. The rule engine evaluates medication pairs against the curated interaction rules.
+7. The uncertainty layer refines confidence using evidence and source-reliability inputs; severity is a separate concept.
+8. The CSP scheduler attempts to satisfy dose-frequency, preferred-time, meal-window, and interaction-separation constraints. If no solution exists, it fails explicitly instead of silently weakening a constraint.
+9. The planner records the order in which goals were resolved.
+10. The API serializes the result and attempts to log the plan.
+11. The frontend presents the schedule and supporting reasoning information returned by the backend.
 
-## 3. Syllabus Alignment
+## 4. Frontend experience and user input
 
-| Unit | Topic Area | Where It Lives |
+The frontend is a React single-page application with two main destinations: **Plan** and **History**.
+
+### 4.1 Plan page
+
+The Plan page introduces the project and provides a medication form with two input modes.
+
+**A. Add medications (structured mode)**
+
+The user enters one medication per row. The available fields in the current form are:
+
+| Field | What the field represents | Input behavior |
 |---|---|---|
-| 1 | Problem spaces, production systems | Scheduling framed as a state-space problem: state = current schedule, operators = placing/shifting a dose, goal test = zero conflicts |
-| 2 | Search & CSP techniques | `services/csp_scheduler.py` — backtracking search, MRV heuristic, forward checking; per-pair separation constraints |
-| 3 | Knowledge representation, forward chaining | `services/rule_engine.py` + `knowledge/interaction_rules.json` — curated predicate-style interaction facts, forward-chained per medication pair; `services/food_rules.py` + `knowledge/food_rules.json` — per-drug meal rules |
-| 4 | Reasoning under uncertainty | `services/uncertainty.py` — Mamdani fuzzy inference system over evidence strength and source reliability |
-| 5 | Planning, goal-stack planning, intelligent agents | `services/planner.py` — goal-stack assembly, risk-ordered; the system as a whole follows perceive → reason → act → explain |
+| Medication name | Name to be checked against the supported knowledge base | Required for each active row; text input |
+| Dosage (mg) | Optional numeric dosage value | Optional; if supplied, must be a valid non-negative number |
+| Times per day | Frequency value used by the scheduling demonstration | Required numeric value from 1 through 6 |
+| Preferred timing | One of No preference, Morning, Afternoon, Evening, or Night | Select control; defaults to No preference |
+| Food instruction | Not specified, With food, or Without food | Select control; defaults to Not specified |
 
-## 4. Tech Stack
+The user can select **Add another medication** to add a row and **Remove** to remove an extra row. At least one active medication row is required. Empty unused rows are ignored. The form validates the medication name, dosage (when supplied), and frequency before submission.
 
-| Layer | Technology | Purpose |
-|---|---|---|
-| Language Understanding | Ollama + `phi3:mini` (local) | Free-text → structured data, entirely optional |
-| Backend Framework | Flask 3 + Flask-Limiter | REST API, per-endpoint rate limiting |
-| Symbolic Reasoning | Pure Python | Rule engine, CSP solver, goal-stack planner |
-| Uncertainty Modeling | `scikit-fuzzy` | Mamdani fuzzy inference for interaction confidence |
-| External Data | RxNav (NLM) + openFDA | RxCUI resolution and drug label data, cached locally |
-| Persistence | SQLAlchemy 2 · SQLite (dev/test) / PostgreSQL via Neon (prod) | Immutable audit log of every generated plan |
-| Frontend | React 18 + Vite + Tailwind CSS + React Router | Input form, schedule timeline, warnings panel, plan history |
-| Testing | pytest + pytest-cov | Unit tests across every reasoning module and the API layer |
-| Deployment | Render + Gunicorn | Single-service deployment — Flask serves the built React bundle, same-origin, no CORS |
-| Version Control | Git + GitHub | Source control |
+**B. Describe in words (natural-language mode)**
 
-## 5. Project Structure
+The user can type a plain-language description into the text area. The current UI allows up to 4,000 characters. The parser is intended to extract medication names and any dosage, frequency, timing, or food details that the model can reliably identify. This mode requires a reachable local Ollama service and the configured model. It is not enabled on the hosted Render demo described below.
 
+For a UI walkthrough or classroom demonstration, use only synthetic, instructor-provided sample data. Do not enter personal health information or real medication regimens. A natural-language parser can misunderstand text; its output must not be treated as medical advice.
+
+**Illustrative text format (synthetic placeholder only):**
+
+```text
+DemoMed-A, one time per day, preferred in the morning.
+DemoMed-B, two times per day, no preferred time was provided.
 ```
+
+These placeholder names are for explaining the input format only. They are not entries in the shipped knowledge base and are not expected to generate a valid plan.
+
+### 4.2 Plan result
+
+When a request succeeds, the result components display the information returned by the API. Depending on the result, this includes:
+
+- **Schedule timeline:** medication labels, scheduled times, and the associated reasoning/constraints.
+- **Interaction warnings:** matched rule information, severity, evidence, confidence, and configured separation or ordering details.
+- **Coverage summary:** how many distinct medication names were checked and which names remain unchecked.
+- **Name corrections:** supported alias or fuzzy-name resolutions made before reasoning.
+- **Food guidance:** applicable meal requirements and whether the input matched or conflicted with the configured rule.
+- **Goal trace:** the order in which the planner resolved its goals.
+
+An empty warning list must not be interpreted as proof that every possible interaction was checked. Always read the coverage information and the application's educational disclaimer.
+
+### 4.3 History page
+
+The History page requests recent saved plans from the backend. It displays the available plan records, input names, creation time, input source, warning count, and expandable schedule entries. A small warning-count trend is shown for the returned history records. The current API history response is limited to a maximum of 100 records; the frontend requests a recent subset.
+
+### 4.4 Navigation and errors
+
+The navigation provides access to the Plan and History views. Validation errors are shown near the relevant fields or form. Backend failures are presented through an error banner rather than being silently converted into a successful-looking result.
+
+## 5. Technology stack
+
+| Area | Technology | Responsibility |
+|---|---|---|
+| Frontend | React 18 | Component-based user interface |
+| Frontend tooling | Vite 5 | Development server and production build |
+| Styling | Tailwind CSS 3 | Responsive utility-first styling |
+| Client routing | React Router 6 | Plan and History navigation |
+| Backend | Flask 3 | REST API and application serving |
+| Rate limiting | Flask-Limiter | Endpoint request limits |
+| Language parsing | Ollama + `phi3:mini` (local) | Optional free-text extraction |
+| Core reasoning | Python | Rules, normalization, planning, and CSP scheduling |
+| Fuzzy inference | scikit-fuzzy | Mamdani-style confidence refinement |
+| External drug data | RxNav and openFDA | RxCUI resolution and label-data lookup |
+| Persistence | SQLAlchemy 2 | SQLite and PostgreSQL database access |
+| Migrations | Alembic | Database schema migration tooling |
+| Testing | pytest + pytest-cov | Automated tests and coverage reporting |
+| Deployment | Render + Gunicorn | Hosted Flask service and built frontend |
+
+## 6. Repository structure
+
+```text
 RxLogic-main/
-├── app.py                       # Flask application factory
-├── extensions.py                # Shared extension instances (rate limiter)
-├── models/
-│   ├── schemas.py                # Medication, Interaction, ScheduleEntry, Coverage, NameResolution, FoodGuidance, DailyPlan
-│   ├── exceptions.py             # Typed domain exceptions (fail-safe, never bare Exception)
-│   └── database.py               # SQLAlchemy engine, PlanLog model
-├── services/
-│   ├── llm_parser.py             # NL → structured Medication (Ollama, optional)
-│   ├── name_normalizer.py        # Brand name / typo → generic, shown to the user
-│   ├── food_rules.py             # Per-drug meal rules → with_food constraint
-│   ├── rule_engine.py            # Forward-chaining interaction detection + coverage check
-│   ├── uncertainty.py            # Fuzzy-logic confidence refinement
-│   ├── csp_scheduler.py          # Dose-timing CSP: backtracking + MRV + forward checking
-│   ├── planner.py                # Goal-stack planning → final DailyPlan
-│   ├── reasoning_service.py      # Single orchestration entry point for the pipeline
-│   ├── drug_data_client.py       # RxNav / openFDA client with local JSON caching
-│   └── plan_log_service.py       # Typed objects ↔ persistence layer translation
+├── app.py                         # Flask application entry point
+├── extensions.py                  # Shared Flask extensions
 ├── routes/
-│   └── api.py                    # Thin REST controllers, JSON ↔ typed schema boundary
+│   └── api.py                     # API routes and request/response boundary
+├── models/
+│   ├── schemas.py                 # Typed domain schemas
+│   ├── exceptions.py              # Typed domain exceptions
+│   └── database.py                # SQLAlchemy database configuration/models
+├── services/
+│   ├── llm_parser.py              # Optional Ollama natural-language parser
+│   ├── name_normalizer.py         # Alias and spelling normalization
+│   ├── food_rules.py              # Meal-related rule processing
+│   ├── rule_engine.py             # Forward-chaining interaction rules
+│   ├── uncertainty.py             # Fuzzy confidence refinement
+│   ├── csp_scheduler.py           # Constraint-satisfaction scheduler
+│   ├── planner.py                 # Goal-stack planner
+│   ├── reasoning_service.py       # Pipeline orchestration
+│   ├── drug_data_client.py        # RxNav/openFDA client and cache
+│   └── plan_log_service.py        # Plan persistence translation
 ├── knowledge/
-│   ├── interaction_rules.json     # Curated interaction rules (severity, evidence, separation) + resolved RxCUIs
-│   ├── food_rules.json            # Curated per-drug meal rules
-│   ├── drug_aliases.json          # Curated brand names and spelling variants
-│   └── cache/                     # Cached RxNav/openFDA responses (regenerable)
-├── alembic/                        # Database migrations (see §7.1)
-├── scripts/
-│   └── build_knowledge_base.py    # One-off script to resolve seed medications to RxCUIs
-├── tests/                          # 13 test modules — every reasoning stage + API + DB
-├── frontend/                       # React + Vite + Tailwind demo UI
-│   └── src/
-│       ├── components/             # MedicationForm, ScheduleTimeline, WarningsPanel, CoverageSummary, NameCorrections, FoodGuidance, GoalTrace, PlanResult, Hero, NavBar
-│       └── pages/                  # HomePage, HistoryPage
-├── requirements.txt
-└── Procfile                        # gunicorn app:app
+│   ├── interaction_rules.json     # Curated interaction knowledge
+│   ├── food_rules.json            # Curated meal-related rules
+│   ├── drug_aliases.json          # Supported aliases and variants
+│   └── cache/                     # Cached external lookup responses
+├── frontend/
+│   ├── src/
+│   │   ├── components/            # Form, result, warning, trace and layout UI
+│   │   ├── pages/                 # Home/Plan and History pages
+│   │   ├── hooks/                 # Shared React hooks
+│   │   ├── api.js                 # Frontend API client
+│   │   ├── App.jsx                # Application routes/layout
+│   │   └── index.css              # Global styles
+│   ├── package.json               # Frontend scripts/dependencies
+│   └── vite.config.js              # Vite development configuration
+├── tests/                         # 14 pytest test modules
+├── alembic/                       # Database migration environment/history
+├── scripts/                       # Knowledge-base maintenance scripts
+├── .github/workflows/             # CI test workflow
+├── live_llm_smoke_test.py         # Manual live Ollama integration check
+├── requirements.txt               # Python dependencies
+├── runtime.txt                    # Python runtime pin
+├── Procfile                       # Gunicorn process declaration
+└── README.md
 ```
 
-## 6. API Reference
+## 7. API overview
 
-All routes are under `/api`, rate-limited per endpoint, and return a specific error code + message for every domain failure — never an unhandled 500 for a known failure mode.
+All application endpoints are under `/api`. The API validates request bodies and maps known domain failures to explicit HTTP responses.
 
-| Endpoint | Method | Rate Limit | Purpose |
-|---|---|---|---|
-| `/api/health` | GET | — | Service health check |
-| `/api/info` | GET | — | Service metadata |
-| `/api/plan` | POST | 20/min | Structured medication list → full reasoning pipeline → `DailyPlan` |
-| `/api/plan/nl` | POST | 10/min | Free-text description → LLM parse → identical reasoning pipeline |
-| `/api/plans` | GET | 30/min | Most recent logged plans, newest first (`?limit=`, capped at 100) |
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/health` | GET | Health check |
+| `/api/info` | GET | Application metadata |
+| `/api/plan` | POST | Create a plan from structured medication data |
+| `/api/plan/nl` | POST | Parse natural-language input, then use the same reasoning pipeline |
+| `/api/plans` | GET | List recent plans for the caller's session; supports a `limit` query parameter |
 
-**Example — `POST /api/plan`:**
+### 7.1 Structured request shape
+
+The structured endpoint expects a JSON object containing a `medications` array. Each medication object can include `name`, `dosage_mg`, `frequency_per_day`, `timing_preference`, and `with_food`. The backend schema is authoritative for accepted values and defaults.
+
+A minimal illustrative request shape (not a medical recommendation):
 
 ```json
 {
   "medications": [
-    { "name": "warfarin", "frequency_per_day": 1, "timing_preference": "morning" },
-    { "name": "aspirin", "frequency_per_day": 1, "with_food": true }
+    {
+      "name": "<supported-demo-name>",
+      "frequency_per_day": 1,
+      "timing_preference": "no_preference"
+    }
   ]
 }
 ```
 
-Returns a JSON object with:
+### 7.2 Response information
 
-| Field | Contents |
-|---|---|
-| `entries` | Chronological schedule: `medication`, `scheduled_time`, `reasoning`, `constraint_ids` |
-| `warnings` | Each flagged interaction: `severity`, `evidence`, `confidence`, `separation_minutes` and `ordering` (each `null` when the rule records none), `rule_id`, `description`, `source` |
-| `goal_trace` | The exact order in which medications were resolved |
-| `coverage` | `checked`, `total`, `is_complete`, `unchecked`, `summary` (e.g. "6 of 6 drugs checked") |
-| `name_resolutions` | Each name changed before checking: `input_name`, `resolved_to`, `match` (`alias` or `fuzzy`), `score` |
-| `food_guidance` | Each drug with a meal rule: `requirement`, `status` (`applied`, `matches_input`, `conflicts_with_input`, `informational`), `note` |
+A successful plan response includes the schedule entries and, where applicable, warnings, goal trace, coverage summary, name resolutions, and food guidance. The frontend consumes these response fields to render the result sections described above.
 
-`severity` (how dangerous) and `evidence` (how well documented) are separate fields on purpose; `confidence` is derived from evidence, not severity.
+### 7.3 Known error categories
 
-**Error responses**, all `RxLogicError` subclasses mapped to specific HTTP codes:
+| Error category | Typical status | Meaning |
+|---|---:|---|
+| `schema_validation_error` | 400 | Invalid request shape or parsed output that fails schema validation |
+| `unknown_medication` | 422 | One or more names are not covered after normalization |
+| `insufficient_data` | 422 | No usable medication entries were provided |
+| `no_feasible_schedule` | 422 | The configured constraints cannot be satisfied |
+| `external_api_error` | 502 | External drug-data service failure |
+| `llm_api_error` | 502 | Local Ollama service/model request failed |
 
-| Error | Status | Cause |
-|---|---|---|
-| `schema_validation_error` | 400 | Malformed request body or LLM output that fails schema validation |
-| `unknown_medication` | 422 | One or more medications can't be matched to the knowledge base, even after name normalization. The response lists every one in `unknown_medications`; no plan is returned |
-| `insufficient_data` | 422 | Empty medication list — nothing to reason about |
-| `no_feasible_schedule` | 422 | CSP has no solution under the given constraints (for example, too many doses of one drug to fit its required separation or meal windows). The scheduler refuses rather than shortening a gap |
-| `external_api_error` | 502 | RxNav / openFDA drug-data lookup failed |
-| `llm_api_error` | 502 | Ollama (LLM parser) unreachable or errored — kept distinct from `external_api_error` so the client can point the user toward structured input specifically, rather than a generic "try again" |
+The exact response body and accepted field values are defined by the current backend schemas and route implementation; consult `models/schemas.py` and `routes/api.py` when integrating another client.
 
-## 7. Getting Started
+## 8. Local setup
 
-### 7.1 Backend
+### 8.1 Prerequisites
+
+- Windows 10/11 with PowerShell, macOS, or Linux.
+- Python 3.12 (the repository runtime pin is in `runtime.txt`).
+- Node.js and npm for frontend development/building.
+- Git (optional, for cloning/version control).
+- Ollama and the configured model only if testing natural-language mode.
+
+### 8.2 Get the source
+
+Clone the repository:
 
 ```bash
-python -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python app.py                     # serves on http://localhost:5000
+git clone https://github.com/raghavshikriwal/RxLogic.git
+cd RxLogic
 ```
 
-By default the backend uses an in-memory SQLite database. To use PostgreSQL, set `DATABASE_URL` in `.env` (a Neon `postgres://` URL is normalized to `postgresql://` automatically). Tables are created automatically on startup; for an existing database, apply schema changes with `alembic upgrade head` (migrations live in `alembic/versions/`).
+Alternatively, open the extracted project directory in VS Code.
 
-### 7.2 Frontend
+### 8.3 Configure environment
+
+Copy the example environment file and edit only the settings needed for your local environment.
+
+**PowerShell:**
+
+```powershell
+Copy-Item .env.example .env
+```
+
+**macOS/Linux:**
 
 ```bash
+cp .env.example .env
+```
+
+Do not commit `.env`, database credentials, API keys, or other secrets. Keep secrets in environment variables or the deployment platform's secret settings.
+
+### 8.4 Install backend dependencies
+
+**PowerShell:**
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+If PowerShell blocks virtual-environment activation, use the Python executable directly instead of changing machine-wide execution policy:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+**macOS/Linux:**
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### 8.5 Install frontend dependencies
+
+```powershell
 cd frontend
-npm install
-npm run dev                       # http://localhost:5173, proxies /api to :5000
-npm run build                     # produces frontend/dist/, committed to git
+npm ci
+cd ..
 ```
 
-`frontend/dist/` is tracked in version control on purpose: Render's native Python runtime has no Node.js, so the build artifact is committed rather than built on every deploy. **Rebuild and re-commit `frontend/dist/` after any change to `frontend/src/`**, or the deployed site will silently serve a stale bundle.
+Use `npm ci` for a reproducible install from the committed lockfile. `npm install` is also available when intentionally updating dependencies.
 
-### 7.3 Natural-Language Input (Optional)
+## 9. Running the application
 
-Natural-language parsing (`/api/plan/nl`) requires a local [Ollama](https://ollama.com) instance:
+### 9.1 Run the backend
 
-```bash
+From the repository root, with the virtual environment active:
+
+```powershell
+python app.py
+```
+
+The Flask development server is configured to listen on the local backend port (normally `http://127.0.0.1:5000`). Use a separate terminal for the frontend development server.
+
+### 9.2 Run the frontend in development mode
+
+From the repository root:
+
+```powershell
+cd frontend
+npm run dev
+```
+
+Open the local Vite URL printed in the terminal (normally `http://localhost:5173`). The Vite configuration proxies `/api` requests to the local Flask backend. Keep both processes running while using the development UI.
+
+### 9.3 Build the frontend
+
+From the repository root:
+
+```powershell
+cd frontend
+npm run build
+cd ..
+```
+
+The production assets are generated in `frontend/dist/`. This repository tracks the built frontend bundle for its single-service Render deployment. After changing frontend source files, rebuild the bundle and include the updated `frontend/dist/` in the deployment commit; otherwise the hosted Flask app may serve an older bundle.
+
+### 9.4 Optional local natural-language mode
+
+Natural-language parsing requires Ollama to be installed and running locally, with the configured model available. For this repository's documented default:
+
+```powershell
 ollama pull phi3:mini
 ollama serve
 ```
 
-If Ollama isn't running, `/api/plan/nl` returns a clean, correctly-attributed `llm_api_error` — every other route, and the entire reasoning core, is unaffected. This is by design (see §1) and is verified directly in [§9](#9-testing).
+Ollama may already be running as a background service after installation. Confirm that the configured model is present with `ollama list`. The backend reads `OLLAMA_BASE_URL` and `OLLAMA_MODEL` from its environment; see `.env.example` and `services/llm_parser.py`.
 
-### 7.4 Deployment on Render with Neon
+If Ollama is unavailable, natural-language requests should return the explicit `llm_api_error` category. Structured input and the symbolic reasoning pipeline are designed to remain independent of Ollama.
 
-The live demo runs on this exact configuration:
+### 9.5 Environment variables
 
-| Component | Choice | Notes |
+| Variable | Documented default / behavior | Purpose |
 |---|---|---|
-| Hosting | [Render](https://render.com) — free tier, Python 3 runtime | Build: `pip install -r requirements.txt` · Start: `gunicorn app:app` |
-| Python version | 3.12.7, pinned via `PYTHON_VERSION` env var | Render's current default (3.14) has no `psycopg2-binary` wheel yet; pinning avoids a source-build ABI mismatch |
-| Database | [Neon](https://neon.tech) serverless Postgres, free tier | `DATABASE_URL` set to the **pooled** connection string (hostname ends in `-pooler`) |
-| Ollama | Not deployed | Only runs locally; the deployed instance correctly falls back to `llm_api_error` for free-text input, proving the neuro-symbolic litmus test (§1) holds in production, not just in dev |
+| `DATABASE_URL` | SQLite in-memory default in application configuration | Database connection; configure PostgreSQL for a persistent deployment |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Local Ollama server URL |
+| `OLLAMA_MODEL` | `phi3:mini` | Ollama model name |
+| `FLASK_DEBUG` | `false` | Flask debug behavior; keep disabled in production |
+| `LOG_LEVEL` | `INFO` | Application logging level |
+| `PORT` | `5000` locally; hosting platform may set it | HTTP server port |
+| `PYTHON_VERSION` | Platform-specific | Render runtime selection |
 
-Required environment variables on Render — see [§7.5](#75-environment-variables) for the full table. Set `PYTHON_VERSION`, `DATABASE_URL`, `LOG_LEVEL`, and `FLASK_DEBUG`; leave `OLLAMA_BASE_URL`/`OLLAMA_MODEL` unset in production.
+Check `.env.example`, `app.py`, and `services/llm_parser.py` for the authoritative configuration behavior before changing deployment values.
 
-### 7.5 Environment Variables
+## 10. Testing and verification evidence
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `DATABASE_URL` | `sqlite:///:memory:` | Persistence backend — set to a Neon pooled connection string in production |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama server address — local development only |
-| `OLLAMA_MODEL` | `phi3:mini` | Local model used for NL parsing |
-| `FLASK_DEBUG` | `false` | Flask debug mode — off by default in every environment |
-| `LOG_LEVEL` | `INFO` | Logging verbosity |
-| `PORT` | `5000` | Server port — Render sets this automatically; leave unset there |
-| `PYTHON_VERSION` | *(platform default)* | Render-specific — pins the Python runtime; see [§7.4](#74-deployment-on-render-with-neon) |
+RxLogic has an automated pytest suite across **14 test modules**. The results below distinguish the full-suite run, focused test runs, and manually executed live-model verification. Counts from focused runs overlap with the full suite and must not be added together as separate unique tests.
 
-## 8. Scope, Safety & Limitations
+### 10.1 Full automated suite — latest user-provided run
 
-This section is treated as a first-class part of the system design, not an afterthought.
+| Measure | Result |
+|---|---:|
+| Command | `python -m pytest -v` |
+| Collected / passed | **262 / 262** |
+| Failed | **0** |
+| Duration | **90.62 seconds** |
+| Platform reported by pytest | Windows (`win32`), Python 3.12.10, pytest 8.3.3 |
 
-- **This is an educational demonstrator**, illustrating neuro-symbolic reasoning applied to a safety-adjacent domain. It is not a substitute for professional medical or pharmacist advice and is not intended for real-world medication decisions.
-- The interaction rule base is **curated, not exhaustive** — it currently covers 12 rules across 10 seed medications ([`knowledge/interaction_rules.json`](knowledge/interaction_rules.json)) and does not account for patient-specific factors such as age, weight, renal or hepatic function, or pregnancy.
-- **Curated values are unreviewed.** The evidence ratings, the one order-aware spacing rule (ibuprofen at least 30 minutes after, or 8 hours before, aspirin) and the per-drug meal rules in [`knowledge/food_rules.json`](knowledge/food_rules.json) were assigned from general pharmacology and label knowledge, not by a clinician. Drugs whose meal guidance is conditional or formulation-dependent have no food rule and are scheduled without a meal constraint.
-- **Name matching is best-effort.** Brand names come from a curated alias list. Near-miss spellings are matched conservatively and always shown to the user to confirm, and anything not matched confidently is rejected as unknown rather than guessed.
-- **Plan history is partial.** Logged plans store the schedule, warnings and goal trace; coverage, name corrections and food guidance are returned live but not persisted.
-- **RxNav's live Drug-Drug Interaction API was discontinued by NLM in January 2024.** RxLogic only uses RxNav for RxCUI resolution (still live) and openFDA for label data; interaction *rules* themselves are manually curated, sourced from openFDA labeling and clinical literature, not pulled live.
-- Unknown medications or insufficient rule coverage produce an explicit `insufficient_data` / `unknown_medication` response — **never a silent guess or false negative.** Every plan also reports a coverage summary, so an empty warnings list is never mistaken for "everything was checked".
-- Every interaction warning and every scheduling decision is traceable to the specific rule or constraint that produced it (`rule_id`, `constraint_ids`, `goal_trace`) — the system's reasoning can be audited, not just trusted.
-- A visible disclaimer should be shown in the application UI and stated upfront in any demo or presentation of this project.
+This result was captured from a local PowerShell run on November 12, 2026. It is evidence for that source state and environment; rerun the suite after subsequent code changes.
 
-## 9. Testing
+### 10.2 Focused verification runs discussed during project review
 
-```bash
-pytest                            # run the full suite
-pytest --cov=services --cov=models --cov=routes   # with coverage
+| Area | Command / method | User-provided result |
+|---|---|---:|
+| CSP scheduler | `python -m pytest tests/test_csp_scheduler.py -v` (previously reported run) | **27 passed** |
+| Rule engine + reasoning service | `python -m pytest tests/test_rule_engine.py tests/test_reasoning_service.py -v` | **95 passed** |
+| LLM parser unit tests | `python -m pytest tests/test_llm_parser.py -v` | **13 passed** |
+| API routes | `python -m pytest tests/test_api.py -v` | **32 passed** |
+| Database URL behavior | `python -m pytest tests/test_database.py -v` | **2 passed** |
+| End-to-end pipeline | `python -m pytest tests/test_e2e.py -v` | **3 passed** |
+| Full automated suite | `python -m pytest -v` | **262 passed** |
+
+The focused API, database, and end-to-end runs total 37 passed test cases in those selected modules. The 95 interaction tests and other focused runs are also included in the full-suite result; they are not additional unique tests beyond the 262.
+
+### 10.3 Coverage measurements reported during review
+
+| Module | Reported coverage | Measurement scope |
+|---|---:|---|
+| `services/csp_scheduler.py` | **99%** | Focused scheduler coverage run; 176 statements, 1 missed (previously reported) |
+| `services/llm_parser.py` | **100%** | `python -m pytest tests/test_llm_parser.py --cov=services.llm_parser --cov-report=term-missing -v`; 47 statements, 0 missed |
+
+These are **module-specific coverage results**, not overall repository coverage. A single current full-project coverage percentage has not been established in the verification evidence recorded here.
+
+To generate a fresh overall report locally:
+
+```powershell
+python -m pytest --cov=services --cov=models --cov=routes --cov-report=term-missing
 ```
 
-Thirteen test modules cover the schemas, rule engine, name normalizer, food rules, uncertainty layer, CSP scheduler, planner, reasoning service, LLM parser, drug data client, database layer, API routes, and a full end-to-end pipeline run — each reasoning module is independently testable with zero dependency on the LLM or the API layer, matching the architectural separation above.
+### 10.4 Live Ollama smoke test
 
-### Live Ollama verification (manual)
+The project includes `live_llm_smoke_test.py`, which calls `services.llm_parser.parse_medications()` against a running Ollama model rather than mocking the model request.
 
-`tests/test_llm_parser.py` mocks every Ollama call, so it verifies the parsing/validation logic but never exercises a real model. `live_llm_smoke_test.py` fills that gap — it calls `services.llm_parser.parse_medications()` directly against a running Ollama instance, with no Flask/routing layer in between:
+The user-provided local verification recorded:
 
-```bash
-ollama pull phi3:mini
-ollama serve            # usually starts automatically after install
+- Ollama version: `0.40.14`.
+- Model available: `phi3:mini`.
+- Direct model invocation returned the requested JSON-shaped output.
+- `python live_llm_smoke_test.py` completed **3/3 cases** successfully.
+- The three cases exercised extraction of medication names and frequency, plus timing and dosage fields where present.
+
+This verifies a local parser-to-Ollama smoke-test path for those sample inputs. It does not prove general language-understanding accuracy, medical correctness, or hosted Ollama availability.
+
+Run it locally after starting Ollama:
+
+```powershell
 python live_llm_smoke_test.py
 ```
 
-**Diagnosed issue:** an early run of this script intermittently timed out on certain inputs. `diagnose_case2_timeout.py` (same repo root) isolated the cause by sending the identical request with a much longer timeout budget: `phi3:mini` at `temperature=0.0` (greedy decoding) could fall into a repetition loop on specific inputs and never emit a stop token — reproduced hanging past 180s on one deterministic case. `REQUEST_TIMEOUT_SECONDS` alone couldn't fix this, since it only bounds how long the *caller* waits, not how long Ollama keeps generating in the background.
+### 10.5 What the tests cover
 
-**Fix**, both in `services/llm_parser.py`:
-- `MAX_OUTPUT_TOKENS = 300` — passed as Ollama's `num_predict` option, this caps generation length outright. A medication-extraction JSON array never legitimately needs more than a few dozen tokens per medication, so 300 is a generous ceiling that costs nothing on the happy path but guarantees every request resolves in bounded time.
-- `REQUEST_TIMEOUT_SECONDS = 60` — a generous caller-side ceiling that also covers cold-start model load time on slower local hardware, on top of the generation cap above.
+The 14 test modules exercise the following areas:
 
-With both in place, all three cases in `live_llm_smoke_test.py` complete cleanly and consistently.
+| Test module | Primary focus |
+|---|---|
+| `test_api.py` | Health/root routes, request validation, structured and text plan endpoints, error mapping, session-scoped history, and response fields |
+| `test_architecture_boundaries.py` | Separation between parser, reasoning core, and external/network dependencies |
+| `test_csp_scheduler.py` | Dose spacing, timing preferences, meal windows, interaction constraints, ordering, backtracking, and unsatisfiable cases |
+| `test_database.py` | Database URL normalization |
+| `test_drug_data_client.py` | RxCUI/label lookup behavior, caching, and external-service failure handling |
+| `test_e2e.py` | Full reasoning pipeline scenarios and fail-safe handling of unknown names |
+| `test_food_rules.py` | Food-rule validation, application, conflicts, and missing-rule behavior |
+| `test_llm_parser.py` | JSON parsing, defaults, schema validation, and Ollama error handling |
+| `test_name_normalizer.py` | Exact names, aliases, fuzzy matching safeguards, and normalization |
+| `test_planner.py` | Goal ordering, trace generation, and warning propagation |
+| `test_reasoning_service.py` | Orchestration, interaction flow, coverage, duplicate handling, and food guidance |
+| `test_rule_engine.py` | Rule loading, pair matching, evidence, severity, coverage, separation, and ordering |
+| `test_schemas.py` | Domain schema validation and defaults |
+| `test_uncertainty.py` | Confidence refinement, evidence/source reliability, and bounds |
 
-## 10. Design Principles
+### 10.6 Reproduce the checks
 
-- **Strict schema boundary.** `models/schemas.py`'s frozen dataclasses are the *only* thing that crosses layer boundaries. The reasoning core never imports SQLAlchemy; the persistence layer never imports the reasoning core's types; the LLM never talks to the reasoning engine with raw text.
-- **Fail-safe over confident-but-wrong.** Every failure mode — unknown medication, unsatisfiable constraints, malformed LLM output, empty input — raises a specific typed exception from `models/exceptions.py`, never a bare `Exception`.
-- **No black-box output.** Every interaction is traceable to a `rule_id`; every dose placement carries `constraint_ids` and a human-readable `reasoning` string; every plan carries a `goal_trace` of the exact resolution order, and every name correction and food rule applied is shown to the user instead of being applied silently.
-- **The LLM is provably optional.** Remove `services/llm_parser.py` entirely and `services/reasoning_service.py` still fully works via structured input — this is enforced by the module boundary, not just documentation.
-- **Type hints, dataclasses, and named constants throughout** — no magic numbers, no untyped dicts passed between layers.
+Run the complete suite:
 
-## 11. Future Scope
+```powershell
+python -m pytest -v
+```
 
-- Expand the knowledge base with a larger, clinician-reviewed interaction dataset, including a clinical review of the evidence ratings, separation times and food rules.
-- Partial coverage: return a plan for the drugs that are known, with the unknown ones clearly flagged as unchecked (today any unknown drug rejects the whole request).
-- Order-aware spacing rules for more pairs, once a clinician has confirmed which pairs depend on dose order (today only aspirin + ibuprofen does).
-- Formulation-aware food rules (for example, immediate- vs extended-release).
-- Persist coverage, name corrections and food guidance in the plan log.
-- Add patient-specific parameters (age, weight, renal function) to the reasoning layer.
-- Extend the fuzzy uncertainty layer into a full dynamic Bayesian network for time-varying risk as medications are added or removed.
-- Add a notification/reminder subsystem for real adherence tracking (explicitly out of scope for this build).
-- Explore a small fine-tuned or distilled model for the parsing layer to reduce local compute requirements.
+Run the API, persistence configuration, and end-to-end modules individually:
 
-## License
+```powershell
+python -m pytest tests/test_api.py -v
+python -m pytest tests/test_database.py -v
+python -m pytest tests/test_e2e.py -v
+```
 
-Released under the [MIT License](LICENSE) — see the file for full terms.
+Run interaction and LLM parser tests:
+
+```powershell
+python -m pytest tests/test_rule_engine.py tests/test_reasoning_service.py -v
+python -m pytest tests/test_llm_parser.py -v
+```
+
+Run focused coverage reports:
+
+```powershell
+python -m pytest tests/test_csp_scheduler.py --cov=services.csp_scheduler --cov-report=term-missing -v
+python -m pytest tests/test_llm_parser.py --cov=services.llm_parser --cov-report=term-missing -v
+```
+
+The pytest-asyncio deprecation warning about an unset default fixture-loop scope appeared in some earlier runs. It was non-blocking and did not cause test failures. It should be addressed as a separate test-configuration cleanup if the installed plugin version continues to emit it.
+
+### 10.7 Verification boundaries
+
+Passing automated tests establish that the tested code paths behaved as expected in the reported local environment. They do **not** establish clinical validity, exhaustive knowledge-base coverage, production load capacity, penetration-test results, full accessibility conformance, or continuous uptime of the hosted service. Frontend browser QA and a fresh deployed-environment audit remain separate verification activities.
+
+## 11. Deployment notes
+
+The repository is configured for a single-service deployment in which Gunicorn runs the Flask application and Flask serves the committed frontend build output.
+
+The project README's existing deployment configuration describes Render hosting and PostgreSQL through Neon. Deployment settings, environment variables, database connectivity, and hosted service health should be checked in the relevant provider dashboards before each evaluation or release. Do not publish secret values in source control or screenshots.
+
+The hosted demonstration does not run Ollama. Therefore, use structured input for the hosted demonstration; use a local environment with Ollama for the natural-language parser demonstration.
+
+## 12. Safety, scope, and known limitations
+
+This project is intentionally an educational software demonstrator. It is **not a medical device, clinical decision-support system, prescribing tool, or source of medical advice**. It must not be used for real medication decisions.
+
+Known limitations include:
+
+- The interaction knowledge base is curated and incomplete. It does not cover every medication or every possible interaction.
+- The shipped rule values and meal guidance have not been clinically validated by a qualified clinician for this project.
+- The reasoning model does not account for all patient-specific factors, formulations, diagnoses, laboratory results, allergies, pregnancy status, organ function, or other context needed for real clinical decisions.
+- Brand/alias and fuzzy name normalization is limited to the project's curated data and matching safeguards.
+- A name outside the knowledge base is rejected rather than treated as safe. A complete coverage summary is important when interpreting any result.
+- External RxNav/openFDA data access may fail, change, or be unavailable; local cache contents may be stale.
+- Ollama is optional and local. Model output may omit or misinterpret information and is subject to schema validation, not clinical validation.
+- Plan history is not a complete immutable clinical record. The current persistence implementation stores only the fields explicitly mapped by the plan-log service.
+- The test suite uses software fixtures and synthetic scenarios; passing tests do not validate clinical recommendations.
+
+Do not enter personal health information into a classroom demo. Use synthetic examples only. Any real medication question must be handled by a qualified pharmacist or physician.
+
+## 13. Design decisions
+
+- **Keep the reasoning core independent:** the parser and network-facing integrations are outside the symbolic reasoning core.
+- **Use typed boundaries:** domain schemas and explicit exceptions make data contracts and failure modes inspectable.
+- **Fail safely:** unknown names, invalid inputs, and unsatisfiable constraints produce explicit failures rather than reassuring but unsupported results.
+- **Make outputs traceable:** rule IDs, constraint IDs, coverage, and planner traces expose why the system produced its output.
+- **Keep the LLM optional:** structured input can exercise the reasoning pipeline without a running model.
+- **Keep scope honest:** curated educational rules are not presented as comprehensive clinical knowledge.
+
+## 14. Future improvements
+
+- Independent clinical review and governance for any expanded knowledge base (without presenting the educational application as a clinical product).
+- Broader automated tests for real database connectivity, migrations, persistence across restarts, and failure recovery.
+- Dedicated frontend component, accessibility, and browser-based end-to-end tests.
+- Deployment smoke tests for hosted API health, frontend/API integration, and database connectivity.
+- A reproducible full-project coverage baseline and CI coverage reporting.
+- More explicit data provenance/versioning for curated knowledge files and cached external data.
+- Better observability, structured logs, and deployment diagnostics.
+- Additional documentation and a reproducible evaluation/demo script using synthetic inputs only.
+
+## 15. License and project information
+
+Released under the [MIT License](LICENSE). See the license file for the complete terms.
+
+- **Project:** RxLogic
+- **Repository:** [github.com/raghavshikriwal/RxLogic](https://github.com/raghavshikriwal/RxLogic)
+- **Live demonstration:** [rxlogic-ataf.onrender.com](https://rxlogic-ataf.onrender.com)
+- **Academic context:** Artificial Intelligence coursework demonstration
 
 ---
 
-**Author:** Raghav Shikriwal · B.Tech Information Technology, 3rd Year — NSUT
-**Course Alignment:** Artificial Intelligence Elective
-**Repository:** [github.com/raghavshikriwal/RxLogic](https://github.com/raghavshikriwal/RxLogic)
+*Documentation status: updated to record the project structure and verification evidence discussed on November 12, 2026. Re-run the commands and refresh the results after any relevant source-code, dependency, or environment change.*
