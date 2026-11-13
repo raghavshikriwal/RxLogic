@@ -1,298 +1,1047 @@
+
 # RxLogic
 
-**An explainable neuro-symbolic AI demonstrator for medication-interaction reasoning and constraint-based schedule generation.**
+### An Explainable Neuro-Symbolic Medication Reasoning and Scheduling System with Evidence-Governed Knowledge Management
 
-[![Tests](https://github.com/raghavshikriwal/RxLogic/actions/workflows/tests.yml/badge.svg)](https://github.com/raghavshikriwal/RxLogic/actions/workflows/tests.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](runtime.txt)
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://rxlogic-ataf.onrender.com)
+<p align="center">
+  <strong>Neuro-Symbolic AI · Constraint Satisfaction · Explainable Reasoning · Evidence Governance · Clinical Knowledge Management</strong>
+</p>
 
-**[Open the live demonstration](https://rxlogic-ataf.onrender.com)**
+<p align="center">
+  <a href="https://github.com/raghavshikriwal/RxLogic/actions/workflows/tests.yml">
+    <img src="https://github.com/raghavshikriwal/RxLogic/actions/workflows/tests.yml/badge.svg" alt="Tests">
+  </a>
+  <img src="https://img.shields.io/badge/Python-3.12-blue" alt="Python">
+  <img src="https://img.shields.io/badge/React-18-61DAFB" alt="React">
+  <img src="https://img.shields.io/badge/Flask-3.0-black" alt="Flask">
+  <img src="https://img.shields.io/badge/Vite-6-646CFF" alt="Vite">
+  <img src="https://img.shields.io/badge/Project%20Tasks-01--09-success" alt="Tasks 01–09">
+  <img src="https://img.shields.io/badge/Status-Research%20Demonstrator-orange" alt="Research Demonstrator">
+</p>
 
-> **Important deployment note:** The deployed Render instance does not host Ollama. Its structured medication-entry workflow is available; natural-language parsing requires a locally running Ollama service and is therefore not available on that hosted instance.
-
-> **Educational demonstrator only — not a medical device.** RxLogic is a software engineering and AI coursework demonstration. It is not clinically validated, is not a substitute for a qualified healthcare professional, and must never be used to choose, change, time, start, stop, or combine real medication. All examples and test cases are synthetic demonstrations.
-
-RxLogic separates optional neural language understanding from its deterministic symbolic reasoning core. A local LLM can convert a natural-language description into typed input. The actual interaction-rule evaluation, uncertainty refinement, constraint solving, planning, and explanation are performed by conventional, inspectable software. The structured-input workflow does not require an LLM.
-
----
-
-## Contents
-
-1. [Project overview](#1-project-overview)
-2. [Key capabilities](#2-key-capabilities)
-3. [Architecture and data flow](#3-architecture-and-data-flow)
-4. [Frontend experience and user input](#4-frontend-experience-and-user-input)
-5. [Technology stack](#5-technology-stack)
-6. [Repository structure](#6-repository-structure)
-7. [API overview](#7-api-overview)
-8. [Local setup](#8-local-setup)
-9. [Running the application](#9-running-the-application)
-10. [Testing and verification evidence](#10-testing-and-verification-evidence)
-11. [Deployment notes](#11-deployment-notes)
-12. [Safety, scope, and known limitations](#12-safety-scope-and-known-limitations)
-13. [Design decisions](#13-design-decisions)
-14. [Future improvements](#14-future-improvements)
-15. [License and project information](#15-license-and-project-information)
+<p align="center">
+  <a href="https://github.com/raghavshikriwal/RxLogic">GitHub Repository</a> ·
+  <a href="https://rxlogic-ataf.onrender.com">Live Demonstration</a>
+</p>
 
 ---
 
-## 1. Project overview
+> **IMPORTANT MEDICAL AND SAFETY DISCLAIMER**
+>
+> RxLogic is an educational and software-engineering research demonstrator. It is NOT a medical device, has NOT been clinically validated, and is NOT authorized for patient-care use.
+>
+> It must not be used to diagnose conditions, prescribe medication, select treatments, calculate patient-specific dosages, determine whether a medication combination is safe, or make real medication decisions.
+>
+> The included knowledge base is limited and contains unreviewed development records. A missing warning or absent knowledge entry does not establish safety.
+>
+> Use synthetic demonstration data only. Consult a qualified healthcare professional for all real medication decisions.
 
-RxLogic demonstrates how multiple classical AI techniques can cooperate in one explainable pipeline. It is designed around a deliberately safety-adjacent example domain so that the project can demonstrate rule-based knowledge representation, reasoning under uncertainty, constraint satisfaction, planning, and transparent output.
+---
 
-The project combines:
+# Table of Contents
 
-- **Knowledge representation and inference:** curated medication-pair rules evaluated by a forward-chaining rule engine.
-- **Reasoning under uncertainty:** a Mamdani fuzzy-logic layer that refines confidence using evidence strength and source reliability.
-- **Constraint satisfaction:** a dose-time scheduler using backtracking, a minimum-remaining-values (MRV) variable-ordering heuristic, and forward checking.
-- **Goal-stack planning:** a planner that resolves scheduling goals and records its resolution trace.
-- **Optional natural-language understanding:** a local Ollama model that extracts structured fields from text; it does not make the downstream decisions.
-- **A web interface and API:** a React frontend communicates with a Flask backend and displays the pipeline's structured results.
+1. [Project Overview](#1-project-overview)
+2. [Problem Statement](#2-problem-statement)
+3. [Project Objectives](#3-project-objectives)
+4. [Key Features](#4-key-features)
+5. [System Architecture](#5-system-architecture)
+6. [Core Reasoning Pipeline](#6-core-reasoning-pipeline)
+7. [Major Algorithms and Methodologies](#7-major-algorithms-and-methodologies)
+8. [Knowledge Base and Evidence Governance](#8-knowledge-base-and-evidence-governance)
+9. [Task-by-Task Development History](#9-task-by-task-development-history)
+10. [Medication Catalog and Knowledge Coverage](#10-medication-catalog-and-knowledge-coverage)
+11. [Task 09 Clinical Reasoning Integration](#11-task-09-clinical-reasoning-integration)
+12. [Application Walkthrough](#12-application-walkthrough)
+13. [API Documentation](#13-api-documentation)
+14. [Technology Stack](#14-technology-stack)
+15. [Project Structure](#15-project-structure)
+16. [Installation and Setup](#16-installation-and-setup)
+17. [Running the Application](#17-running-the-application)
+18. [Configuration](#18-configuration)
+19. [Testing and Verification](#19-testing-and-verification)
+20. [Knowledge Management Workflows](#20-knowledge-management-workflows)
+21. [Deployment](#21-deployment)
+22. [Security and Privacy](#22-security-and-privacy)
+23. [Known Limitations](#23-known-limitations)
+24. [Future Scope](#24-future-scope)
+25. [Evaluation and Viva Preparation](#25-evaluation-and-viva-preparation)
+26. [Conclusion](#26-conclusion)
+27. [License](#27-license)
 
-A core architectural property is that the symbolic reasoning pipeline can run using structured input without calling the LLM. The LLM is an input convenience, not the authority for interaction decisions or schedule construction.
+---
 
-## 2. Key capabilities
+# 1. Project Overview
 
-### Reasoning and planning
+**RxLogic** is a full-stack neuro-symbolic medication-reasoning and scheduling demonstrator designed to explore how natural-language processing, deterministic rule-based reasoning, fuzzy logic, constraint satisfaction, and evidence-governed knowledge management can work together within a single software architecture.
 
-- Normalize supported brand aliases and selected spelling variants to canonical names.
-- Reject medication names that are not covered by the shipped knowledge base rather than silently treating them as safe.
-- Evaluate curated interaction rules across medication pairs.
-- Keep interaction severity, evidence strength, and derived confidence conceptually separate.
-- Apply available food-related constraints and report conflicts with user-provided fields.
-- Generate a feasible schedule subject to configured timing and separation constraints, or return a typed unsatisfiable result.
-- Include rule identifiers, constraint identifiers, reasoning text, and a goal-resolution trace in the output.
+The project combines the flexibility of an optional Large Language Model (LLM) input layer with the transparency and predictability of symbolic reasoning.
 
-### Application experience
+Rather than allowing an LLM to independently determine medication interactions or produce schedules, RxLogic separates language understanding from downstream decision logic.
 
-- Structured medication-entry form with add/remove rows and field validation.
-- Optional natural-language input mode when the backend can reach a local Ollama instance.
-- Result presentation for the generated schedule, interaction warnings, coverage, name corrections, food guidance, and goal trace.
-- Plan-history page backed by the API's plan-list endpoint.
-- Responsive React layout built with Tailwind CSS.
+The application transforms structured or natural-language input into validated domain objects, evaluates configured knowledge rules, refines uncertainty representations, constructs scheduling constraints, and generates explainable software outputs.
 
-### Backend and persistence
+Beyond its reasoning pipeline, RxLogic implements a controlled knowledge lifecycle that separates external evidence collection from clinical knowledge approval and runtime publication.
 
-- Flask REST API with request validation and endpoint rate limits.
-- Typed domain schemas and explicit domain exceptions.
-- SQLAlchemy persistence with SQLite for local/test use and PostgreSQL configuration for deployment.
-- Best-effort plan logging: a logging failure is designed not to turn an otherwise successful plan response into an API failure.
-- Cached external drug-data lookups through the RxNav RxCUI and openFDA label-data integrations.
+The knowledge-management architecture includes:
 
-## 3. Architecture and data flow
+- Evidence ingestion and source preservation.
+- Cryptographic content-integrity verification.
+- Evidence inspection and reviewer decisions.
+- Evidence-linked knowledge candidates.
+- Independent clinical review.
+- Conflict assessment.
+- Immutable knowledge releases.
+- Explicit release promotion and rollback.
+- Integrity-checked runtime loading.
+- Audit trails for knowledge-management operations.
 
-The system is organized around a strict boundary between language parsing and symbolic reasoning.
+The development has progressed through nine major implementation tasks, integrating the backend, frontend, reasoning services, medication catalog, knowledge governance, testing infrastructure, and clinical-assessment response architecture.
 
-```text
-React + Vite frontend
-        |
-        | structured request or natural-language request
-        v
-Flask API (routes/api.py)
-        |
-        +---- structured input -------------------------------+
-        |                                                      |
-        +---- free text --> Ollama --> LLM parser --> schema --+
-                                                               |
-                                                               v
-                                                Typed Medication objects
-                                                               |
-                                                               v
-                                                Reasoning service
-                                                               |
-                 +----------------------+----------------------+-------------------+
-                 |                      |                      |                   |
-                 v                      v                      v                   v
-          Name normalizer          Food rules             Rule engine        Coverage check
-          aliases/variants         meal constraints       forward chaining  unknown-name guard
-                 |                      |                      |
-                 +----------------------+----------------------+
-                                                               |
-                                                               v
-                                                   Fuzzy uncertainty layer
-                                                               |
-                                                               v
-                                                   Goal-stack planner
-                                                               |
-                                                               v
-                                                   CSP dose scheduler
-                                                   backtracking + MRV
-                                                   + forward checking
-                                                               |
-                                                               v
-                                                   Explainable DailyPlan
-                                                               |
-                                      +------------------------+------------------+
-                                      |                                           |
-                                      v                                           v
-                              API response / React UI                     Plan log storage
-                                                                         SQLite / PostgreSQL
-```
+## Current Project Status
 
-### Pipeline stages
+| Component | Status |
+|---|---|
+| Tasks 01–09 | Implemented and integrated |
+| Backend | Implemented |
+| React frontend | Implemented |
+| Neuro-symbolic reasoning | Implemented |
+| Constraint-based scheduling | Implemented |
+| Fuzzy confidence refinement | Implemented |
+| Goal-stack planning | Implemented |
+| Medication identity catalog | Implemented |
+| Evidence ingestion | Implemented |
+| Evidence review workflow | Implemented |
+| Controlled knowledge releases | Implemented |
+| Task 09 clinical assessment | Integrated |
+| Python regression suite | 377 tests passed |
+| Frontend production build | Passed |
+| npm dependency audit | 0 vulnerabilities reported |
+| Knowledge structural validation | Passed |
+| Clinical validation | Not performed |
+| Patient-care authorization | Not authorized |
 
-1. The user submits either structured fields or a natural-language description.
-2. For natural-language input only, the LLM parser requests structured output from Ollama and validates it against the application's schema.
-3. The name normalizer resolves supported aliases and selected close variants; unresolved names are surfaced as unknown.
-4. Coverage is evaluated against the project's curated knowledge base. An unknown medication does not receive an all-clear result.
-5. Food-rule processing applies configured guidance where the input leaves the field unspecified and reports conflicts rather than silently hiding them.
-6. The rule engine evaluates medication pairs against the curated interaction rules.
-7. The uncertainty layer refines confidence using evidence and source-reliability inputs; severity is a separate concept.
-8. The CSP scheduler attempts to satisfy dose-frequency, preferred-time, meal-window, and interaction-separation constraints. If no solution exists, it fails explicitly instead of silently weakening a constraint.
-9. The planner records the order in which goals were resolved.
-10. The API serializes the result and attempts to log the plan.
-11. The frontend presents the schedule and supporting reasoning information returned by the backend.
-
-## 4. Frontend experience and user input
-
-The frontend is a React single-page application with two main destinations: **Plan** and **History**.
-
-### 4.1 Plan page
-
-The Plan page introduces the project and provides a medication form with two input modes.
-
-**A. Add medications (structured mode)**
-
-The user enters one medication per row. The available fields in the current form are:
-
-| Field | What the field represents | Input behavior |
-|---|---|---|
-| Medication name | Name to be checked against the supported knowledge base | Required for each active row; text input |
-| Dosage (mg) | Optional numeric dosage value | Optional; if supplied, must be a valid non-negative number |
-| Times per day | Frequency value used by the scheduling demonstration | Required numeric value from 1 through 6 |
-| Preferred timing | One of No preference, Morning, Afternoon, Evening, or Night | Select control; defaults to No preference |
-| Food instruction | Not specified, With food, or Without food | Select control; defaults to Not specified |
-
-The user can select **Add another medication** to add a row and **Remove** to remove an extra row. At least one active medication row is required. Empty unused rows are ignored. The form validates the medication name, dosage (when supplied), and frequency before submission.
-
-**B. Describe in words (natural-language mode)**
-
-The user can type a plain-language description into the text area. The current UI allows up to 4,000 characters. The parser is intended to extract medication names and any dosage, frequency, timing, or food details that the model can reliably identify. This mode requires a reachable local Ollama service and the configured model. It is not enabled on the hosted Render demo described below.
-
-For a UI walkthrough or classroom demonstration, use only synthetic, instructor-provided sample data. Do not enter personal health information or real medication regimens. A natural-language parser can misunderstand text; its output must not be treated as medical advice.
-
-**Illustrative text format (synthetic placeholder only):**
+**Latest Task 09 GitHub commit:**
 
 ```text
-DemoMed-A, one time per day, preferred in the morning.
-DemoMed-B, two times per day, no preferred time was provided.
+cb448f2 Complete RxLogic Task 09
 ```
 
-These placeholder names are for explaining the input format only. They are not entries in the shipped knowledge base and are not expected to generate a valid plan.
+Repository:
 
-### 4.2 Plan result
+https://github.com/raghavshikriwal/RxLogic
 
-When a request succeeds, the result components display the information returned by the API. Depending on the result, this includes:
-
-- **Schedule timeline:** medication labels, scheduled times, and the associated reasoning/constraints.
-- **Interaction warnings:** matched rule information, severity, evidence, confidence, and configured separation or ordering details.
-- **Coverage summary:** how many distinct medication names were checked and which names remain unchecked.
-- **Name corrections:** supported alias or fuzzy-name resolutions made before reasoning.
-- **Food guidance:** applicable meal requirements and whether the input matched or conflicted with the configured rule.
-- **Goal trace:** the order in which the planner resolved its goals.
-
-An empty warning list must not be interpreted as proof that every possible interaction was checked. Always read the coverage information and the application's educational disclaimer.
-
-### 4.3 History page
-
-The History page requests recent saved plans from the backend. It displays the available plan records, input names, creation time, input source, warning count, and expandable schedule entries. A small warning-count trend is shown for the returned history records. The current API history response is limited to a maximum of 100 records; the frontend requests a recent subset.
-
-### 4.4 Navigation and errors
-
-The navigation provides access to the Plan and History views. Validation errors are shown near the relevant fields or form. Backend failures are presented through an error banner rather than being silently converted into a successful-looking result.
-
-## 5. Technology stack
-
-| Area | Technology | Responsibility |
-|---|---|---|
-| Frontend | React 18 | Component-based user interface |
-| Frontend tooling | Vite 5 | Development server and production build |
-| Styling | Tailwind CSS 3 | Responsive utility-first styling |
-| Client routing | React Router 6 | Plan and History navigation |
-| Backend | Flask 3 | REST API and application serving |
-| Rate limiting | Flask-Limiter | Endpoint request limits |
-| Language parsing | Ollama + `phi3:mini` (local) | Optional free-text extraction |
-| Core reasoning | Python | Rules, normalization, planning, and CSP scheduling |
-| Fuzzy inference | scikit-fuzzy | Mamdani-style confidence refinement |
-| External drug data | RxNav and openFDA | RxCUI resolution and label-data lookup |
-| Persistence | SQLAlchemy 2 | SQLite and PostgreSQL database access |
-| Migrations | Alembic | Database schema migration tooling |
-| Testing | pytest + pytest-cov | Automated tests and coverage reporting |
-| Deployment | Render + Gunicorn | Hosted Flask service and built frontend |
-
-## 6. Repository structure
+Branch:
 
 ```text
-RxLogic-main/
-├── app.py                         # Flask application entry point
-├── extensions.py                  # Shared Flask extensions
-├── routes/
-│   └── api.py                     # API routes and request/response boundary
-├── models/
-│   ├── schemas.py                 # Typed domain schemas
-│   ├── exceptions.py              # Typed domain exceptions
-│   └── database.py                # SQLAlchemy database configuration/models
-├── services/
-│   ├── llm_parser.py              # Optional Ollama natural-language parser
-│   ├── name_normalizer.py         # Alias and spelling normalization
-│   ├── food_rules.py              # Meal-related rule processing
-│   ├── rule_engine.py             # Forward-chaining interaction rules
-│   ├── uncertainty.py             # Fuzzy confidence refinement
-│   ├── csp_scheduler.py           # Constraint-satisfaction scheduler
-│   ├── planner.py                 # Goal-stack planner
-│   ├── reasoning_service.py       # Pipeline orchestration
-│   ├── drug_data_client.py        # RxNav/openFDA client and cache
-│   └── plan_log_service.py        # Plan persistence translation
-├── knowledge/
-│   ├── interaction_rules.json     # Curated interaction knowledge
-│   ├── food_rules.json            # Curated meal-related rules
-│   ├── drug_aliases.json          # Supported aliases and variants
-│   └── cache/                     # Cached external lookup responses
-├── frontend/
-│   ├── src/
-│   │   ├── components/            # Form, result, warning, trace and layout UI
-│   │   ├── pages/                 # Home/Plan and History pages
-│   │   ├── hooks/                 # Shared React hooks
-│   │   ├── api.js                 # Frontend API client
-│   │   ├── App.jsx                # Application routes/layout
-│   │   └── index.css              # Global styles
-│   ├── package.json               # Frontend scripts/dependencies
-│   └── vite.config.js              # Vite development configuration
-├── tests/                         # 24 pytest test modules
-├── alembic/                       # Database migration environment/history
-├── scripts/                       # Knowledge-base maintenance scripts
-├── .github/workflows/             # CI test workflow
-├── live_llm_smoke_test.py         # Manual live Ollama integration check
-├── requirements.txt               # Python dependencies
-├── runtime.txt                    # Python runtime pin
-├── Procfile                       # Gunicorn process declaration
-└── README.md
+main
 ```
 
-## 7. API overview
+---
 
-All application endpoints are under `/api`. The API validates request bodies and maps known domain failures to explicit HTTP responses.
+# 2. Problem Statement
 
-| Endpoint | Method | Purpose |
+Medication-related software involves several interconnected information-processing challenges.
+
+These include:
+
+- Medication-name ambiguity.
+- Incomplete or inconsistent knowledge.
+- Potential interactions between medications.
+- Food-related constraints.
+- Uncertainty in available evidence.
+- Scheduling conflicts.
+- Conflicting or outdated source information.
+- The need for traceable and explainable outputs.
+
+A conventional application may rely on fixed lookup tables, while an LLM-based application may generate plausible but unsupported information.
+
+RxLogic explores a different approach.
+
+It separates input interpretation, knowledge evaluation, constraint solving, planning, and evidence governance into distinct software components.
+
+The central engineering problem is:
+
+**How can an AI-assisted medication-reasoning system combine flexible input interpretation with deterministic, inspectable decision logic and a controlled knowledge lifecycle?**
+
+RxLogic approaches this problem using a modular neuro-symbolic architecture.
+
+---
+
+# 3. Project Objectives
+
+The main objectives are:
+
+1. Develop a modular medication-reasoning application.
+2. Integrate an optional natural-language parsing layer.
+3. Convert input into validated structured medication objects.
+4. Implement deterministic medication-rule evaluation.
+5. Represent uncertainty using fuzzy reasoning.
+6. Develop a constraint-satisfaction scheduling engine.
+7. Implement goal-stack planning.
+8. Provide explainable outputs and reasoning traces.
+9. Maintain a structured medication identity catalog.
+10. Separate evidence collection from knowledge approval.
+11. Preserve source provenance and content integrity.
+12. Implement independent clinical-review requirements for clinical assertions.
+13. Support immutable knowledge releases and explicit promotion.
+14. Integrate governed clinical assertions into the Task 09 API response.
+15. Build a responsive React frontend.
+16. Establish regression tests and structural acceptance audits.
+17. Maintain an evaluation-ready development and documentation process.
+
+---
+
+# 4. Key Features
+
+## 4.1 Medication Identity and Name Normalization
+
+RxLogic includes a medication identity catalog and normalization service.
+
+Capabilities include:
+
+- Canonical medication names.
+- Explicit aliases.
+- Guarded fuzzy matching.
+- Medication identity metadata.
+- RxNorm/RxCUI identifiers where registered.
+- Unknown-name handling.
+- Normalization explanations.
+
+For example:
+
+```text
+paracetamol
+     |
+     v
+acetaminophen
+```
+
+The catalog recognizes `paracetamol` as an alias for `acetaminophen`.
+
+This is a terminology-resolution capability only. It does not establish clinical interaction coverage, dosing instructions, contraindications, or medication suitability.
+
+## 4.2 Symbolic Interaction Reasoning
+
+The symbolic rule engine evaluates configured medication-pair rules.
+
+It provides:
+
+- Structured rule evaluation.
+- Rule identifiers.
+- Evidence metadata.
+- Severity representation.
+- Evidence-strength representation.
+- Explicit handling of unavailable knowledge.
+
+Severity and evidence strength are separate concepts.
+
+A severe potential interaction and the strength of evidence supporting a rule are not interchangeable measurements.
+
+## 4.3 Fuzzy Logic and Uncertainty Refinement
+
+The uncertainty component demonstrates fuzzy reasoning using configured evidence-related inputs.
+
+It helps represent graded confidence rather than relying exclusively on binary values.
+
+Important distinction:
+
+The generated confidence values are software representations based on development rules. They are not clinically calibrated probabilities.
+
+## 4.4 Constraint-Satisfaction Scheduling
+
+The scheduling engine formulates schedule generation as a constraint-satisfaction problem.
+
+It uses:
+
+- Variables and domains.
+- Constraint propagation.
+- Backtracking.
+- Minimum Remaining Values (MRV).
+- Forward checking.
+- Scheduling-window constraints.
+- Dose-spacing constraints.
+- Meal-window constraints where applicable.
+
+The scheduler searches for a feasible assignment under the configured constraints.
+
+If no valid assignment exists, the system can return an explicit infeasibility result rather than inventing a schedule.
+
+## 4.5 Goal-Stack Planning
+
+RxLogic includes a goal-stack planning component.
+
+It resolves scheduling goals through an explicit planning sequence and can expose a trace of goal resolution.
+
+This provides an additional explanation layer beyond simply displaying a final schedule.
+
+## 4.6 Optional Natural-Language Input
+
+The application supports an optional Ollama-powered natural-language parsing workflow.
+
+Example placeholder:
+
+```text
+Create a demonstration plan using the configured
+synthetic medication inputs.
+```
+
+The parser extracts candidate structured fields.
+
+The resulting data still passes through validation and the symbolic pipeline.
+
+The LLM is not responsible for:
+
+- Establishing clinical truth.
+- Approving evidence.
+- Deciding interaction severity.
+- Publishing knowledge.
+- Independently constructing the final schedule.
+
+Structured input remains available without an LLM.
+
+## 4.7 Evidence-Governed Knowledge Management
+
+The project implements a controlled workflow for transforming source material into governed knowledge.
+
+The stages are:
+
+```text
+Source acquisition
+       |
+       v
+Evidence staging
+       |
+       v
+Integrity verification
+       |
+       v
+Evidence inspection
+       |
+       v
+Reviewer decision
+       |
+       v
+Knowledge candidate creation
+       |
+       v
+Independent clinical review
+       |
+       v
+Conflict assessment
+       |
+       v
+Immutable release assembly
+       |
+       v
+Explicit promotion
+       |
+       v
+Runtime integrity verification
+```
+
+Evidence acceptance does not automatically mean clinical approval.
+
+Release creation does not automatically mean release activation.
+
+## 4.8 Task 09 Clinical Assessment
+
+Task 09 adds an evidence-governed clinical-assessment component to the plan response.
+
+It supports optional context fields:
+
+- Foods.
+- Conditions.
+
+The assessment evaluates eligible assertions against explicitly supplied context.
+
+It does not infer diagnoses or generate patient-specific dosage instructions.
+
+Unapproved, rejected, withdrawn, unresolved-conflict, or otherwise ineligible assertions are excluded from findings.
+
+Missing knowledge is represented as unavailable or insufficient rather than as proof of safety.
+
+---
+
+# 5. System Architecture
+
+RxLogic uses a layered full-stack architecture.
+
+```text
+                  REACT + VITE FRONTEND
+       -------------------------------------------
+       Plan Form | Clinical Assessment | Warnings
+       Schedule | Coverage | History
+       -------------------------------------------
+                         |
+                         | HTTP / JSON
+                         v
+                    FLASK REST API
+       -------------------------------------------
+       Request Validation | Error Handling
+       Session Management | Response Serialization
+       -------------------------------------------
+                         |
+             -------------------------
+             |                       |
+             v                       v
+       OPTIONAL LLM             STRUCTURED INPUT
+       Ollama Parser             Direct Form Input
+             |                       |
+             -----------+-------------
+                        |
+                        v
+                DOMAIN VALIDATION
+       -------------------------------------------
+       Typed Medication Objects
+       Request Schemas
+       Domain Constraints
+       -------------------------------------------
+                        |
+                        v
+              SYMBOLIC REASONING PIPELINE
+       -------------------------------------------
+       Name Normalization
+              |
+       Food Rule Evaluation
+              |
+       Interaction Rule Engine
+              |
+       Fuzzy Confidence Refinement
+              |
+       CSP Scheduler
+              |
+       Goal-Stack Planner
+              |
+       Explanation Generation
+       -------------------------------------------
+                        |
+             -------------------------
+             |                       |
+             v                       v
+       PLAN PERSISTENCE       CLINICAL ASSESSMENT
+       History Records        Task 09 Integration
+                                     |
+                                     v
+                          GOVERNED ASSERTIONS
+                          Evidence-Linked Knowledge
+
+       SEPARATE KNOWLEDGE GOVERNANCE SYSTEM
+       -------------------------------------------
+       Source Connectors
+              |
+       Evidence Ingestion
+              |
+       Evidence Review
+              |
+       Candidate Curation
+              |
+       Independent Approval
+              |
+       Immutable Release
+              |
+       Promotion / Rollback
+              |
+       Integrity-Checked Runtime
+       -------------------------------------------
+```
+
+## Architectural Principles
+
+### Separation of concerns
+
+Each component has a defined responsibility.
+
+### Deterministic downstream reasoning
+
+The optional LLM does not replace the symbolic reasoning system.
+
+### Explicit domain boundaries
+
+Input is validated before it reaches the reasoning services.
+
+### Explainability
+
+Outputs can retain references to rules, evidence, constraints, and planning decisions.
+
+### Knowledge governance
+
+External information is not automatically trusted as runtime knowledge.
+
+### Fail-closed behavior
+
+Active-release mode refuses to silently use an invalid or missing approved release.
+
+---
+
+# 6. Core Reasoning Pipeline
+
+The core pipeline follows a sequence of processing stages.
+
+## Stage 1: Input Validation
+
+The API receives structured or parsed input.
+
+Request validation ensures that accepted values satisfy the defined schemas.
+
+## Stage 2: Name Normalization
+
+Medication names are checked against:
+
+- Canonical names.
+- Explicit aliases.
+- Guarded fuzzy matching.
+
+Unknown names are handled explicitly.
+
+## Stage 3: Food-Rule Handling
+
+The food-rule service checks configured guidance.
+
+An important safety gate was introduced during Task 09:
+
+Rules that are not explicitly marked approved are informational only and must not modify the medication's scheduling constraints.
+
+## Stage 4: Interaction Evaluation
+
+The symbolic rule engine evaluates configured medication-pair knowledge.
+
+Results retain available rule and evidence metadata.
+
+## Stage 5: Uncertainty Refinement
+
+The fuzzy reasoning layer refines confidence representations using configured evidence-related information.
+
+## Stage 6: Constraint Construction
+
+The scheduler constructs variables, domains, and constraints.
+
+## Stage 7: Constraint Solving
+
+The CSP engine searches for a feasible schedule using propagation and backtracking.
+
+## Stage 8: Goal-Stack Planning
+
+The planner resolves the configured scheduling goals and records its execution trace.
+
+## Stage 9: Clinical Assessment
+
+Task 09 evaluates eligible evidence-governed assertions against explicitly supplied context.
+
+## Stage 10: Response Generation
+
+The API returns structured outputs containing available:
+
+- Schedule entries.
+- Warnings.
+- Food guidance.
+- Name normalization information.
+- Knowledge coverage.
+- Planning traces.
+- Clinical assessment information.
+
+---
+
+# 7. Major Algorithms and Methodologies
+
+| Methodology | Purpose |
+|---|---|
+| Rule-based reasoning | Deterministic evaluation of configured knowledge |
+| Fuzzy logic | Graded confidence representation |
+| Constraint Satisfaction Problem | Schedule construction |
+| Backtracking | Search for feasible assignments |
+| MRV heuristic | Select the most constrained variable |
+| Forward checking | Detect domain conflicts early |
+| Goal-stack planning | Resolve goals in an explicit sequence |
+| SHA-256 | Source and dataset integrity verification |
+| Immutable release manifests | Bind released knowledge to content hashes |
+| Hash-linked audit events | Detect modification of promotion history |
+
+## 7.1 Constraint Satisfaction
+
+A scheduling problem can be represented as:
+
+```text
+CSP = (X, D, C)
+```
+
+Where:
+
+- `X` represents scheduling variables.
+- `D` represents possible time assignments.
+- `C` represents scheduling constraints.
+
+The scheduler searches for an assignment satisfying the configured constraints.
+
+## 7.2 MRV
+
+Minimum Remaining Values selects the variable with the smallest remaining domain.
+
+This helps prioritize the most constrained scheduling decisions.
+
+## 7.3 Forward Checking
+
+After an assignment, forward checking removes incompatible values from neighboring variable domains.
+
+If a domain becomes empty, the current search branch is rejected.
+
+## 7.4 Backtracking
+
+Backtracking explores alternative assignments when a constraint conflict is encountered.
+
+It allows the solver to recover from unsuccessful partial assignments.
+
+## 7.5 Evidence Integrity
+
+The evidence workflow uses SHA-256 fingerprints to detect changes in source bytes and normalized payloads.
+
+Integrity verification establishes whether stored content matches its recorded fingerprint. It does not establish that the source is medically correct.
+
+---
+
+# 8. Knowledge Base and Evidence Governance
+
+Knowledge governance is one of the central engineering components of RxLogic.
+
+## 8.1 Evidence Ingestion
+
+The ingestion layer supports source staging and metadata validation.
+
+It includes:
+
+- Source identifiers.
+- Publisher metadata.
+- Source titles.
+- Jurisdiction metadata.
+- Canonical URLs.
+- Original source bytes.
+- Normalized payloads.
+- Integrity fingerprints.
+
+## 8.2 Source Connectors
+
+The project includes bounded connectors for:
+
+- RxNav/RxNorm.
+- openFDA drug-label information.
+- DailyMed SPL search.
+
+Retrieved information is staged for review.
+
+It is not automatically inserted into approved runtime knowledge.
+
+## 8.3 Evidence Review
+
+The evidence-review subsystem provides:
+
+- Review queues.
+- Evidence inspection.
+- Hash verification.
+- Reviewer decisions.
+- Append-only decision records.
+
+Accepted evidence is eligible for controlled curation, not automatic clinical publication.
+
+## 8.4 Knowledge Curation
+
+Candidate records are linked to evidence identifiers.
+
+Clinical assertions require independent review by a qualified clinical reviewer, such as a physician or clinical pharmacist.
+
+The candidate author cannot approve their own clinical candidate.
+
+Conflicts must be assessed explicitly.
+
+## 8.5 Immutable Knowledge Releases
+
+A release contains a manifest binding datasets to content hashes.
+
+The workflow distinguishes:
+
+1. Candidate creation.
+2. Candidate approval.
+3. Release assembly.
+4. Release promotion.
+5. Runtime loading.
+
+## 8.6 Promotion and Rollback
+
+Promotion and rollback are separate audited operations.
+
+The system records promotion events in a hash-linked event chain.
+
+## 8.7 Active Release Integrity
+
+In `active_release` mode, runtime loading verifies:
+
+- Active release state.
+- Manifest integrity.
+- Dataset hashes.
+- Schema validity.
+- Audit-chain state.
+
+If a valid active release is unavailable, the system fails closed.
+
+It does not silently fall back to mutable development knowledge.
+
+---
+
+# 9. Task-by-Task Development History
+
+The project was developed through nine staged implementation tasks.
+
+## Task 01 — Repository Audit and Foundation
+
+Established the initial engineering baseline.
+
+Key work:
+
+- Repository inventory.
+- Architecture inspection.
+- Initial knowledge review.
+- Identification of technical gaps.
+- Development roadmap.
+- Initial documentation and audit artifacts.
+
+## Task 02 — Knowledge Structure and Validation
+
+Established structured knowledge representation.
+
+Key work:
+
+- Knowledge manifest.
+- Evidence-source registry.
+- Versioned schemas.
+- Stable identifiers.
+- Structural validation.
+- Knowledge consistency checks.
+
+## Task 03 — Evidence Ingestion
+
+Implemented evidence staging and integrity controls.
+
+Key work:
+
+- Source metadata validation.
+- HTTPS source restrictions.
+- Evidence identifiers.
+- Content-addressed staging.
+- SHA-256 fingerprints.
+- Ingestion command-line workflow.
+
+## Task 04 — Official Source Connectors
+
+Added bounded external-source integration.
+
+Key work:
+
+- RxNav/RxNorm connector.
+- openFDA connector.
+- DailyMed SPL search connector.
+- Source retrieval and staging.
+- External response handling.
+- Provenance retention.
+
+## Task 05 — Evidence Review and Inspection
+
+Introduced a controlled evidence-review workflow.
+
+Key work:
+
+- Original source-byte preservation.
+- Separate source and normalized-payload hashes.
+- Evidence inspection.
+- Review queue.
+- Append-only reviewer decisions.
+- Review CLI.
+
+Accepted evidence remains staged for curation and is not automatically promoted.
+
+## Task 06 — Controlled Knowledge Curation and Release Management
+
+Implemented the controlled lifecycle between reviewed evidence and runtime knowledge.
+
+Key work:
+
+- Evidence-linked candidates.
+- Candidate validation.
+- Independent review.
+- Immutable release assembly.
+- Release manifests.
+- Explicit promotion.
+- Rollback.
+- Runtime release loading.
+- Integrity verification.
+- Tamper-evident promotion event chain.
+
+The Task 06 full regression suite was reported at 337 passing tests.
+
+## Task 07 — Clinical Knowledge Expansion and Governance
+
+Expanded the knowledge architecture with additional clinical assertion families.
+
+Key work:
+
+- Drug–food/component interaction assertions.
+- Contraindication assertions.
+- Dosage-reference assertions.
+- Administration-instruction assertions.
+- Evidence-quality appraisal.
+- Conflict assessment.
+- Independent clinical approval.
+- Expanded governance and audit checks.
+
+The Task 07 full regression suite was reported at 358 passing tests.
+
+## Task 08 — Medication Identity and Knowledge Coverage
+
+Expanded medication identity and coverage reporting.
+
+Key work:
+
+- Versioned medication catalog.
+- Canonical identity records.
+- RxNorm/RxCUI metadata.
+- Alias handling.
+- Paracetamol-to-acetaminophen normalization.
+- Catalog consistency validation.
+- Medication coverage auditing.
+- Expanded acceptance reporting.
+
+The Task 08 full regression suite was reported at 366 passing tests.
+
+## Task 09 — Clinical Reasoning Integration
+
+Integrated governed clinical assertions into the application response.
+
+Key work:
+
+- Clinical assessment service.
+- Explicit food and condition context.
+- Evidence-governed assertion matching.
+- Exclusion of unapproved assertions.
+- Exclusion of unresolved conflicts.
+- Non-prescriptive dosage handling.
+- Assessment API response.
+- Frontend clinical-assessment component.
+- Regression tests.
+- Task 09 acceptance audit.
+
+The Task 09 full regression suite was reported at **377 passing tests**.
+
+The current Task 09 structural audit reports zero approved runtime clinical assertions. This means the application must not invent clinical findings when no approved assertion is available.
+
+---
+
+# 10. Medication Catalog and Knowledge Coverage
+
+The medication catalog is a structured identity resource.
+
+It is not a comprehensive medication database.
+
+The current Task 08 development inventory reported:
+
+| Metric | Reported count |
+|---|---:|
+| Medication identities | 11 |
+| Possible unordered medication pairs | 55 |
+| Legacy DDI assertions present but unreviewed | 12 |
+| DDI pairs not evaluated | 43 |
+| Legacy meal-guidance entries present but unreviewed | 4 |
+| Medication entries without meal-guidance assessment | 7 |
+
+These counts describe the development snapshot and its audit output.
+
+They do not represent complete clinical coverage.
+
+## 10.1 Paracetamol Support
+
+The catalog registers:
+
+```text
+Canonical identity: acetaminophen
+RxNorm concept: 161
+Alias: paracetamol
+```
+
+A test with `paracetamol` can demonstrate name normalization.
+
+It cannot demonstrate that the application has clinically approved interaction, contraindication, food, or dosage knowledge for that medication.
+
+## 10.2 Coverage Interpretation
+
+The application distinguishes:
+
+- Recognized identity.
+- Evaluated knowledge.
+- Unreviewed knowledge.
+- Approved knowledge.
+- Missing knowledge.
+
+These categories must not be collapsed into a single safety indicator.
+
+In particular:
+
+**Not evaluated does not mean no interaction.**
+
+**No warning does not mean safe.**
+
+---
+
+# 11. Task 09 Clinical Reasoning Integration
+
+Task 09 introduces a clinical-assessment response layer.
+
+Its responsibility is to expose eligible governed knowledge in a structured API response.
+
+## 11.1 Supported Context
+
+The optional context object supports:
+
+```json
+{
+  "patient_context": {
+    "foods": [],
+    "conditions": []
+  }
+}
+```
+
+The arrays contain explicitly supplied non-empty strings when used.
+
+Matching is exact and case-insensitive.
+
+The application does not infer medical conditions.
+
+## 11.2 Assertion Eligibility
+
+Clinical findings are restricted to assertions satisfying the configured governance requirements.
+
+Assertions that are:
+
+- Unreviewed.
+- Rejected.
+- Withdrawn.
+- Conflict-unassessed.
+- In unresolved conflict.
+
+are excluded from findings.
+
+## 11.3 Dosage Handling
+
+Dosage references are treated as source-backed reference records.
+
+They are not transformed into patient-specific dosing instructions.
+
+## 11.4 Privacy Boundary
+
+Task 09 patient context and context-derived assessment findings are not persisted in plan-history records.
+
+## 11.5 Current Approval State
+
+The latest Task 09 audit reports:
+
+| Assertion domain | Total assertions | Approved and conflict-assessed |
+|---|---:|---:|
+| Drug–food interactions | 0 | 0 |
+| Contraindications | 0 | 0 |
+| Dosage references | 0 | 0 |
+| Administration instructions | 0 | 0 |
+| **Total** | **0** | **0** |
+
+The correct interpretation is that no approved runtime clinical findings are currently available from these four assertion domains.
+
+---
+
+# 12. Application Walkthrough
+
+## 12.1 Plan Page
+
+The Plan page provides structured and optional natural-language input.
+
+Structured fields can include:
+
+- Medication name.
+- Dosage field.
+- Frequency.
+- Timing preference.
+- Food preference.
+
+The exact accepted values are controlled by the backend schemas.
+
+## 12.2 Schedule Results
+
+The result view can display:
+
+- Generated schedule.
+- Dose-time entries.
+- Scheduling warnings.
+- Rule explanations.
+- Name normalization.
+- Food guidance.
+- Knowledge coverage.
+- Goal-stack trace.
+
+## 12.3 Clinical Assessment
+
+The Task 09 frontend component displays available clinical-assessment information, including:
+
+- Assessment status.
+- Eligible findings.
+- Knowledge availability.
+- Excluded assertions.
+- Conflict information.
+- Evidence references.
+- Non-prescriptive limitations.
+
+## 12.4 History
+
+The History page displays available saved plan records.
+
+Task 09 patient context and context-derived assessment findings are excluded from plan-history persistence.
+
+## 12.5 Safe Demonstration
+
+A software demonstration can use synthetic medication entries to show:
+
+1. Structured input.
+2. Name normalization.
+3. Rule evaluation.
+4. Knowledge coverage.
+5. Scheduling behavior.
+6. Planning traces.
+7. Clinical-assessment status.
+8. Evidence-governance workflows.
+
+Do not use real patient medication regimens.
+
+---
+
+# 13. API Documentation
+
+All API endpoints are under:
+
+```text
+/api
+```
+
+| Endpoint | Method | Description |
 |---|---|---|
 | `/api/health` | GET | Health check |
-| `/api/info` | GET | Application metadata |
-| `/api/plan` | POST | Create a plan from structured medication data |
-| `/api/plan/nl` | POST | Parse natural-language input, then use the same reasoning pipeline |
-| `/api/plans` | GET | List recent plans for the caller's session; supports a `limit` query parameter |
+| `/api/info` | GET | Application information |
+| `/api/plan` | POST | Structured plan generation |
+| `/api/plan/nl` | POST | Natural-language plan generation |
+| `/api/plans` | GET | Retrieve available plan history |
+| `/api/knowledge/status` | GET | Knowledge and active-release status |
 
-### 7.1 Structured request shape
+## 13.1 Structured Plan Request
 
-The structured endpoint expects a JSON object containing a `medications` array. Each medication object can include `name`, `dosage_mg`, `frequency_per_day`, `timing_preference`, and `with_food`. The backend schema is authoritative for accepted values and defaults.
-
-A minimal illustrative request shape (not a medical recommendation):
+Illustrative request structure:
 
 ```json
 {
   "medications": [
     {
-      "name": "<supported-demo-name>",
+      "name": "example-supported-name",
       "frequency_per_day": 1,
       "timing_preference": "no_preference"
     }
@@ -300,527 +1049,947 @@ A minimal illustrative request shape (not a medical recommendation):
 }
 ```
 
-### 7.2 Response information
+The values are placeholders, not medication instructions.
 
-A successful plan response includes the schedule entries and, where applicable, warnings, goal trace, coverage summary, name resolutions, and food guidance. The frontend consumes these response fields to render the result sections described above.
+## 13.2 Context-Aware Plan Request
 
-### 7.3 Known error categories
+```json
+{
+  "medications": [
+    {
+      "name": "example-supported-name",
+      "frequency_per_day": 1
+    }
+  ],
+  "patient_context": {
+    "foods": [
+      "example-food"
+    ],
+    "conditions": [
+      "example-condition"
+    ]
+  }
+}
+```
 
-| Error category | Typical status | Meaning |
-|---|---:|---|
-| `schema_validation_error` | 400 | Invalid request shape or parsed output that fails schema validation |
-| `unknown_medication` | 422 | One or more names are not covered after normalization |
-| `insufficient_data` | 422 | No usable medication entries were provided |
-| `no_feasible_schedule` | 422 | The configured constraints cannot be satisfied |
-| `external_api_error` | 502 | External drug-data service failure |
-| `llm_api_error` | 502 | Local Ollama service/model request failed |
+## 13.3 Clinical Assessment Response
 
-The exact response body and accepted field values are defined by the current backend schemas and route implementation; consult `models/schemas.py` and `routes/api.py` when integrating another client.
+The Task 09 response includes a `clinical_assessment` object.
 
-## 8. Local setup
+Its information can include:
 
-### 8.1 Prerequisites
+- Overall assessment status.
+- Findings.
+- Per-domain knowledge availability.
+- Excluded assertion counts.
+- Conflict information.
+- Evidence provenance.
+- Dosage-reference safety metadata.
+- `clinical_use_permitted: false`.
 
-- Windows 10/11 with PowerShell, macOS, or Linux.
-- Python 3.12 (the repository runtime pin is in `runtime.txt`).
-- Node.js and npm for frontend development/building.
-- Git (optional, for cloning/version control).
-- Ollama and the configured model only if testing natural-language mode.
+## 13.4 Error Handling
 
-### 8.2 Get the source
+Representative error categories include:
 
-Clone the repository:
+| Error | Meaning |
+|---|---|
+| `schema_validation_error` | Invalid request |
+| `unknown_medication` | Unsupported medication identity |
+| `insufficient_data` | Missing usable input |
+| `no_feasible_schedule` | Scheduling constraints cannot be satisfied |
+| `external_api_error` | External source request failed |
+| `llm_api_error` | Natural-language service failed |
+| Knowledge-release error | Active release unavailable or integrity verification failed |
 
-```bash
+For exact schemas and response structures, refer to:
+
+```text
+models/schemas.py
+routes/api.py
+docs/TASK_09_API_CONTRACT.md
+```
+
+---
+
+# 14. Technology Stack
+
+| Category | Technology |
+|---|---|
+| Programming language | Python 3.12 |
+| Frontend framework | React 18 |
+| Frontend build tool | Vite 6 |
+| Styling | Tailwind CSS 3 |
+| Client routing | React Router 7 |
+| Backend framework | Flask 3 |
+| API rate limiting | Flask-Limiter |
+| Language model integration | Ollama |
+| Default local LLM | phi3:mini |
+| Domain modeling | Python dataclasses and enums |
+| Rule reasoning | Custom Python rule engine |
+| Fuzzy logic | scikit-fuzzy |
+| Scheduling | CSP and backtracking |
+| Planning | Goal-stack planner |
+| Persistence | SQLAlchemy 2 |
+| Database migrations | Alembic |
+| Development database | SQLite |
+| Production database option | PostgreSQL |
+| Testing | pytest |
+| Coverage | pytest-cov |
+| Source integrity | SHA-256 |
+| External sources | RxNav/RxNorm, openFDA, DailyMed |
+| Application server | Gunicorn |
+| Deployment | Render |
+| CI/CD | GitHub Actions |
+
+---
+
+# 15. Project Structure
+
+```text
+RxLogic/
+│
+├── app.py
+├── extensions.py
+├── requirements.txt
+├── runtime.txt
+├── Procfile
+├── .env.example
+├── alembic.ini
+│
+├── routes/
+│   └── api.py
+│
+├── models/
+│   ├── schemas.py
+│   ├── exceptions.py
+│   └── database.py
+│
+├── services/
+│   ├── llm_parser.py
+│   ├── name_normalizer.py
+│   ├── medication_catalog.py
+│   ├── drug_data_client.py
+│   ├── medical_source_client.py
+│   ├── evidence_ingestion.py
+│   ├── evidence_review.py
+│   ├── knowledge_curation.py
+│   ├── knowledge_release.py
+│   ├── knowledge_validation.py
+│   ├── clinical_knowledge.py
+│   ├── clinical_reasoning.py
+│   ├── food_rules.py
+│   ├── rule_engine.py
+│   ├── uncertainty.py
+│   ├── csp_scheduler.py
+│   ├── planner.py
+│   ├── reasoning_service.py
+│   └── plan_log_service.py
+│
+├── knowledge/
+│   ├── manifest.json
+│   ├── medication_catalog.json
+│   ├── drug_aliases.json
+│   ├── interaction_rules.json
+│   ├── food_rules.json
+│   ├── clinical_assertions.json
+│   ├── evidence_sources.json
+│   ├── ingestion/
+│   ├── staging/
+│   ├── curation/
+│   └── releases/
+│
+├── scripts/
+│   ├── ingest_evidence.py
+│   ├── review_evidence.py
+│   ├── fetch_medical_source.py
+│   ├── manage_knowledge.py
+│   ├── audit_knowledge_coverage.py
+│   ├── audit_medication_catalog.py
+│   ├── audit_task07.py
+│   ├── audit_task08.py
+│   └── audit_task09.py
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── hooks/
+│   │   ├── api.js
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── dist/
+│   ├── package.json
+│   └── vite.config.js
+│
+├── tests/
+│   └── test_*.py
+│
+├── docs/
+│   ├── TASK_01_CHANGELOG.md
+│   ├── TASK_01_REPOSITORY_AUDIT.md
+│   ├── TASK_02_CHANGELOG.md
+│   ├── TASK_03_CHANGELOG.md
+│   ├── TASK_04_CHANGELOG.md
+│   ├── TASK_05_CHANGELOG.md
+│   ├── TASK_06_CHANGELOG.md
+│   ├── TASK_06_STAGE_5_ACCEPTANCE_AUDIT.md
+│   ├── TASK_07_CHANGELOG.md
+│   ├── TASK_07_ACCEPTANCE_AUDIT.md
+│   ├── TASK_08_CHANGELOG.md
+│   ├── TASK_08_ACCEPTANCE_AUDIT.md
+│   ├── TASK_09_CHANGELOG.md
+│   └── TASK_09_API_CONTRACT.md
+│
+├── reports/
+│   ├── knowledge_coverage.json
+│   ├── medication_catalog_audit.json
+│   ├── task07_acceptance_audit.json
+│   ├── task08_acceptance_audit.json
+│   └── task09_acceptance_audit.json
+│
+└── .github/
+    └── workflows/
+        └── tests.yml
+```
+
+The structure is representative. Some local generated artifacts, staging files, databases, caches, and environment-specific files may not be shown.
+
+---
+
+# 16. Installation and Setup
+
+## 16.1 Prerequisites
+
+Install:
+
+- Python 3.12.
+- Node.js 20 or later.
+- npm.
+- Git.
+
+Ollama is optional and required only for local natural-language mode.
+
+## 16.2 Clone the Repository
+
+```powershell
 git clone https://github.com/raghavshikriwal/RxLogic.git
+
 cd RxLogic
 ```
 
-Alternatively, open the extracted project directory in VS Code.
+## 16.3 Create Python Virtual Environment
 
-### 8.3 Configure environment
-
-Copy the example environment file and edit only the settings needed for your local environment.
-
-**PowerShell:**
-
-```powershell
-Copy-Item .env.example .env
-```
-
-**macOS/Linux:**
-
-```bash
-cp .env.example .env
-```
-
-Do not commit `.env`, database credentials, API keys, or other secrets. Keep secrets in environment variables or the deployment platform's secret settings.
-
-### 8.4 Install backend dependencies
-
-**PowerShell:**
+Windows PowerShell:
 
 ```powershell
 py -3.12 -m venv .venv
+
 .\.venv\Scripts\Activate.ps1
+
 python -m pip install --upgrade pip
+
 python -m pip install -r requirements.txt
 ```
 
-If PowerShell blocks virtual-environment activation, use the Python executable directly instead of changing machine-wide execution policy:
+If PowerShell blocks activation:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-**macOS/Linux:**
+## 16.4 Configure Environment
 
-```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+```powershell
+Copy-Item .env.example .env
 ```
 
-### 8.5 Install frontend dependencies
+Do not commit `.env` or any secrets.
+
+## 16.5 Install Frontend Dependencies
 
 ```powershell
 cd frontend
-npm install
+
+npm ci
+
 cd ..
 ```
 
-Task 09 updates the frontend to Vite 6.4.6 and React Router 7.18.5. Run `npm install` once after extracting this Task 09 package to reconcile the lockfile with those security updates; subsequent installs can use `npm ci`.
+---
 
-## 9. Running the application
+# 17. Running the Application
 
-### 9.1 Run the backend
+## 17.1 Start Backend
 
-From the repository root, with the virtual environment active:
+From the repository root:
 
 ```powershell
 python app.py
 ```
 
-The Flask development server is configured to listen on the local backend port (normally `http://127.0.0.1:5000`). Use a separate terminal for the frontend development server.
+The development backend normally runs at:
 
-### 9.2 Run the frontend in development mode
+```text
+http://127.0.0.1:5000
+```
 
-From the repository root:
+## 17.2 Start Frontend
+
+Open a second terminal:
 
 ```powershell
 cd frontend
+
 npm run dev
 ```
 
-Open the local Vite URL printed in the terminal (normally `http://localhost:5173`). The Vite configuration proxies `/api` requests to the local Flask backend. Keep both processes running while using the development UI.
+Open the Vite URL printed in the terminal.
 
-### 9.3 Build the frontend
+The frontend development configuration proxies API requests to Flask.
+
+## 17.3 Production Frontend Build
+
+```powershell
+cd frontend
+
+npm run build
+
+cd ..
+```
+
+The generated production frontend is stored in:
+
+```text
+frontend/dist/
+```
+
+## 17.4 Optional Ollama Setup
+
+Install Ollama separately.
+
+Pull the configured model:
+
+```powershell
+ollama pull phi3:mini
+```
+
+Check installed models:
+
+```powershell
+ollama list
+```
+
+Start Ollama if it is not already running:
+
+```powershell
+ollama serve
+```
+
+Natural-language mode requires a reachable local Ollama service.
+
+Structured input does not require an LLM.
+
+---
+
+# 18. Configuration
+
+The reference configuration is maintained in `.env.example`.
+
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | Database connection |
+| `OLLAMA_BASE_URL` | Local Ollama endpoint |
+| `OLLAMA_MODEL` | Local model identifier |
+| `LOG_LEVEL` | Logging level |
+| `FLASK_DEBUG` | Development debug mode |
+| `PORT` | Application port |
+| `RXLOGIC_KNOWLEDGE_MODE` | Knowledge loading mode |
+| `RXLOGIC_KNOWLEDGE_ROOT` | Optional knowledge-root override |
+
+## Knowledge Modes
+
+### legacy_development
+
+Uses the repository's development knowledge files.
+
+This mode is intended for backwards-compatible development and demonstration.
+
+The legacy knowledge is not clinically reviewed.
+
+### active_release
+
+Uses the explicitly promoted, integrity-verified knowledge release.
+
+The runtime does not silently fall back to mutable development JSON when the active release is missing or invalid.
+
+**Current status:** No valid active approved release is configured in the latest reported Task 09 snapshot.
+
+Enabling this mode without a valid promoted release is expected to fail closed.
+
+---
+
+# 19. Testing and Verification
+
+Testing is performed at multiple levels.
+
+## 19.1 Latest Full Python Regression Suite
+
+The latest Task 09 Windows verification reported:
+
+```text
+377 passed
+0 failed
+24.21 seconds
+```
+
+Command:
+
+```powershell
+python -m pytest -q
+```
+
+## 19.2 Historical Test Milestones
+
+| Project snapshot | Reported result |
+|---|---:|
+| Task 06 | 337 passed |
+| Task 07 | 358 passed |
+| Task 08 | 366 passed |
+| Task 09 | **377 passed** |
+
+These are historical suite totals from different project snapshots. They must not be added together.
+
+The Task 09 result is the latest reported full-suite result.
+
+## 19.3 Focused Task 09 Verification
+
+| Test category | Result |
+|---|---:|
+| Food-rule and API focused tests | 55 passed |
+| Clinical reasoning tests | 23 passed |
+| Full Python suite | 377 passed |
+| Frontend production build | Passed |
+| npm audit | 0 vulnerabilities |
+
+Focused test counts overlap with the full suite.
+
+## 19.4 Knowledge Structural Validation
+
+The knowledge-validation workflow checks:
+
+- Schema validity.
+- Manifest consistency.
+- Dataset integrity.
+- Evidence references.
+- Catalog consistency.
+- Governance invariants.
+- Release integrity requirements.
+
+Latest reported result:
+
+```text
+Structural validation: PASSED
+```
+
+Structural validation does not prove clinical correctness.
+
+## 19.5 Task 09 Acceptance Audit
+
+Latest Task 09 audit:
+
+```text
+Approved runtime assertions: 0
+```
+
+This is an important limitation.
+
+The system must not generate positive clinical findings when no approved assertion exists.
+
+## 19.6 Frontend Verification
+
+From the frontend directory:
+
+```powershell
+npm audit
+
+npm run build
+```
+
+Latest reported result:
+
+```text
+npm audit: 0 vulnerabilities
+Production build: PASSED
+```
+
+## 19.7 Run All Main Checks
 
 From the repository root:
 
 ```powershell
-cd frontend
-npm run build
-cd ..
-```
+# Python regression suite
+python -m pytest -q
 
-The production assets are generated in `frontend/dist/`. This repository tracks the built frontend bundle for its single-service Render deployment. After changing frontend source files, rebuild the bundle and include the updated `frontend/dist/` in the deployment commit; otherwise the hosted Flask app may serve an older bundle.
-
-### 9.4 Optional local natural-language mode
-
-Natural-language parsing requires Ollama to be installed and running locally, with the configured model available. For this repository's documented default:
-
-```powershell
-ollama pull phi3:mini
-ollama serve
-```
-
-Ollama may already be running as a background service after installation. Confirm that the configured model is present with `ollama list`. The backend reads `OLLAMA_BASE_URL` and `OLLAMA_MODEL` from its environment; see `.env.example` and `services/llm_parser.py`.
-
-If Ollama is unavailable, natural-language requests should return the explicit `llm_api_error` category. Structured input and the symbolic reasoning pipeline are designed to remain independent of Ollama.
-
-### 9.5 Environment variables
-
-| Variable | Documented default / behavior | Purpose |
-|---|---|---|
-| `DATABASE_URL` | SQLite in-memory default in application configuration | Database connection; configure PostgreSQL for a persistent deployment |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Local Ollama server URL |
-| `OLLAMA_MODEL` | `phi3:mini` | Ollama model name |
-| `FLASK_DEBUG` | `false` | Flask debug behavior; keep disabled in production |
-| `LOG_LEVEL` | `INFO` | Application logging level |
-| `PORT` | `5000` locally; hosting platform may set it | HTTP server port |
-| `PYTHON_VERSION` | Platform-specific | Render runtime selection |
-
-Check `.env.example`, `app.py`, and `services/llm_parser.py` for the authoritative configuration behavior before changing deployment values.
-
-## 10. Testing and verification evidence
-
-RxLogic has an automated pytest suite across **24 test modules**. The results below distinguish the latest user-verified full-suite run, earlier historical runs, focused test runs, and manually executed live-model verification. Counts from focused runs overlap with the full suite and must not be added together as separate unique tests.
-
-### 10.1 Full automated suite — latest user-provided verification
-
-| Measure | Result |
-|---|---:|
-| Command | `python -m pytest -v` |
-| Collected / passed | **337 / 337** |
-| Failed | **0** |
-| Duration | **16.41 seconds** |
-| Platform reported by pytest | Windows, Python 3.12.10, pytest 8.3.3 |
-
-This is the user-reported full-suite result for the Task 06 Stage 5 snapshot, verified from PowerShell on November 13, 2026. It is not a fresh run of every later snapshot; rerun the suite after subsequent code changes. The earlier 262-test result from November 12 and Stage 4 result of 336 passed are historical and superseded by this run. Task 07 changes have not yet received a complete Windows run.
-
-### 10.2 Focused verification runs discussed during project review
-
-| Area | Command / method | User-provided result |
-|---|---|---:|
-| CSP scheduler | `python -m pytest tests/test_csp_scheduler.py -v` (previously reported run) | **27 passed** |
-| Rule engine + reasoning service | `python -m pytest tests/test_rule_engine.py tests/test_reasoning_service.py -v` | **95 passed** |
-| LLM parser unit tests | `python -m pytest tests/test_llm_parser.py -v` | **13 passed** |
-| API routes | `python -m pytest tests/test_api.py -v` | **32 passed** |
-| Database URL behavior | `python -m pytest tests/test_database.py -v` | **2 passed** |
-| End-to-end pipeline | `python -m pytest tests/test_e2e.py -v` | **3 passed** |
-| Earlier full-suite run (historical) | `python -m pytest -v` | **262 passed** |
-
-The focused API, database, and end-to-end runs total 37 passed test cases in those selected modules. The 95 interaction tests and other focused runs are also included in the full-suite result; they are not additional unique tests beyond the 262.
-
-### 10.3 Coverage measurements reported during review
-
-| Module | Reported coverage | Measurement scope |
-|---|---:|---|
-| `services/csp_scheduler.py` | **99%** | Focused scheduler coverage run; 176 statements, 1 missed (previously reported) |
-| `services/llm_parser.py` | **100%** | `python -m pytest tests/test_llm_parser.py --cov=services.llm_parser --cov-report=term-missing -v`; 47 statements, 0 missed |
-
-These are **module-specific coverage results**, not overall repository coverage. A single current full-project coverage percentage has not been established in the verification evidence recorded here.
-
-To generate a fresh overall report locally:
-
-```powershell
-python -m pytest --cov=services --cov=models --cov=routes --cov-report=term-missing
-```
-
-### 10.4 Live Ollama smoke test
-
-The project includes `live_llm_smoke_test.py`, which calls `services.llm_parser.parse_medications()` against a running Ollama model rather than mocking the model request.
-
-The user-provided local verification recorded:
-
-- Ollama version: `0.40.14`.
-- Model available: `phi3:mini`.
-- Direct model invocation returned the requested JSON-shaped output.
-- `python live_llm_smoke_test.py` completed **3/3 cases** successfully.
-- The three cases exercised extraction of medication names and frequency, plus timing and dosage fields where present.
-
-This verifies a local parser-to-Ollama smoke-test path for those sample inputs. It does not prove general language-understanding accuracy, medical correctness, or hosted Ollama availability.
-
-Run it locally after starting Ollama:
-
-```powershell
-python live_llm_smoke_test.py
-```
-
-### 10.5 What the tests cover
-
-The 24 test modules exercise the following areas:
-
-| Test module | Primary focus |
-|---|---|
-| `test_api.py` | Health/root routes, request validation, structured and text plan endpoints, error mapping, session-scoped history, and knowledge status |
-| `test_architecture_boundaries.py` | Separation between parser, reasoning core, and external/network dependencies |
-| `test_clinical_knowledge.py` | Task 07 assertion schemas, conflict gates, source-quality rationale, and release inclusion for the new clinical knowledge domains |
-| `test_csp_scheduler.py` | Dose spacing, timing preferences, meal windows, interaction constraints, ordering, backtracking, and unsatisfiable cases |
-| `test_database.py` | Database URL normalization |
-| `test_drug_data_client.py` | RxCUI/label lookup behavior, caching, and external-service failure handling |
-| `test_e2e.py` | Full reasoning pipeline scenarios and fail-safe handling of unknown names |
-| `test_evidence_ingestion.py` | Evidence source validation, hashing, idempotency, and staging |
-| `test_evidence_review.py` | Evidence inspection and append-only reviewer decisions |
-| `test_food_rules.py` | Food-rule validation, application, conflicts, and missing-rule behavior |
-| `test_knowledge_curation.py` | Candidate creation, evidence linkage, and independent clinical decisions |
-| `test_knowledge_coverage.py` | Pairwise and per-domain coverage inventories; not-evaluated and conflict semantics |
-| `test_knowledge_management_cli.py` | Governance CLI commands, path overrides, and safe error handling |
-| `test_knowledge_release.py` | Immutable release assembly, promotion, rollback, manifests, and audit-chain integrity |
-| `test_knowledge_runtime.py` | Active-release runtime selection and fail-closed configuration behavior |
-| `test_knowledge_validation.py` | Knowledge dataset and manifest validation |
-| `test_llm_parser.py` | JSON parsing, defaults, schema validation, and Ollama error handling |
-| `test_medical_source_client.py` | Official medical-source connector behavior, response limits, and failure handling |
-| `test_name_normalizer.py` | Exact names, aliases, fuzzy matching safeguards, and normalization |
-| `test_planner.py` | Goal ordering, trace generation, and warning propagation |
-| `test_reasoning_service.py` | Orchestration, interaction flow, coverage, duplicate handling, and food guidance |
-| `test_rule_engine.py` | Rule loading, pair matching, evidence, severity, coverage, separation, and ordering |
-| `test_schemas.py` | Domain schema validation and defaults |
-| `test_uncertainty.py` | Confidence refinement, evidence/source reliability, and bounds |
-
-### 10.6 Reproduce the checks
-
-Run the complete suite:
-
-```powershell
-python -m pytest -v
-```
-
-Run the API, persistence configuration, and end-to-end modules individually:
-
-```powershell
-python -m pytest tests/test_api.py -v
-python -m pytest tests/test_database.py -v
-python -m pytest tests/test_e2e.py -v
-```
-
-Run interaction and LLM parser tests:
-
-```powershell
-python -m pytest tests/test_rule_engine.py tests/test_reasoning_service.py -v
-python -m pytest tests/test_llm_parser.py -v
-```
-
-Run focused coverage reports:
-
-```powershell
-python -m pytest tests/test_csp_scheduler.py --cov=services.csp_scheduler --cov-report=term-missing -v
-python -m pytest tests/test_llm_parser.py --cov=services.llm_parser --cov-report=term-missing -v
-```
-
-The pytest-asyncio deprecation warning about an unset default fixture-loop scope appeared in some earlier runs. It was non-blocking and did not cause test failures. It should be addressed as a separate test-configuration cleanup if the installed plugin version continues to emit it.
-
-### 10.7 Verification boundaries
-
-Passing automated tests establish that the tested code paths behaved as expected in the reported local environment. They do **not** establish clinical validity, exhaustive knowledge-base coverage, production load capacity, penetration-test results, full accessibility conformance, or continuous uptime of the hosted service. Frontend browser QA and a fresh deployed-environment audit remain separate verification activities.
-
-## 11. Deployment notes
-
-The repository is configured for a single-service deployment in which Gunicorn runs the Flask application and Flask serves the committed frontend build output.
-
-The project README's existing deployment configuration describes Render hosting and PostgreSQL through Neon. Deployment settings, environment variables, database connectivity, and hosted service health should be checked in the relevant provider dashboards before each evaluation or release. Do not publish secret values in source control or screenshots.
-
-The hosted demonstration does not run Ollama. Therefore, use structured input for the hosted demonstration; use a local environment with Ollama for the natural-language parser demonstration.
-
-## 12. Safety, scope, and known limitations
-
-This project is intentionally an educational software demonstrator. It is **not a medical device, clinical decision-support system, prescribing tool, or source of medical advice**. It must not be used for real medication decisions.
-
-Known limitations include:
-
-- The interaction knowledge base is curated and incomplete. It does not cover every medication or every possible interaction.
-- The shipped rule values and meal guidance have not been clinically validated by a qualified clinician for this project.
-- The reasoning model does not account for all patient-specific factors, formulations, diagnoses, laboratory results, allergies, pregnancy status, organ function, or other context needed for real clinical decisions.
-- Brand/alias and fuzzy name normalization is limited to the project's curated data and matching safeguards.
-- A name outside the knowledge base is rejected rather than treated as safe. A complete coverage summary is important when interpreting any result.
-- External RxNav/openFDA data access may fail, change, or be unavailable; local cache contents may be stale.
-- Ollama is optional and local. Model output may omit or misinterpret information and is subject to schema validation, not clinical validation.
-- Plan history is not a complete immutable clinical record. The current persistence implementation stores only the fields explicitly mapped by the plan-log service.
-- The test suite uses software fixtures and synthetic scenarios; passing tests do not validate clinical recommendations.
-
-Do not enter personal health information into a classroom demo. Use synthetic examples only. Any real medication question must be handled by a qualified pharmacist or physician.
-
-## 13. Design decisions
-
-- **Keep the reasoning core independent:** the parser and network-facing integrations are outside the symbolic reasoning core.
-- **Use typed boundaries:** domain schemas and explicit exceptions make data contracts and failure modes inspectable.
-- **Fail safely:** unknown names, invalid inputs, and unsatisfiable constraints produce explicit failures rather than reassuring but unsupported results.
-- **Make outputs traceable:** rule IDs, constraint IDs, coverage, and planner traces expose why the system produced its output.
-- **Keep the LLM optional:** structured input can exercise the reasoning pipeline without a running model.
-- **Keep scope honest:** curated educational rules are not presented as comprehensive clinical knowledge.
-
-## 14. Future improvements
-
-- Authenticated staff identity, multi-party approval, and signed attestations for remote knowledge governance; current CLI actor roles are audit assertions, not authentication.
-- Broader automated tests for real database connectivity, migrations, persistence across restarts, and failure recovery.
-- Dedicated frontend component, accessibility, and browser-based end-to-end tests.
-- Deployment smoke tests for hosted API health, frontend/API integration, and database connectivity.
-- A reproducible full-project coverage baseline and CI coverage reporting.
-- Externally anchored or digitally signed audit records, authenticated staff identity, dual-control authorization, and operational backup/restore exercises for knowledge releases. The local Stage 4 hash chain is tamper-evident, not a digital signature.
-- Better observability, structured logs, and deployment diagnostics.
-- Additional documentation and a reproducible evaluation/demo script using synthetic inputs only.
-
-## 15. License and project information
-
-Released under the [MIT License](LICENSE). See the license file for the complete terms.
-
-- **Project:** RxLogic
-- **Repository:** [github.com/raghavshikriwal/RxLogic](https://github.com/raghavshikriwal/RxLogic)
-- **Live demonstration:** [rxlogic-ataf.onrender.com](https://rxlogic-ataf.onrender.com)
-- **Academic context:** Artificial Intelligence coursework demonstration
-
----
-
-*Documentation status: updated to record the project structure and verification evidence discussed on November 12, 2026. Re-run the commands and refresh the results after any relevant source-code, dependency, or environment change.*
-
-
-## Knowledge dataset governance (Task 02)
-
-The bundled knowledge files use a versioned schema and stable rule identifiers.
-`knowledge/manifest.json` identifies the current development release, while
-`knowledge/evidence_sources.json` stores source records referenced by each
-clinical assertion. Migrated legacy source labels are marked **unverified**;
-they are not bibliographic citations. Every migrated assertion is marked
-`needs_clinical_review`.
-
-Run the offline structural validator from the repository root:
-
-```bash
+# Knowledge structural validation
 python -m services.knowledge_validation
-python -m scripts.audit_task07 --output reports\task07_acceptance_audit.json
-```
 
-A passing result confirms structural integrity and referential consistency
-only. It does **not** establish clinical accuracy, completeness, or approval
-for patient care. RxLogic remains an educational demonstrator.
-
-
----
-
-## Evidence source ingestion (Task 03)
-
-RxLogic includes an offline evidence-staging utility for locally downloaded JSON
-snapshots from approved primary-source domains. It records source metadata,
-retrieval time, and a SHA-256 content digest, and stores each snapshot in a
-content-addressed review queue.
-
-The utility **does not** fetch arbitrary URLs, infer drug interactions, update
-runtime knowledge rules, or approve clinical assertions. Every imported record
-remains `pending_clinical_review` and `staged_only`. See
-[`knowledge/ingestion/README.md`](knowledge/ingestion/README.md) for the trust
-boundary and CLI usage.
-
-Run the focused tests with:
-
-```powershell
-python -m pytest tests/test_evidence_ingestion.py -q
-```
-
-Passing ingestion tests verifies software behavior only; it is not clinical
-validation and does not make RxLogic suitable for patient care.
-
----
-
-## Task 07 — Clinical knowledge expansion and evidence governance
-
-Task 07 extends the governed knowledge model with typed assertion families for drug–food/component interactions, contraindications, source-backed dosage references, and administration instructions. It also separates source verification, source quality, assertion evidence strength, evidence direction, applicability, and conflict status. The new records use the existing evidence-ingestion, evidence-review, independent clinical-approval, immutable-release, and explicit-promotion workflow.
-
-The coverage report is generated from the current development datasets:
-
-```powershell
-python -m scripts.audit_knowledge_coverage
-python -m scripts.audit_knowledge_coverage --output reports\knowledge_coverage.json
-python -m services.knowledge_validation
-python -m scripts.audit_task07 --output reports\task07_acceptance_audit.json
-```
-
-The baseline ten-medication inventory has 45 possible unordered drug pairs: 12 have legacy assertions and 33 are not evaluated. Four medications have legacy meal-timing rules and six are not evaluated. No clinical contraindication, dosage, administration, or drug–food component assertion was invented to fill those gaps. Missing knowledge remains `not_evaluated`; it is never interpreted as safe or as proof that no interaction exists.
-
-Create a candidate only from evidence currently accepted for curation:
-
-```powershell
-python -m scripts.manage_knowledge candidate-create --type contraindication --rule-file .\candidate.json --evidence-id EVD-... --author-id knowledge-author --rationale "Human-authored rationale"
-python -m scripts.manage_knowledge candidates
-python -m scripts.manage_knowledge candidate-decide KNC-... --decision approved --reviewer-id pharmacist-1 --reviewer-role clinical_pharmacist --rationale "Independent clinical review rationale"
-```
-
-Task 07 candidate types are `drug_food_interaction`, `contraindication`, `dosage_reference`, and `administration_instruction`; existing `interaction_rule` and `food_rule` types remain supported. Task 07 candidates require explicit conflict assessment before approval. Assessed source quality requires a written rationale. See [`docs/TASK_07_ACCEPTANCE_AUDIT.md`](docs/TASK_07_ACCEPTANCE_AUDIT.md), [`docs/TASK_07_CHANGELOG.md`](docs/TASK_07_CHANGELOG.md), [`docs/TASK_07_CANDIDATE_SCHEMA.md`](docs/TASK_07_CANDIDATE_SCHEMA.md), [`docs/EVIDENCE_QUALITY_FRAMEWORK.md`](docs/EVIDENCE_QUALITY_FRAMEWORK.md), and `tests/test_clinical_knowledge.py` for required fields and workflow constraints.
-
-Approved candidates are included in `clinical_assertions.json` inside a new immutable release. Release creation does not activate it; promotion remains an explicit steward/administrator operation with the existing audit chain. The active-release loader verifies the clinical assertion schema and dataset hash. Existing patient-plan reasoning does not yet consume the new contraindication, dosage, or administration records. Dosage records are non-patient-specific source references only; no dose calculator or automated contraindication decision is enabled.
-
-`clinical_use_permitted` remains `false`. Structural validation and passing software tests do not establish clinical accuracy, completeness, or fitness for patient care. RxLogic remains an educational demonstrator.
-
-Task 07 implementation-environment checks: **76 focused evidence/governance tests passed** and **272 tests passed** in the broader available regression subset. The full suite could not be collected in that environment because Flask and scikit-fuzzy are not installed; one architecture-boundary subprocess test also depends on scikit-fuzzy. These partial results are not a full-suite pass. Run the complete suite in the project's Windows environment before accepting the Task 07 snapshot. See [`docs/TASK_07_ACCEPTANCE_AUDIT.md`](docs/TASK_07_ACCEPTANCE_AUDIT.md) for the exact exclusions and audit limitations.
-
-## Controlled knowledge releases (Task 06)
-
-Task 06 adds a human-governed path from source evidence to candidate assertions
-and then to immutable, explicitly promoted knowledge releases:
-
-1. Evidence must be ingested and independently reviewed as `accepted_for_curation`.
-2. A knowledge author creates a candidate linked to integrity-verified evidence.
-3. A qualified clinical reviewer (not the candidate author) records an approval.
-4. A release is assembled from selected, currently approved candidates. Creating
-   a release does not activate it.
-5. A knowledge steward or administrator explicitly promotes the release.
-6. Runtime active-release mode verifies the active pointer, manifest, and dataset
-   hashes and refuses to fall back to the legacy development datasets.
-
-The release-management CLI is available from the project root:
-
-```powershell
-python -m scripts.manage_knowledge candidates
-python -m scripts.manage_knowledge releases
-python -m scripts.manage_knowledge status
-python -m scripts.manage_knowledge inspect RXK-YYYYMMDDTHHMMSSZ-XXXXXXXX
-```
-
-For the full create/promote/rollback workflow and path overrides, see
-[`docs/TASK_06_CHANGELOG.md`](docs/TASK_06_CHANGELOG.md). Set
-`RXLOGIC_KNOWLEDGE_MODE=active_release` only after a genuine release has been
-reviewed and promoted. The default `legacy_development` mode remains explicitly
-unreviewed. `GET /api/knowledge/status` reports the configured knowledge mode.
-
-The current API has no authenticated staff identity system, so release mutation
-is intentionally not exposed as HTTP endpoints. CLI actor IDs/roles are audit
-assertions, not authentication; host access must be restricted to authorized
-staff. Even a promoted governance release is **not** clinical validation or
-authorization for patient-care use (`clinical_use_permitted` remains false).
-
-
-### Task 06 Stage 4 — audit-chain hardening
-
-The local release-promotion log now uses a SHA-256 hash chain and two-phase
-intent/completion events. Active-release loading verifies the chain and checks
-that the active pointer is bound to a completed promotion or rollback event.
-Release manifests must declare the exact expected dataset set and explicitly
-prohibit unreviewed runtime records and clinical-use claims. See
-[`docs/TASK_06_CHANGELOG.md`](docs/TASK_06_CHANGELOG.md) for limitations: local
-hashes do not provide signer identity or protect against a privileged actor
-rewriting the complete local chain. Older unchained logs require reviewed
-migration; do not bypass this check by editing audit files.
-
-
-### Task 06 Stage 5 — final acceptance audit
-
-Stage 5 consolidates the final governance acceptance checklist and corrects the
-test inventory and verification history above. The user subsequently verified
-Stage 5 on Windows: the focused governance/runtime suite passed **58 tests** and
-the complete suite passed **337 tests in 16.41 seconds**. The earlier Stage 4
-result of 336 passed is historical. The Task 07 snapshot has additional tests
-and must receive its own complete Windows verification.
-
-The acceptance boundary remains explicit: no clinical candidate is approved
-by automation, no release is activated by creation, runtime loading is
-fail-closed, and a promoted governance release is not clinical validation.
-See [`docs/TASK_06_STAGE_5_ACCEPTANCE_AUDIT.md`](docs/TASK_06_STAGE_5_ACCEPTANCE_AUDIT.md)
-for the complete checklist, verified evidence, and remaining operational
-requirements.
-
----
-
-## Task 08 — Medication identity catalog and evidence coverage
-
-Task 08 adds a versioned medication identity catalog and registers acetaminophen (RxNorm concept 161) with `paracetamol` as a recognized name alias. The backend canonicalizes this name to `acetaminophen` before checking whether the medication exists in the development formulary. Newly created immutable knowledge releases include the catalog as a manifest-hash-bound dataset; Task 06 and Task 07 releases remain backward-compatible.
-
-**Important:** this is identity coverage only. No new drug interaction, food interaction, contraindication, dosage, or administration assertion is created for acetaminophen. Its clinical coverage remains not evaluated. Catalog recognition must never be read as evidence that a medication or medication combination is safe. The development catalog now contains 11 medication identities and therefore 55 possible unordered medication pairs; 43 pairs remain unevaluated and 12 legacy pair assertions remain unreviewed.
-
-Run the Task 08 structural checks with:
-
-```powershell
-python -m services.knowledge_validation
+# Medication catalog audit
 python -m scripts.audit_medication_catalog --output reports\medication_catalog_audit.json
+
+# Knowledge coverage audit
 python -m scripts.audit_knowledge_coverage --output reports\knowledge_coverage.json
+
+# Task 07 audit
 python -m scripts.audit_task07 --output reports\task07_acceptance_audit.json
+
+# Task 08 audit
 python -m scripts.audit_task08 --output reports\task08_acceptance_audit.json
+
+# Task 09 audit
+python -m scripts.audit_task09 --output reports\task09_acceptance_audit.json
+
+# Frontend verification
+Set-Location frontend
+
+npm audit
+
+npm run build
+
+Set-Location ..
 ```
 
-These checks validate structure, identity mapping, and governance metadata only. They are not clinical validation or authorization for patient-care use. Clinical facts still require reliable source evidence, evidence review, independent clinical approval, and controlled release.
+The exact command-line arguments for individual scripts should be confirmed with their `--help` output if the local revision differs.
 
-## Task 09 — Clinical reasoning integration
+## 19.8 CI/CD
 
-The reasoning response now includes a `clinical_assessment` object. Only
-explicitly approved assertions with an acceptable conflict assessment and
-source references can produce findings. Optional `patient_context.foods` and
-`patient_context.conditions` enable exact context matching for drug/food and
-contraindication assertions; they are not inferred from free text and are not
-stored in plan history. Dosage references are never converted into
-patient-specific dosing instructions.
+The GitHub Actions workflow is located at:
 
-**Current limitation:** the Task 08 clinical assertion dataset is empty across
-all four assertion domains. The runtime therefore reports insufficient
-approved knowledge rather than treating missing records as evidence of safety.
-This software is not clinically validated and is not for diagnosis,
-prescribing, or patient-care use. See `docs/TASK_09_CHANGELOG.md`.
+```text
+.github/workflows/tests.yml
+```
+
+It runs the automated Python test workflow for configured pushes and pull requests targeting `main`.
+
+CI provides software regression evidence, not clinical validation.
+
+---
+
+# 20. Knowledge Management Workflows
+
+The knowledge-management commands are intended for authorized development and governance operators.
+
+## 20.1 Inspect Evidence Ingestion CLI
+
+```powershell
+python -m scripts.ingest_evidence --help
+```
+
+## 20.2 Inspect Evidence Review CLI
+
+```powershell
+python -m scripts.review_evidence --help
+```
+
+## 20.3 Inspect Source Connector CLI
+
+```powershell
+python -m scripts.fetch_medical_source --help
+```
+
+## 20.4 Inspect Knowledge Management CLI
+
+```powershell
+python -m scripts.manage_knowledge --help
+```
+
+The exact command syntax is defined by the current script implementations and task documentation.
+
+## 20.5 Governance Lifecycle
+
+```text
+External source
+      |
+      v
+Evidence staging
+      |
+      v
+Integrity verification
+      |
+      v
+Evidence inspection
+      |
+      v
+Append-only review decision
+      |
+      v
+Evidence-linked candidate
+      |
+      v
+Independent clinical review
+      |
+      v
+Conflict assessment
+      |
+      v
+Immutable release
+      |
+      v
+Explicit promotion
+      |
+      v
+Runtime integrity checks
+```
+
+A schema-valid candidate is not automatically clinically correct.
+
+A promoted software release is not automatically proof of patient-care safety.
+
+---
+
+# 21. Deployment
+
+RxLogic uses a single-service deployment model.
+
+The Flask backend serves the built React frontend from:
+
+```text
+frontend/dist/
+```
+
+The repository includes:
+
+- `Procfile`.
+- `runtime.txt`.
+- `requirements.txt`.
+- `alembic.ini`.
+- `alembic/`.
+- `.env.example`.
+
+## 21.1 Hosted Demonstration
+
+Live demonstration:
+
+https://rxlogic-ataf.onrender.com
+
+The existing project deployment target is Render.
+
+## 21.2 Deployment Considerations
+
+For persistent hosting:
+
+- Configure a managed PostgreSQL database.
+- Configure secrets through the hosting platform.
+- Set `FLASK_DEBUG=false`.
+- Build the frontend before deployment.
+- Ensure `frontend/dist/` contains current assets.
+- Protect knowledge-management and audit artifacts.
+- Do not enable active-release mode without a valid approved release.
+
+The hosted demonstration does not provide the local Ollama service used for natural-language parsing.
+
+A successful deployment indicates that the application is running. It does not establish clinical validity.
+
+---
+
+# 22. Security and Privacy
+
+RxLogic uses multiple software-level controls.
+
+## Knowledge Integrity
+
+- SHA-256 source fingerprints.
+- Separate source and normalized-payload hashes.
+- Evidence metadata integrity.
+- Dataset hashes.
+- Release manifests.
+- Hash-linked promotion events.
+
+## Governance Controls
+
+- Append-only review decisions.
+- Evidence-linked candidates.
+- Independent clinical-review requirement.
+- Conflict assessment.
+- Explicit release promotion.
+- Audited rollback.
+- Fail-closed active-release loading.
+
+## Runtime Controls
+
+- Unreviewed food rules are informational.
+- Unapproved clinical assertions are excluded.
+- Unresolved conflicts are excluded from findings.
+- Missing knowledge is not interpreted as safety.
+- Dosage references are not converted into patient-specific instructions.
+
+## Privacy
+
+Use synthetic data only.
+
+Task 09 patient context and context-derived findings are not persisted in plan history.
+
+Do not submit personally identifying information, medical records, or real patient medication regimens.
+
+## Production Governance Limitations
+
+CLI actor IDs and role strings are audit metadata. They are not authenticated identities.
+
+A production governance deployment would require:
+
+- Strong identity management.
+- Authenticated reviewer roles.
+- Authorization checks.
+- Secure approval workflows.
+- Dual-control release promotion.
+- Operational key management.
+- Protected audit storage.
+
+---
+
+# 23. Known Limitations
+
+The current project has important limitations.
+
+1. The medication catalog contains only a small development inventory.
+2. The knowledge base is not comprehensive.
+3. Several legacy interaction assertions remain unreviewed.
+4. Several legacy food-guidance entries remain unreviewed.
+5. Some medication pairs have not been evaluated.
+6. The Task 09 assertion domains currently contain zero approved runtime assertions.
+7. No clinical validation study has been performed.
+8. No patient-outcome evaluation has been performed.
+9. The application does not provide patient-specific dosage calculations.
+10. The application does not infer diagnoses.
+11. Natural-language parsing requires a local Ollama service.
+12. The hosted deployment does not host Ollama.
+13. The current CLI governance workflow is not a replacement for authenticated institutional review.
+14. No valid active approved knowledge release is configured in the latest reported snapshot.
+
+These limitations are intentionally documented rather than hidden.
+
+---
+
+# 24. Future Scope
+
+Potential future development directions include:
+
+## Knowledge Expansion
+
+- Expand medication identity coverage.
+- Add more source-backed evidence.
+- Improve terminology consistency.
+- Increase coverage through reviewed and approved knowledge.
+
+## Governance Improvements
+
+- Authenticated reviewer identities.
+- Stronger dual-control approval.
+- Signed release manifests.
+- Improved audit storage.
+- Operational key management.
+
+## Reasoning Improvements
+
+- More sophisticated constraint models.
+- Improved schedule-explanation traces.
+- Expanded evaluation datasets.
+- Better parser robustness testing.
+- More detailed knowledge-coverage reporting.
+
+## Infrastructure
+
+- Stronger observability.
+- Database migration automation.
+- Deployment health checks.
+- Improved CI integration.
+- Performance testing.
+
+## Research and Validation
+
+Any future clinical validation would require a separate, appropriately governed research process, qualified clinical involvement, and applicable regulatory review.
+
+Software development alone does not establish clinical suitability.
+
+---
+
+# 25. Evaluation and Viva Preparation
+
+This section summarizes the project's main technical contributions.
+
+## Q1. What is RxLogic?
+
+RxLogic is a neuro-symbolic medication-reasoning and scheduling demonstrator combining optional LLM-based input parsing with deterministic rule evaluation, fuzzy uncertainty refinement, constraint satisfaction, and goal-stack planning.
+
+It also includes evidence-governed knowledge management and a bounded clinical-assessment API integration.
+
+## Q2. Why use neuro-symbolic architecture?
+
+The neural component provides flexible language interpretation.
+
+The symbolic component provides explicit schemas, inspectable rules, deterministic constraints, and explainable outputs.
+
+Separating these responsibilities reduces dependence on unconstrained LLM-generated decisions.
+
+## Q3. What is the role of the LLM?
+
+The LLM parses natural-language input into candidate structured fields.
+
+It is not the source of clinical truth and does not independently decide interactions or schedule constraints.
+
+## Q4. Why use fuzzy logic?
+
+Fuzzy logic allows graded confidence representations using configured evidence-related inputs rather than relying only on binary classifications.
+
+The resulting values are not clinically calibrated probabilities.
+
+## Q5. Why use CSP scheduling?
+
+Scheduling involves variables, possible assignments, and constraints.
+
+CSP provides a structured way to search for feasible assignments and report infeasible configurations.
+
+## Q6. What is MRV?
+
+Minimum Remaining Values selects the variable with the fewest available values.
+
+It helps prioritize the most constrained variable during search.
+
+## Q7. What is forward checking?
+
+Forward checking removes values that are incompatible with an assignment from neighboring variable domains.
+
+It can identify impossible branches earlier.
+
+## Q8. Why use goal-stack planning?
+
+Goal-stack planning resolves a sequence of goals and provides an inspectable planning trace.
+
+It makes the reasoning process easier to explain than displaying only a final result.
+
+## Q9. Why separate severity and evidence strength?
+
+Severity describes the potential seriousness represented by a rule.
+
+Evidence strength describes how well supported the rule is.
+
+They represent different dimensions.
+
+## Q10. Why is evidence ingestion separate from clinical approval?
+
+Retrieved material may be incomplete, irrelevant, outdated, or incorrectly interpreted.
+
+Separate review and approval stages prevent external source data from silently becoming runtime clinical knowledge.
+
+## Q11. What does SHA-256 accomplish?
+
+It creates a content fingerprint that can be used to detect whether stored content differs from the content originally recorded.
+
+It verifies integrity, not medical truth.
+
+## Q12. What is an immutable knowledge release?
+
+A release is a versioned collection of approved knowledge datasets bound to a manifest of content hashes.
+
+Its creation is separate from explicit activation.
+
+## Q13. What is the purpose of fail-closed loading?
+
+If an active release is missing or fails integrity checks, the runtime refuses to silently use a mutable development knowledge source.
+
+## Q14. What does Task 08 contribute?
+
+Task 08 introduces medication identity catalog management, aliases, RxNorm metadata, and knowledge-coverage auditing.
+
+It includes the paracetamol-to-acetaminophen identity mapping.
+
+## Q15. What does Task 09 contribute?
+
+Task 09 integrates evidence-governed clinical assessment into the plan response.
+
+It evaluates eligible assertions against explicitly supplied context while excluding unapproved and conflicted knowledge.
+
+## Q16. Does RxLogic provide medical advice?
+
+No.
+
+It is an educational and software-engineering demonstrator and is not clinically validated or authorized for patient-care use.
+
+## Q17. What does 377 passed tests mean?
+
+It means the latest reported automated regression suite passed 377 tests in the reported Windows environment.
+
+It does not establish clinical correctness or patient-care safety.
+
+## Q18. What happens when knowledge is missing?
+
+The system reports insufficient or unavailable knowledge.
+
+It must not interpret missing knowledge as evidence that a medication combination is safe.
+
+## Suggested Evaluation Demonstration
+
+A safe demonstration can cover:
+
+1. Application architecture.
+2. Structured synthetic input.
+3. Medication name normalization.
+4. Rule-engine behavior.
+5. Knowledge-coverage reporting.
+6. CSP scheduling.
+7. Goal-stack trace.
+8. Task 09 clinical-assessment response.
+9. Evidence ingestion and review.
+10. Knowledge-release integrity workflow.
+11. Automated test results.
+12. Known limitations and future scope.
+
+Use synthetic demonstration data only.
+
+---
+
+# 26. Conclusion
+
+RxLogic demonstrates a modular approach to combining neural input interpretation with deterministic symbolic reasoning and evidence-governed knowledge management.
+
+Across Tasks 01–09, the project evolved from an initial medication-reasoning application into a broader software-engineering demonstrator incorporating:
+
+- Full-stack application architecture.
+- Optional natural-language parsing.
+- Structured domain validation.
+- Rule-based reasoning.
+- Fuzzy uncertainty representation.
+- Constraint-based scheduling.
+- Goal-stack planning.
+- Medication identity normalization.
+- Evidence ingestion and review.
+- Knowledge provenance and integrity.
+- Independent clinical-review requirements.
+- Immutable release management.
+- Clinical-assessment integration.
+- Automated testing and structural audits.
+
+The latest reported Task 09 snapshot passed 377 automated tests and successfully built the frontend.
+
+The project also explicitly documents the limits of its current knowledge base and the absence of clinical validation.
+
+Its principal contribution is an inspectable engineering architecture that demonstrates how AI-assisted input, symbolic reasoning, constraint solving, and controlled knowledge publication can be separated and integrated within a single application.
+
+---
+
+# 27. License
+
+This project is distributed under the MIT License.
+
+See the [LICENSE](LICENSE) file for the full license text.
+
+---
+
+<p align="center">
+  <strong>RxLogic — Explainable Reasoning. Structured Knowledge. Controlled Evidence.</strong>
+</p>
+
+<p align="center">
+  Built as an educational and software-engineering research demonstrator.
+</p>
+
+> **Final Disclaimer:** RxLogic is not a medical device, has not been clinically validated, and is not authorized for patient-care use. Its knowledge base is incomplete. No output should be interpreted as a diagnosis, prescription, dosing instruction, or confirmation of medication safety. Always consult a qualified healthcare professional for real medication decisions.
