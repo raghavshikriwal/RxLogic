@@ -11,11 +11,14 @@
 export default function CoverageSummary({ coverage }) {
   if (!coverage) return null;
 
-  const { summary, is_complete: isComplete, unchecked } = coverage;
+  const { summary, is_complete: isComplete, unchecked, identity_only: identityOnly = [] } = coverage;
 
   return (
     <div className={`rounded-lg border p-24 ${isComplete ? 'border-fog' : 'border-dashed border-slate'}`}>
       <p className="font-clarkson text-body-sm text-obsidian">{summary}</p>
+      {identityOnly.length > 0 && (
+        <p className="mt-8 font-clarkson text-caption text-slate">Recognized by medication identity only; clinical interaction and other safety knowledge has not been evaluated for: {identityOnly.join(', ')}. Do not interpret recognition as evidence of safety.</p>
+      )}
       {!isComplete && (
         <p className="mt-8 font-clarkson text-caption text-slate">
           Not covered by the knowledge base: {unchecked.join(', ')}. Treat this check as incomplete.

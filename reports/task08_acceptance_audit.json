@@ -1,0 +1,67 @@
+{
+  "schema_version": "1.0.0",
+  "audit_type": "task08_medication_identity_and_coverage_structural_audit_not_clinical_validation",
+  "passed": true,
+  "checks": {
+    "knowledge_structurally_valid": true,
+    "catalog_matches_runtime_medication_map": true,
+    "acetaminophen_identity_is_registered": true,
+    "paracetamol_alias_is_registered": true,
+    "clinical_use_remains_prohibited": true,
+    "new_medication_has_no_fabricated_clinical_assertions": true
+  },
+  "validation_errors": [],
+  "catalog_audit": {
+    "catalog_medication_count": 11,
+    "runtime_medication_count": 11,
+    "catalog_entries_missing_from_runtime": [],
+    "rxcui_mismatches": [],
+    "runtime_entries_missing_from_catalog": [],
+    "passed": true
+  },
+  "coverage_summary": {
+    "medication_count": 11,
+    "drug_drug_interactions": {
+      "total": 55,
+      "assertion_present_unreviewed": 12,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 43,
+      "conflicting_evidence": 0
+    },
+    "drug_food_guidance": {
+      "total": 11,
+      "assertion_present_unreviewed": 4,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 7,
+      "conflicting_evidence": 0
+    },
+    "contraindications": {
+      "total": 11,
+      "assertion_present_unreviewed": 0,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 11,
+      "conflicting_evidence": 0
+    },
+    "dosage_references": {
+      "total": 11,
+      "assertion_present_unreviewed": 0,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 11,
+      "conflicting_evidence": 0
+    },
+    "administration_instructions": {
+      "total": 11,
+      "assertion_present_unreviewed": 0,
+      "assertion_present_reviewed": 0,
+      "not_evaluated": 11,
+      "conflicting_evidence": 0
+    }
+  },
+  "clinical_assertions_added_for_acetaminophen": 0,
+  "limitations": [
+    "Catalog identity is not clinical evidence.",
+    "No drug interaction, food effect, contraindication, dosage, or administration claim is inferred for acetaminophen.",
+    "Not-evaluated means unknown, not safe or risk-free.",
+    "This report validates structure and governance only; it is not clinical validation or authorization for patient-care use."
+  ]
+}

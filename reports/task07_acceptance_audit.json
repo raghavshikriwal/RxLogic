@@ -1,14 +1,14 @@
 {
   "schema_version": "1.0.0",
   "audit_type": "task07_knowledge_governance_structural_audit_not_clinical_validation",
-  "knowledge_release": "rxlogic-seed-2026-11-13",
+  "knowledge_release": "rxlogic-task08-development-2026-11-13",
   "passed": true,
   "checks": {
     "knowledge_structurally_valid": true,
     "development_runtime_policy_is_explicit": true,
     "clinical_use_prohibited": true,
     "dosage_records_are_non_patient_specific": true,
-    "clinical_assertions_are_approved": true
+    "no_unapproved_clinical_assertions": true
   },
   "validation_errors": [],
   "clinical_assertion_counts": {
@@ -19,48 +19,50 @@
   },
   "unsafe_patient_specific_dosage_assertion_ids": [],
   "unapproved_clinical_assertion_ids": [],
+  "clinical_assertions_are_empty_pending_review": true,
+  "clinical_assertion_records_present": false,
   "coverage_summary": {
-    "medication_count": 10,
+    "medication_count": 11,
     "drug_drug_interactions": {
-      "total": 45,
+      "total": 55,
       "assertion_present_unreviewed": 12,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 33,
+      "not_evaluated": 43,
       "conflicting_evidence": 0
     },
     "drug_food_guidance": {
-      "total": 10,
+      "total": 11,
       "assertion_present_unreviewed": 4,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 6,
+      "not_evaluated": 7,
       "conflicting_evidence": 0
     },
     "contraindications": {
-      "total": 10,
+      "total": 11,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 10,
+      "not_evaluated": 11,
       "conflicting_evidence": 0
     },
     "dosage_references": {
-      "total": 10,
+      "total": 11,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 10,
+      "not_evaluated": 11,
       "conflicting_evidence": 0
     },
     "administration_instructions": {
-      "total": 10,
+      "total": 11,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 10,
+      "not_evaluated": 11,
       "conflicting_evidence": 0
     },
     "drug_food_component_interactions": {
-      "total": 10,
+      "total": 11,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 10,
+      "not_evaluated": 11,
       "conflicting_evidence": 0
     }
   },

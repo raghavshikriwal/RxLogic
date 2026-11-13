@@ -1,0 +1,39 @@
+{
+  "task": "09",
+  "audit_type": "clinical_reasoning_integration_structural_audit",
+  "clinical_validation": false,
+  "clinical_use_permitted": false,
+  "runtime_policy": {
+    "unreviewed_assertions_used": false,
+    "unresolved_conflicts_used": false,
+    "missing_knowledge_treated_as_safe": false,
+    "patient_specific_dosing_generated": false,
+    "patient_context_persisted_in_plan_history": false
+  },
+  "assertion_counts": {
+    "drug_food_interactions": {
+      "total": 0,
+      "approved_and_conflict_assessed": 0
+    },
+    "contraindications": {
+      "total": 0,
+      "approved_and_conflict_assessed": 0
+    },
+    "dosage_references": {
+      "total": 0,
+      "approved_and_conflict_assessed": 0
+    },
+    "administration_instructions": {
+      "total": 0,
+      "approved_and_conflict_assessed": 0
+    }
+  },
+  "total_assertions": 0,
+  "approved_runtime_assertions": 0,
+  "empty_knowledge_probe_status": "insufficient_approved_knowledge",
+  "limitations": [
+    "Structural integration audit only; no clinical truth adjudication.",
+    "No approved assertions means no positive clinical finding can be emitted.",
+    "No finding is not evidence of safety."
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "catalog_medication_count": 11,
+  "runtime_medication_count": 11,
+  "catalog_entries_missing_from_runtime": [],
+  "rxcui_mismatches": [],
+  "runtime_entries_missing_from_catalog": [],
+  "passed": true
+}

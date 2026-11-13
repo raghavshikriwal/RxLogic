@@ -37,9 +37,9 @@ def food_rules(tmp_path) -> FoodRules:
         _write_rules(
             tmp_path,
             [
-                {"medication": "Metformin", "requirement": "with_food", "note": "With meals.", "source": "label"},
-                {"medication": "levothyroxine", "requirement": "empty_stomach"},
-                {"medication": "warfarin", "requirement": "no_restriction", "note": "Keep vitamin K steady."},
+                {"medication": "Metformin", "requirement": "with_food", "note": "With meals.", "source": "label", "review_status": "approved"},
+                {"medication": "levothyroxine", "requirement": "empty_stomach", "review_status": "approved"},
+                {"medication": "warfarin", "requirement": "no_restriction", "note": "Keep vitamin K steady.", "review_status": "approved"},
             ],
         )
     )
@@ -162,3 +162,26 @@ def test_real_rules_encode_the_expected_meal_guidance():
 
     assert rules["metformin"].requirement == FoodRequirement.WITH_FOOD
     assert rules["levothyroxine"].requirement == FoodRequirement.EMPTY_STOMACH
+
+
+def test_unreviewed_rule_does_not_change_medication_food_constraint(tmp_path):
+    from models.schemas import FoodStatus, Medication
+
+    rules = FoodRules(
+        _write_rules(
+            tmp_path,
+            [{
+                "medication": "metformin",
+                "requirement": "with_food",
+                "note": "Unreviewed note must not be applied.",
+                "review_status": "needs_clinical_review",
+            }],
+        )
+    )
+    original = Medication(name="Metformin")
+    resolved, guidance = rules.apply([original])
+
+    assert resolved[0].with_food is None
+    assert guidance[0].status == FoodStatus.INFORMATIONAL
+    assert guidance[0].note == "Not applied: this rule requires clinical review."
+    assert guidance[0].review_status == "needs_clinical_review"

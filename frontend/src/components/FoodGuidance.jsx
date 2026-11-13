@@ -39,6 +39,7 @@ export default function FoodGuidance({ guidance }) {
               <> ({STATUS_LABELS[g.status] ?? g.status})</>
             )}
             {g.note && <span className="block">{g.note}</span>}
+            <span className="block">{g.review_status === 'clinically_approved' ? 'Approved knowledge-release rule' : 'Unreviewed development rule — not clinical advice'}</span>
           </li>
         ))}
       </ul>

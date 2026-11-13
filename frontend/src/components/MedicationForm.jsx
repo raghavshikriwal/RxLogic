@@ -120,6 +120,8 @@ export default function MedicationForm({
   ]);
 
   const [freeText, setFreeText] = useState('');
+  const [foodContext, setFoodContext] = useState('');
+  const [conditionContext, setConditionContext] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [validation, setValidation] = useState({
@@ -205,10 +207,14 @@ export default function MedicationForm({
     onError(null);
 
     try {
+      const patientContext = {
+        foods: foodContext.split(',').map((value) => value.trim()).filter(Boolean),
+        conditions: conditionContext.split(',').map((value) => value.trim()).filter(Boolean),
+      };
       const plan =
         mode === 'structured'
-          ? await createPlan(toPayload(medications))
-          : await createPlanFromText(freeText.trim());
+          ? await createPlan(toPayload(medications), patientContext)
+          : await createPlanFromText(freeText.trim(), patientContext);
 
       onPlanReady(plan);
     } catch (error) {
@@ -359,6 +365,32 @@ export default function MedicationForm({
               </span>
             </label>
           )}
+
+          <div className="mt-32 grid gap-16 rounded-xl border border-fog p-24 md:grid-cols-2">
+            <label className="block">
+              <span className="mb-8 block font-clarkson text-body-sm text-obsidian">Relevant foods or supplements (optional)</span>
+              <input
+                value={foodContext}
+                onChange={(event) => setFoodContext(event.target.value)}
+                maxLength={500}
+                placeholder="e.g. grapefruit, calcium supplement"
+                className="w-full rounded-lg border border-fog bg-paper px-16 py-12 font-clarkson text-base text-obsidian placeholder:text-slate focus:border-teal"
+              />
+              <span className="mt-8 block font-clarkson text-caption text-slate">Separate entries with commas.</span>
+            </label>
+            <label className="block">
+              <span className="mb-8 block font-clarkson text-body-sm text-obsidian">Relevant conditions or populations (optional)</span>
+              <input
+                value={conditionContext}
+                onChange={(event) => setConditionContext(event.target.value)}
+                maxLength={500}
+                placeholder="e.g. kidney disease, pregnancy"
+                className="w-full rounded-lg border border-fog bg-paper px-16 py-12 font-clarkson text-base text-obsidian placeholder:text-slate focus:border-teal"
+              />
+              <span className="mt-8 block font-clarkson text-caption text-slate">Exact context matching only; this is not a diagnosis.</span>
+            </label>
+            <p className="font-clarkson text-caption text-slate md:col-span-2">Optional context is used only for this request and is not included in plan-history records. Leave blank if you prefer. Missing context means those checks are not evaluated.</p>
+          </div>
 
           {/* Validation message */}
 

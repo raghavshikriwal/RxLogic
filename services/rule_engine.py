@@ -101,6 +101,7 @@ class RuleEngine:
             name.lower(): str(rxcui) for name, rxcui in raw.get("medications", {}).items()
         }
         instance.known_medications = frozenset(instance.medication_rxcuis)
+        instance.medication_catalog = bundle.get("medication_catalog")
         instance.knowledge_release = bundle["manifest"]["knowledge_release"]
         return instance
 
@@ -115,6 +116,11 @@ class RuleEngine:
             name.lower(): str(rxcui) for name, rxcui in raw.get("medications", {}).items()
         }
         self.known_medications: frozenset[str] = frozenset(self.medication_rxcuis)
+        try:
+            from services.medication_catalog import load_medication_catalog
+            self.medication_catalog = load_medication_catalog()
+        except (OSError, ValueError):
+            self.medication_catalog = None
 
     @staticmethod
     def _parse_rules(raw: dict) -> list[InteractionRule]:
@@ -167,9 +173,22 @@ class RuleEngine:
         "unknown" has exactly one definition across the engine.
         """
         distinct_count = len({medication.name.lower() for medication in medications})
+        catalog_only: set[str] = set()
+        catalog = getattr(self, "medication_catalog", None)
+        if isinstance(catalog, dict):
+            catalog_only = {
+                str(row.get("canonical_name", "")).casefold()
+                for row in catalog.get("medications", [])
+                if isinstance(row, dict) and row.get("clinical_coverage_status") == "identity_only_not_evaluated"
+            }
+        identity_only = tuple(
+            medication.name for medication in medications
+            if medication.name.casefold() in catalog_only
+        )
         return Coverage(
             total=distinct_count,
             unchecked=tuple(self.find_unknown_medications(medications)),
+            identity_only=identity_only,
         )
 
     def _matches(self, rule: InteractionRule, name_a: str, name_b: str) -> bool:

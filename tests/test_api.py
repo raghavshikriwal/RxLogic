@@ -85,7 +85,29 @@ def test_create_plan_success(client):
     assert body["warnings"][0]["evidence"] == "strong"
     assert {body["warnings"][0]["medication_a"], body["warnings"][0]["medication_b"]} == {"warfarin", "aspirin"}
     assert len(body["goal_trace"]) == 2
+    assert body["clinical_assessment"]["clinical_use_permitted"] is False
+    assert body["clinical_assessment"]["dosage_safety"]["patient_specific_dosing_generated"] is False
 
+
+
+def test_patient_context_is_validated_and_not_required(client):
+    response = client.post("/api/plan", json={
+        "medications": [{"name": "Metformin"}],
+        "patient_context": {"foods": ["grapefruit"], "conditions": ["kidney disease"]},
+    })
+    assert response.status_code == 200
+    body = response.get_json()
+    assert "clinical_assessment" in body
+    assert body["clinical_assessment"]["clinical_use_permitted"] is False
+
+
+def test_patient_context_rejects_unknown_fields(client):
+    response = client.post("/api/plan", json={
+        "medications": [{"name": "Metformin"}],
+        "patient_context": {"allergies": ["penicillin"]},
+    })
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "schema_validation_error"
 
 def test_create_plan_missing_body_returns_400(client):
     response = client.post("/api/plan", data="not json", content_type="text/plain")
@@ -352,8 +374,17 @@ def test_create_plan_response_includes_coverage_summary(client):
         "total": 2,
         "is_complete": True,
         "unchecked": [],
+        "identity_only": [],
         "summary": "2 of 2 drugs checked",
     }
+
+
+def test_paracetamol_is_recognized_but_reported_as_identity_only(client):
+    response = client.post("/api/plan", json={"medications": [{"name": "paracetamol"}]})
+    body = response.get_json()
+    assert response.status_code == 200
+    assert body["name_resolutions"][0]["resolved_to"] == "acetaminophen"
+    assert body["coverage"]["identity_only"] == ["acetaminophen"]
 
 
 def test_create_plan_reports_name_resolutions_for_brand_names(client):
@@ -407,9 +438,12 @@ def test_create_plan_reports_food_guidance(client):
         {
             "medication": "metformin",
             "requirement": "with_food",
-            "status": "applied",
-            "note": "Taken with meals to reduce stomach upset.",
-            "source": "drug label guidance",
+            "status": "informational",
+            "note": "Not applied: this rule requires clinical review.",
+            "source": "",
+            "rule_id": "FOOD-METFORMIN",
+            "evidence_source_ids": ["SRC-LEGACY-C00D96B655"],
+            "review_status": "needs_clinical_review",
         }
     ]
 

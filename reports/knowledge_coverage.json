@@ -1,17 +1,87 @@
 {
   "schema_version": "1.1.0",
-  "knowledge_release": "rxlogic-seed-2026-11-13",
+  "knowledge_release": "rxlogic-task08-development-2026-11-13",
   "inventory_type": "development_knowledge_coverage_not_clinical_validation",
-  "medication_count": 10,
+  "medication_count": 11,
   "drug_drug_interactions": {
     "counts": {
-      "total": 45,
+      "total": 55,
       "assertion_present_unreviewed": 12,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 33,
+      "not_evaluated": 43,
       "conflicting_evidence": 0
     },
     "pairs": [
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "amoxicillin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "aspirin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "atorvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "ibuprofen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "levothyroxine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
       {
         "medication_a": "amoxicillin",
         "medication_b": "aspirin",
@@ -439,13 +509,19 @@
   },
   "drug_food_guidance": {
     "counts": {
-      "total": 10,
+      "total": 11,
       "assertion_present_unreviewed": 4,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 6,
+      "not_evaluated": 7,
       "conflicting_evidence": 0
     },
     "medications": [
+      {
+        "medication": "acetaminophen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
       {
         "medication": "amoxicillin",
         "status": "not_evaluated",
@@ -542,13 +618,19 @@
   },
   "drug_food_interactions": {
     "counts": {
-      "total": 10,
+      "total": 11,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 10,
+      "not_evaluated": 11,
       "conflicting_evidence": 0
     },
     "medications": [
+      {
+        "medication": "acetaminophen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
       {
         "medication": "amoxicillin",
         "status": "not_evaluated",
@@ -616,13 +698,19 @@
   },
   "contraindications": {
     "counts": {
-      "total": 10,
+      "total": 11,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 10,
+      "not_evaluated": 11,
       "conflicting_evidence": 0
     },
     "medications": [
+      {
+        "medication": "acetaminophen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
       {
         "medication": "amoxicillin",
         "status": "not_evaluated",
@@ -687,13 +775,19 @@
   },
   "dosage_references": {
     "counts": {
-      "total": 10,
+      "total": 11,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 10,
+      "not_evaluated": 11,
       "conflicting_evidence": 0
     },
     "medications": [
+      {
+        "medication": "acetaminophen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
       {
         "medication": "amoxicillin",
         "status": "not_evaluated",
@@ -758,13 +852,19 @@
   },
   "administration_instructions": {
     "counts": {
-      "total": 10,
+      "total": 11,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 10,
+      "not_evaluated": 11,
       "conflicting_evidence": 0
     },
     "medications": [
+      {
+        "medication": "acetaminophen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
       {
         "medication": "amoxicillin",
         "status": "not_evaluated",

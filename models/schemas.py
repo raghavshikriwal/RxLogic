@@ -146,9 +146,10 @@ class Coverage:
     """
     total: int
     unchecked: tuple[str, ...] = ()
+    identity_only: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
-        if self.total < 0 or len(self.unchecked) > self.total:
+        if self.total < 0 or len(self.unchecked) > self.total or len(self.identity_only) > self.total:
             raise ValueError(
                 f"Invalid coverage: {len(self.unchecked)} unchecked drug(s) out of {self.total} total"
             )
@@ -202,3 +203,4 @@ class DailyPlan:
     resolutions: list[NameResolution] = field(default_factory=list)  # brand/typo names mapped to generics
     food_guidance: list[FoodGuidance] = field(default_factory=list)  # per-drug meal rules and how each was used
     coverage: Optional[Coverage] = None                        # set by ReasoningService; None only if a plan is built outside the pipeline
+    clinical_assessment: dict = field(default_factory=dict)     # evidence-governed Task 09 findings; never a diagnosis or prescription

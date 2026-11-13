@@ -68,10 +68,10 @@ async function request(path, options = {}) {
  * POST /api/plan — structured medication list -> DailyPlan.
  * @param {Array<{name: string, dosage_mg?: number, frequency_per_day?: number, timing_preference?: string, with_food?: boolean}>} medications
  */
-export function createPlan(medications) {
+export function createPlan(medications, patientContext = {}) {
   return request('/api/plan', {
     method: 'POST',
-    body: JSON.stringify({ medications }),
+    body: JSON.stringify({ medications, patient_context: patientContext }),
   });
 }
 
@@ -79,10 +79,10 @@ export function createPlan(medications) {
  * POST /api/plan/nl — free-text description -> DailyPlan.
  * @param {string} text
  */
-export function createPlanFromText(text) {
+export function createPlanFromText(text, patientContext = {}) {
   return request('/api/plan/nl', {
     method: 'POST',
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, patient_context: patientContext }),
   });
 }
 

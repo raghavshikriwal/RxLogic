@@ -94,6 +94,22 @@ class FoodRules:
                 resolved.append(medication)
                 continue
 
+            if rule.review_status.strip().lower() != "approved":
+                resolved.append(medication)
+                guidance.append(
+                    FoodGuidance(
+                        medication=medication.name.lower(),
+                        requirement=rule.requirement,
+                        status=FoodStatus.INFORMATIONAL,
+                        note="Not applied: this rule requires clinical review.",
+                        source="",
+                        rule_id=rule.rule_id,
+                        evidence_source_ids=rule.evidence_source_ids,
+                        review_status=rule.review_status,
+                    )
+                )
+                continue
+
             medication, status = self._apply_rule(medication, rule)
             resolved.append(medication)
             guidance.append(

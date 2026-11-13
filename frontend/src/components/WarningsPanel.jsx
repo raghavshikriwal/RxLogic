@@ -89,7 +89,7 @@ export default function WarningsPanel({ warnings }) {
                 {EVIDENCE_LABEL[warning.evidence] ?? EVIDENCE_LABEL.unknown}
               </span>
               <span className="ml-auto font-clarkson text-caption text-slate">
-                {Math.round(warning.confidence * 100)}% confidence
+                {Math.round(warning.confidence * 100)}% rule-match confidence
               </span>
             </div>
 
@@ -103,6 +103,11 @@ export default function WarningsPanel({ warnings }) {
 
             <p className="mt-8 font-clarkson text-caption text-slate">
               Rule {warning.rule_id} · {warning.source}
+            </p>
+            <p className="mt-4 font-clarkson text-caption text-slate">
+              {warning.review_status === 'clinically_approved'
+                ? 'Approved knowledge-release rule'
+                : 'Unreviewed development rule — not a clinically approved finding'}
             </p>
           </li>
         ))}

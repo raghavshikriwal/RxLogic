@@ -10,7 +10,8 @@
     "omeprazole": "7646",
     "metoprolol": "6918",
     "amoxicillin": "723",
-    "levothyroxine": "10582"
+    "levothyroxine": "10582",
+    "acetaminophen": "161"
   },
   "interaction_rules": [
     {
@@ -188,5 +189,5 @@
     }
   ],
   "schema_version": "2.0.0",
-  "knowledge_release": "rxlogic-seed-2026-11-13"
+  "knowledge_release": "rxlogic-task08-development-2026-11-13"
 }

@@ -1,0 +1,144 @@
+{
+  "schema_version": "1.0.0",
+  "catalog_id": "rxlogic-medication-catalog-task08",
+  "catalog_status": "development_identity_registry",
+  "clinical_use_permitted": false,
+  "identity_source": {
+    "publisher": "U.S. National Library of Medicine",
+    "name": "RxNorm",
+    "url": "https://www.nlm.nih.gov/research/umls/rxnorm/",
+    "note": "RxNorm concept identity is not evidence of clinical interaction, dosage, contraindication, or administration guidance."
+  },
+  "medications": [
+    {
+      "canonical_name": "amoxicillin",
+      "rxcui": "723",
+      "aliases": [
+        "amoxil",
+        "moxikind",
+        "novamox",
+        "amoxycillin"
+      ],
+      "identity_status": "existing_catalog_entry",
+      "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "aspirin",
+      "rxcui": "1191",
+      "aliases": [
+        "ecosprin",
+        "ecotrin",
+        "disprin",
+        "acetylsalicylic acid",
+        "asa"
+      ],
+      "identity_status": "existing_catalog_entry",
+      "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "atorvastatin",
+      "rxcui": "83367",
+      "aliases": [
+        "lipitor",
+        "atorva"
+      ],
+      "identity_status": "existing_catalog_entry",
+      "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "ibuprofen",
+      "rxcui": "5640",
+      "aliases": [
+        "advil",
+        "motrin",
+        "brufen",
+        "nurofen"
+      ],
+      "identity_status": "existing_catalog_entry",
+      "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "levothyroxine",
+      "rxcui": "10582",
+      "aliases": [
+        "synthroid",
+        "levoxyl",
+        "eltroxin",
+        "thyronorm"
+      ],
+      "identity_status": "existing_catalog_entry",
+      "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "lisinopril",
+      "rxcui": "29046",
+      "aliases": [
+        "zestril",
+        "prinivil"
+      ],
+      "identity_status": "existing_catalog_entry",
+      "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "metformin",
+      "rxcui": "6809",
+      "aliases": [
+        "glucophage",
+        "glumetza",
+        "fortamet"
+      ],
+      "identity_status": "existing_catalog_entry",
+      "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "metoprolol",
+      "rxcui": "6918",
+      "aliases": [
+        "lopressor",
+        "toprol-xl",
+        "betaloc",
+        "metolar",
+        "metoprolol tartrate",
+        "metoprolol succinate"
+      ],
+      "identity_status": "existing_catalog_entry",
+      "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "omeprazole",
+      "rxcui": "7646",
+      "aliases": [
+        "prilosec",
+        "losec",
+        "omez"
+      ],
+      "identity_status": "existing_catalog_entry",
+      "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "warfarin",
+      "rxcui": "11289",
+      "aliases": [
+        "coumadin",
+        "jantoven"
+      ],
+      "identity_status": "existing_catalog_entry",
+      "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "acetaminophen",
+      "rxcui": "161",
+      "aliases": [
+        "paracetamol"
+      ],
+      "identity_status": "added_task08_identity_only",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/161",
+      "clinical_coverage_status": "identity_only_not_evaluated"
+    }
+  ],
+  "interpretation": [
+    "Catalog inclusion means only that a medication identity is recognized by this development application.",
+    "It does not mean the medication has been evaluated for interactions, food effects, contraindications, dosage, or administration.",
+    "Unassessed clinical domains must remain explicitly unknown; they must never be interpreted as safe or risk-free."
+  ]
+}

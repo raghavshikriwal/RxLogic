@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from services.clinical_knowledge import validate_clinical_assertions
+from services.medication_catalog import validate_medication_catalog
 
 ROOT = Path(__file__).resolve().parent.parent / "knowledge"
 ALLOWED_REVIEW_STATES = {"needs_clinical_review", "reviewed", "rejected", "withdrawn"}
@@ -32,6 +33,8 @@ def validate_knowledge(root: Path = ROOT) -> list[str]:
     interactions = _load(root / "interaction_rules.json")
     foods = _load(root / "food_rules.json")
     evidence = _load(root / "evidence_sources.json")
+    catalog_path = root / "medication_catalog.json"
+    catalog = _load(catalog_path) if catalog_path.exists() else None
     clinical_path = root / "clinical_assertions.json"
     clinical = _load(clinical_path) if clinical_path.exists() else {
         "schema_version": "1.0.0", "drug_food_interactions": [],
@@ -59,6 +62,18 @@ def validate_knowledge(root: Path = ROOT) -> list[str]:
     source_set = set(source_ids)
 
     medications = {str(k).lower() for k in interactions.get("medications", {})}
+    catalog_declaration = declared_datasets.get("medication_catalog") if isinstance(declared_datasets, dict) else None
+    if catalog is None:
+        if catalog_declaration is not None:
+            errors.append("manifest: medication_catalog is declared but file is missing")
+    else:
+        if not isinstance(catalog_declaration, dict) or catalog_declaration.get("path") != "medication_catalog.json" or catalog_declaration.get("schema_version") != "1.0.0":
+            errors.append("manifest: medication_catalog dataset declaration is invalid")
+        errors.extend(validate_medication_catalog(catalog))
+        catalog_map = {row.get("canonical_name"): str(row.get("rxcui")) for row in catalog.get("medications", []) if isinstance(row, dict)}
+        runtime_map = {str(k).casefold(): str(v) for k, v in interactions.get("medications", {}).items()}
+        if catalog_map != runtime_map:
+            errors.append("medication_catalog: canonical names/RxCUIs must exactly match interaction_rules medication map")
     if clinical.get("knowledge_release") != release:
         errors.append("clinical_assertions: knowledge_release does not match manifest")
     errors.extend(validate_clinical_assertions(clinical, medications, source_set))

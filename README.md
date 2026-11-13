@@ -386,11 +386,11 @@ python -m pip install -r requirements.txt
 
 ```powershell
 cd frontend
-npm ci
+npm install
 cd ..
 ```
 
-Use `npm ci` for a reproducible install from the committed lockfile. `npm install` is also available when intentionally updating dependencies.
+Task 09 updates the frontend to Vite 6.4.6 and React Router 7.18.5. Run `npm install` once after extracting this Task 09 package to reconcile the lockfile with those security updates; subsequent installs can use `npm ci`.
 
 ## 9. Running the application
 
@@ -788,3 +788,39 @@ fail-closed, and a promoted governance release is not clinical validation.
 See [`docs/TASK_06_STAGE_5_ACCEPTANCE_AUDIT.md`](docs/TASK_06_STAGE_5_ACCEPTANCE_AUDIT.md)
 for the complete checklist, verified evidence, and remaining operational
 requirements.
+
+---
+
+## Task 08 — Medication identity catalog and evidence coverage
+
+Task 08 adds a versioned medication identity catalog and registers acetaminophen (RxNorm concept 161) with `paracetamol` as a recognized name alias. The backend canonicalizes this name to `acetaminophen` before checking whether the medication exists in the development formulary. Newly created immutable knowledge releases include the catalog as a manifest-hash-bound dataset; Task 06 and Task 07 releases remain backward-compatible.
+
+**Important:** this is identity coverage only. No new drug interaction, food interaction, contraindication, dosage, or administration assertion is created for acetaminophen. Its clinical coverage remains not evaluated. Catalog recognition must never be read as evidence that a medication or medication combination is safe. The development catalog now contains 11 medication identities and therefore 55 possible unordered medication pairs; 43 pairs remain unevaluated and 12 legacy pair assertions remain unreviewed.
+
+Run the Task 08 structural checks with:
+
+```powershell
+python -m services.knowledge_validation
+python -m scripts.audit_medication_catalog --output reports\medication_catalog_audit.json
+python -m scripts.audit_knowledge_coverage --output reports\knowledge_coverage.json
+python -m scripts.audit_task07 --output reports\task07_acceptance_audit.json
+python -m scripts.audit_task08 --output reports\task08_acceptance_audit.json
+```
+
+These checks validate structure, identity mapping, and governance metadata only. They are not clinical validation or authorization for patient-care use. Clinical facts still require reliable source evidence, evidence review, independent clinical approval, and controlled release.
+
+## Task 09 — Clinical reasoning integration
+
+The reasoning response now includes a `clinical_assessment` object. Only
+explicitly approved assertions with an acceptable conflict assessment and
+source references can produce findings. Optional `patient_context.foods` and
+`patient_context.conditions` enable exact context matching for drug/food and
+contraindication assertions; they are not inferred from free text and are not
+stored in plan history. Dosage references are never converted into
+patient-specific dosing instructions.
+
+**Current limitation:** the Task 08 clinical assertion dataset is empty across
+all four assertion domains. The runtime therefore reports insufficient
+approved knowledge rather than treating missing records as evidence of safety.
+This software is not clinically validated and is not for diagnosis,
+prescribing, or patient-care use. See `docs/TASK_09_CHANGELOG.md`.

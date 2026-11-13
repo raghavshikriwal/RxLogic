@@ -4,6 +4,7 @@ import GoalTrace from './GoalTrace.jsx';
 import CoverageSummary from './CoverageSummary.jsx';
 import NameCorrections from './NameCorrections.jsx';
 import FoodGuidance from './FoodGuidance.jsx';
+import ClinicalAssessment from './ClinicalAssessment.jsx';
 
 /**
  * @param {{entries: object[], warnings: object[], goal_trace: string[], coverage?: object | null, name_resolutions?: object[], food_guidance?: object[]}} plan
@@ -32,6 +33,7 @@ export default function PlanResult({ plan }) {
             <CoverageSummary coverage={plan.coverage} />
             <WarningsPanel warnings={plan.warnings} />
             <FoodGuidance guidance={plan.food_guidance} />
+            <ClinicalAssessment assessment={plan.clinical_assessment} />
           </div>
         </div>
       </div>

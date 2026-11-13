@@ -228,12 +228,11 @@ def _minutes(entry) -> int:
     return entry.scheduled_time.hour * 60 + entry.scheduled_time.minute
 
 
-def test_with_food_rule_places_doses_near_meals_when_user_left_it_open():
+def test_unreviewed_with_food_rule_does_not_force_doses_near_meals():
     plan = generate_daily_plan([Medication(name="Metformin", frequency_per_day=2)])
 
-    for entry in plan.entries:
-        assert any(abs(_minutes(entry) - meal) <= WITH_FOOD_TOLERANCE_MINUTES for meal in MEAL_TIMES_MINUTES)
-    assert plan.food_guidance[0].status == FoodStatus.APPLIED
+    assert plan.food_guidance[0].status == FoodStatus.INFORMATIONAL
+    assert plan.food_guidance[0].note == "Not applied: this rule requires clinical review."
 
 
 def test_empty_stomach_rule_keeps_doses_away_from_meals():
@@ -247,10 +246,18 @@ def test_conflicting_user_choice_wins_and_is_reported():
     plan = generate_daily_plan([Medication(name="Levothyroxine", with_food=True)])
 
     assert any(abs(_minutes(plan.entries[0]) - meal) <= WITH_FOOD_TOLERANCE_MINUTES for meal in MEAL_TIMES_MINUTES)
-    assert plan.food_guidance[0].status == FoodStatus.CONFLICTS_WITH_INPUT
+    assert plan.food_guidance[0].status == FoodStatus.INFORMATIONAL
+    assert plan.food_guidance[0].note == "Not applied: this rule requires clinical review."
 
 
 def test_plan_without_any_food_rule_has_no_food_guidance():
     plan = generate_daily_plan([Medication(name="Aspirin")])
 
     assert plan.food_guidance == []
+
+
+def test_reasoning_service_attaches_fail_safe_clinical_assessment():
+    plan = generate_daily_plan([Medication(name="Metformin")])
+    assert plan.clinical_assessment["clinical_use_permitted"] is False
+    assert plan.clinical_assessment["status"] == "insufficient_approved_knowledge"
+    assert plan.clinical_assessment["dosage_safety"]["patient_specific_dosing_generated"] is False

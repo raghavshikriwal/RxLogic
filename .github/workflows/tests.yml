@@ -1,4 +1,4 @@
-﻿# Runs the pytest suite on every push and pull request targeting `main`.
+# Runs the pytest suite on every push and pull request targeting `main`.
 #
 # The suite needs no external services: models/database.py falls back to
 # an in-memory SQLite database whenever DATABASE_URL is unset, so no
@@ -52,6 +52,9 @@ jobs:
 
       - name: Run test suite with coverage
         run: pytest --cov --cov-report=term-missing --cov-report=xml
+
+      - name: Run Task 09 structural acceptance audit
+        run: python -m scripts.audit_task09 --output reports/task09_acceptance_audit.json
 
       - name: Upload coverage report
         if: always()

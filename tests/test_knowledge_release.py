@@ -38,6 +38,15 @@ def approved_candidate(tmp_path):
     knowledge.mkdir()
     # Only medication terminology is copied into the generated release.
     (knowledge / "interaction_rules.json").write_text(json.dumps({"medications": {"warfarin": "11289", "aspirin": "1191"}, "interaction_rules": [{"rule_id": "UNREVIEWED", "medication_a": "warfarin", "medication_b": "aspirin", "severity": "severe", "description": "must not leak", "source": "legacy"}]}), encoding="utf-8")
+    (knowledge / "medication_catalog.json").write_text(json.dumps({
+        "schema_version": "1.0.0", "catalog_id": "test-catalog", "catalog_status": "development_identity_registry",
+        "clinical_use_permitted": False,
+        "identity_source": {"publisher": "NLM", "name": "RxNorm", "url": "https://www.nlm.nih.gov/research/umls/rxnorm/"},
+        "medications": [
+            {"canonical_name": "warfarin", "rxcui": "11289", "aliases": [], "identity_status": "existing_catalog_entry", "clinical_coverage_status": "legacy_assertions_unreviewed_partial"},
+            {"canonical_name": "aspirin", "rxcui": "1191", "aliases": [], "identity_status": "existing_catalog_entry", "clinical_coverage_status": "legacy_assertions_unreviewed_partial"}
+        ]
+    }), encoding="utf-8")
     return candidate, curation, staging, knowledge
 
 
@@ -67,6 +76,8 @@ def test_only_steward_can_promote_and_active_runtime_loads_release(approved_cand
     assert engine.knowledge_release == manifest["knowledge_release"]
     assert len(engine.rules) == 1
     assert food.rules == {}
+    assert bundle["medication_catalog"]["catalog_id"] == "test-catalog"
+    assert engine.medication_catalog["catalog_id"] == "test-catalog"
 
 
 def test_release_tampering_is_detected_by_runtime_loader(approved_candidate):
@@ -247,10 +258,14 @@ def test_task06_release_without_task07_dataset_remains_loadable(approved_candida
     release_dir = knowledge / "releases" / manifest["knowledge_release"]
     legacy_manifest = json.loads((release_dir / "manifest.json").read_text(encoding="utf-8"))
     legacy_manifest.pop("task07_schema_version", None)
+    legacy_manifest.pop("task08_schema_version", None)
     legacy_manifest["datasets"].pop("clinical_assertions.json")
+    legacy_manifest["datasets"].pop("medication_catalog.json")
     (release_dir / "clinical_assertions.json").unlink()
+    (release_dir / "medication_catalog.json").unlink()
     (release_dir / "manifest.json").write_text(json.dumps(legacy_manifest, indent=2), encoding="utf-8")
     promote_release(manifest["knowledge_release"], "steward", "knowledge_steward", knowledge, curation, staging)
     bundle = load_active_release(knowledge)
     assert bundle["manifest"]["knowledge_release"] == manifest["knowledge_release"]
     assert bundle["clinical_assertions"]["contraindications"] == []
+    assert bundle["medication_catalog"] is None

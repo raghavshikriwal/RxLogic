@@ -112,6 +112,30 @@ def _parse_medication(raw: dict[str, Any]) -> Medication:
         raise SchemaValidationError(raw_output=str(raw), validation_errors=str(exc)) from exc
 
 
+def _parse_patient_context(payload: dict[str, Any]) -> dict[str, list[str]]:
+    """Validate optional user-supplied matching context; never infer it from prose."""
+    raw = payload.get("patient_context", {})
+    if raw is None:
+        raw = {}
+    if not isinstance(raw, dict):
+        raise SchemaValidationError(raw_output=str(raw), validation_errors="'patient_context' must be an object")
+    result: dict[str, list[str]] = {}
+    for field in ("foods", "conditions"):
+        values = raw.get(field, [])
+        if not isinstance(values, list) or len(values) > 50:
+            raise SchemaValidationError(raw_output=str(raw), validation_errors=f"patient_context.{field} must be an array with at most 50 items")
+        cleaned: list[str] = []
+        for value in values:
+            if not isinstance(value, str) or not value.strip() or len(value.strip()) > 120:
+                raise SchemaValidationError(raw_output=str(raw), validation_errors=f"patient_context.{field} items must be non-empty strings of at most 120 characters")
+            cleaned.append(value.strip())
+        result[field] = cleaned
+    unknown = set(raw) - {"foods", "conditions"}
+    if unknown:
+        raise SchemaValidationError(raw_output=str(raw), validation_errors=f"unsupported patient_context fields: {', '.join(sorted(unknown))}")
+    return result
+
+
 def _parse_medications(payload: dict[str, Any]) -> list[Medication]:
     raw_medications = payload.get("medications")
     if not isinstance(raw_medications, list):
@@ -155,6 +179,7 @@ def _serialize_coverage(coverage: Coverage | None) -> dict[str, Any] | None:
         "total": coverage.total,
         "is_complete": coverage.is_complete,
         "unchecked": list(coverage.unchecked),
+        "identity_only": list(coverage.identity_only),
         "summary": coverage.summary,
     }
 
@@ -175,6 +200,9 @@ def _serialize_food_guidance(guidance: FoodGuidance) -> dict[str, Any]:
         "status": guidance.status.value,
         "note": guidance.note,
         "source": guidance.source,
+        "rule_id": guidance.rule_id,
+        "evidence_source_ids": list(guidance.evidence_source_ids),
+        "review_status": guidance.review_status,
     }
 
 
@@ -202,6 +230,7 @@ def _serialize_plan(plan: DailyPlan) -> dict[str, Any]:
         "coverage": _serialize_coverage(plan.coverage),
         "name_resolutions": [_serialize_resolution(r) for r in plan.resolutions],
         "food_guidance": [_serialize_food_guidance(g) for g in plan.food_guidance],
+        "clinical_assessment": plan.clinical_assessment,
     }
 
 
@@ -243,8 +272,9 @@ def create_plan() -> tuple[dict[str, Any], int]:
         raise SchemaValidationError(raw_output="<no body>", validation_errors="request body must be JSON")
 
     medications = _parse_medications(payload)
+    patient_context = _parse_patient_context(payload)
     try:
-        plan = generate_daily_plan(medications)
+        plan = generate_daily_plan(medications, patient_context=patient_context)
     except KnowledgeReleaseError as exc:
         return jsonify({"error": "approved_knowledge_unavailable", "message": str(exc)}), 503
     except ValueError as exc:
@@ -273,8 +303,9 @@ def create_plan_from_text() -> tuple[dict[str, Any], int]:
         raise SchemaValidationError(raw_output=str(payload), validation_errors="'text' must be a non-empty string")
 
     medications = parse_medications(user_text)
+    patient_context = _parse_patient_context(payload)
     try:
-        plan = generate_daily_plan(medications)
+        plan = generate_daily_plan(medications, patient_context=patient_context)
     except KnowledgeReleaseError as exc:
         return jsonify({"error": "approved_knowledge_unavailable", "message": str(exc)}), 503
     except ValueError as exc:

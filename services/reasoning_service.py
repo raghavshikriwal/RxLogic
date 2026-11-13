@@ -28,6 +28,7 @@ from pathlib import Path
 from models.exceptions import InsufficientDataError, UnknownMedicationError
 from models.schemas import DailyPlan, Medication
 from services.food_rules import FoodRules
+from services.clinical_reasoning import ClinicalReasoningEngine
 from services.name_normalizer import NameNormalizer
 from services.planner import Planner
 from services.rule_engine import RuleEngine
@@ -58,27 +59,48 @@ class ReasoningService:
     @classmethod
     def from_active_release(cls, knowledge_root: Path | None = None) -> "ReasoningService":
         """Build the service from one integrity-verified active release only."""
+        from services.knowledge_release import DEFAULT_KNOWLEDGE_ROOT, load_active_release
+        bundle = load_active_release(knowledge_root or DEFAULT_KNOWLEDGE_ROOT)
         rule_engine = RuleEngine.from_active_release(knowledge_root)
         food_rules = FoodRules.from_active_release(knowledge_root)
-        if rule_engine.knowledge_release != food_rules.knowledge_release:
+        expected_release = bundle["manifest"]["knowledge_release"]
+        if rule_engine.knowledge_release != food_rules.knowledge_release or rule_engine.knowledge_release != expected_release:
             from services.knowledge_release import KnowledgeReleaseError
-            raise KnowledgeReleaseError("interaction and food knowledge releases do not match")
-        return cls(rule_engine=rule_engine, food_rules=food_rules)
+            raise KnowledgeReleaseError("clinical, interaction, and food knowledge releases do not match")
+        return cls(rule_engine=rule_engine, food_rules=food_rules, clinical_assertions=bundle.get("clinical_assertions"))
 
     def __init__(
         self,
         rule_engine: RuleEngine | None = None,
         name_normalizer: NameNormalizer | None = None,
         food_rules: FoodRules | None = None,
+        clinical_assertions: dict | None = None,
     ):
         # Allow injection for testing; default to the curated knowledge base.
         self.rule_engine = rule_engine or RuleEngine()
-        self.name_normalizer = name_normalizer or NameNormalizer.from_file(
-            self.rule_engine.medication_rxcuis
-        )
+        if name_normalizer is not None:
+            self.name_normalizer = name_normalizer
+        elif getattr(self.rule_engine, "medication_catalog", None):
+            self.name_normalizer = NameNormalizer.from_catalog(
+                self.rule_engine.medication_catalog, self.rule_engine.medication_rxcuis
+            )
+        else:
+            self.name_normalizer = NameNormalizer.from_file(self.rule_engine.medication_rxcuis)
         self.food_rules = food_rules or FoodRules()
+        # Mutable legacy/development JSON is never a clinical authority. Only
+        # the integrity-verified active release may supply runtime assertions.
+        runtime_assertions = clinical_assertions or {
+            "schema_version": "1.0.0",
+            "drug_food_interactions": [],
+            "contraindications": [],
+            "dosage_references": [],
+            "administration_instructions": [],
+        }
+        self.clinical_reasoning = ClinicalReasoningEngine(assertions=runtime_assertions)
 
-    def generate_daily_plan(self, medications: list[Medication]) -> DailyPlan:
+    def generate_daily_plan(
+        self, medications: list[Medication], *, patient_context: dict | None = None
+    ) -> DailyPlan:
         """
         Runs the full symbolic pipeline on a resolved medication list and
         returns the final DailyPlan.
@@ -118,10 +140,21 @@ class ReasoningService:
         interactions = self.rule_engine.check_interactions(medications)
         interactions = refine_confidence(interactions, total_medication_count=len(medications))
         plan = Planner(medications, interactions).build_plan()
-        return replace(plan, coverage=coverage, resolutions=resolutions, food_guidance=food_guidance)
+        context = patient_context or {}
+        clinical_assessment = self.clinical_reasoning.assess(
+            medications,
+            foods=context.get("foods", ()),
+            conditions=context.get("conditions", ()),
+        )
+        return replace(
+            plan, coverage=coverage, resolutions=resolutions, food_guidance=food_guidance,
+            clinical_assessment=clinical_assessment,
+        )
 
 
-def generate_daily_plan(medications: list[Medication]) -> DailyPlan:
+def generate_daily_plan(
+    medications: list[Medication], *, patient_context: dict | None = None
+) -> DailyPlan:
     """Build the configured knowledge runtime, then generate a plan.
 
     Runtime configuration is validated before request-level input validation,

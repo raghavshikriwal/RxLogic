@@ -126,5 +126,8 @@ def test_task07_audit_reports_structural_governance_without_claiming_clinical_va
     report = build_task07_audit(root)
     assert report["passed"] is True
     assert report["checks"]["clinical_use_prohibited"] is True
+    assert report["checks"]["no_unapproved_clinical_assertions"] is True
+    assert report["clinical_assertion_records_present"] is False
+    assert report["clinical_assertions_are_empty_pending_review"] is True
     assert "not_clinical_validation" in report["audit_type"]
     assert report["clinical_assertion_counts"]["dosage_references"] == 0

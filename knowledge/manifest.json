@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "knowledge_release": "rxlogic-seed-2026-11-13",
+  "knowledge_release": "rxlogic-task08-development-2026-11-13",
   "release_status": "development_unreviewed",
   "created_date": "2026-11-13",
   "datasets": {
@@ -19,11 +19,16 @@
     "clinical_assertions": {
       "path": "clinical_assertions.json",
       "schema_version": "1.0.0"
+    },
+    "medication_catalog": {
+      "path": "medication_catalog.json",
+      "schema_version": "1.0.0"
     }
   },
   "publication_policy": {
     "runtime_may_load_unreviewed_records": true,
     "clinical_use_permitted": false,
-    "note": "Existing records are retained for educational/demo compatibility. Every migrated assertion remains needs_clinical_review; legacy source labels are not verified citations."
-  }
+    "note": "Existing records are retained for educational/demo compatibility. Every migrated assertion remains needs_clinical_review; legacy source labels are not verified citations. Task 08 adds identity-only acetaminophen/paracetamol catalog coverage; it adds no clinical assertions for this medication."
+  },
+  "task08_schema_version": "1.0.0"
 }

@@ -21,6 +21,7 @@ from services.knowledge_curation import (
     CurationError, DEFAULT_CURATION_ROOT, _accepted_evidence, _read_jsonl,
 )
 from services.clinical_knowledge import validate_clinical_assertions, validate_release_evidence_sources
+from services.medication_catalog import validate_medication_catalog
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_KNOWLEDGE_ROOT = PROJECT_ROOT / "knowledge"
@@ -251,6 +252,8 @@ def create_release(
     legacy = _read_json(Path(knowledge_root) / "interaction_rules.json")
     release_id = "RXK-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8].upper()
     created_at = _now()
+    catalog_path = Path(knowledge_root) / "medication_catalog.json"
+    catalog = _read_json(catalog_path) if catalog_path.exists() else None
     datasets = {
         "interaction_rules.json": {"schema_version": "2.0.0", "knowledge_release": release_id,
                                    "source_note": "Only independently clinically approved candidates are included.",
@@ -260,9 +263,12 @@ def create_release(
         "evidence_sources.json": {"schema_version": "1.0.0", "sources": list(evidence_sources.values())},
         "clinical_assertions.json": {"schema_version": "1.0.0", "knowledge_release": release_id, **clinical_assertions},
     }
+    if catalog is not None:
+        datasets["medication_catalog.json"] = catalog
     hashes = {name: _canonical_hash(content) for name, content in datasets.items()}
     manifest = {
         "schema_version": "1.0.0", "task07_schema_version": "1.0.0",
+        **({"task08_schema_version": "1.0.0"} if catalog is not None else {}),
         "knowledge_release": release_id, "release_status": "immutable_release",
         "created_at": created_at, "created_by": author_id.strip(), "rationale": rationale.strip(),
         "candidate_ids": candidate_ids, "clinical_approval_ids": [approval["decision_id"] for _, approval in selected],
@@ -298,9 +304,13 @@ def _validate_release(release_dir: Path) -> dict[str, Any]:
         raise KnowledgeReleaseError("release has an invalid status")
     legacy_datasets = {"interaction_rules.json", "food_rules.json", "evidence_sources.json"}
     task07_datasets = legacy_datasets | {"clinical_assertions.json"}
+    task08_datasets = task07_datasets | {"medication_catalog.json"}
     datasets = manifest.get("datasets")
     task07_version = manifest.get("task07_schema_version")
-    if task07_version == "1.0.0":
+    task08_version = manifest.get("task08_schema_version")
+    if task08_version == "1.0.0":
+        required_datasets = task08_datasets
+    elif task07_version == "1.0.0":
         required_datasets = task07_datasets
     elif task07_version is None:
         # Backward-compatible read support for immutable Task 06 releases.
@@ -316,6 +326,13 @@ def _validate_release(release_dir: Path) -> dict[str, Any]:
         data = _read_json(release_dir / name)
         if _canonical_hash(data) != info["sha256"]:
             raise KnowledgeReleaseError(f"release dataset integrity check failed: {name}")
+    if task08_version == "1.0.0":
+        catalog = _read_json(release_dir / "medication_catalog.json")
+        catalog_errors = validate_medication_catalog(catalog)
+        interaction_map = _read_json(release_dir / "interaction_rules.json").get("medications", {})
+        catalog_map = {row.get("canonical_name"): str(row.get("rxcui")) for row in catalog.get("medications", [])}
+        if catalog_errors or catalog_map != {str(k).casefold(): str(v) for k, v in interaction_map.items()}:
+            raise KnowledgeReleaseError("release medication catalog is invalid or inconsistent")
     if task07_version == "1.0.0":
         clinical = _read_json(release_dir / "clinical_assertions.json")
         interaction_data = _read_json(release_dir / "interaction_rules.json")
@@ -472,6 +489,7 @@ def load_active_release(knowledge_root: Path = DEFAULT_KNOWLEDGE_ROOT) -> dict[s
             "interaction_rules": _read_json(release_dir / "interaction_rules.json"),
             "food_rules": _read_json(release_dir / "food_rules.json"),
             "evidence_sources": _read_json(release_dir / "evidence_sources.json"),
+            "medication_catalog": (_read_json(release_dir / "medication_catalog.json") if (release_dir / "medication_catalog.json").exists() else None),
             "clinical_assertions": (
                 _read_json(release_dir / "clinical_assertions.json")
                 if (release_dir / "clinical_assertions.json").exists()

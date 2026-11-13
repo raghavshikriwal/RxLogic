@@ -38,7 +38,7 @@ def build_task07_audit(knowledge_root: Path) -> dict[str, Any]:
         ) or policy.get("runtime_may_load_unreviewed_records") is False,
         "clinical_use_prohibited": policy.get("clinical_use_permitted") is False,
         "dosage_records_are_non_patient_specific": not unsafe_patient_specific_dose_records,
-        "clinical_assertions_are_approved": not unapproved_runtime_records,
+        "no_unapproved_clinical_assertions": not unapproved_runtime_records,
     }
     return {
         "schema_version": "1.0.0",
@@ -50,6 +50,8 @@ def build_task07_audit(knowledge_root: Path) -> dict[str, Any]:
         "clinical_assertion_counts": clinical_counts,
         "unsafe_patient_specific_dosage_assertion_ids": unsafe_patient_specific_dose_records,
         "unapproved_clinical_assertion_ids": unapproved_runtime_records,
+        "clinical_assertions_are_empty_pending_review": sum(clinical_counts.values()) == 0,
+        "clinical_assertion_records_present": sum(clinical_counts.values()) > 0,
         "coverage_summary": {
             "medication_count": coverage["medication_count"],
             "drug_drug_interactions": coverage["drug_drug_interactions"]["counts"],

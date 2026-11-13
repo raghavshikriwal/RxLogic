@@ -79,6 +79,22 @@ class NameNormalizer:
         raw = json.loads(aliases_path.read_text(encoding="utf-8"))
         return cls(rxcuis, raw.get("aliases", {}))
 
+    @classmethod
+    def from_catalog(cls, catalog: Mapping[str, object], rxcuis: Mapping[str, str]) -> "NameNormalizer":
+        """Construct from a validated medication catalog payload."""
+        from services.medication_catalog import validate_medication_catalog
+        errors = validate_medication_catalog(catalog)
+        if errors:
+            raise ValueError("invalid medication catalog: " + "; ".join(errors))
+        aliases: dict[str, str] = {}
+        for row in catalog.get("medications", []):
+            if not isinstance(row, dict):
+                continue
+            canonical = str(row.get("canonical_name", "")).casefold()
+            for alias in row.get("aliases", []):
+                aliases[str(alias).casefold()] = canonical
+        return cls(rxcuis, aliases)
+
     def resolve(self, name: str) -> Optional[NameResolution]:
         """Returns how `name` maps to a generic, or None if it does not."""
         key = _clean(name)
