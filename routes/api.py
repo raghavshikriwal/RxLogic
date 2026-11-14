@@ -10,13 +10,14 @@ between the LLM and the reasoning core.
 from __future__ import annotations
 
 import logging
+import math
 import os
 from pathlib import Path
 import uuid
 from dataclasses import asdict
 from typing import Any
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 
 from extensions import limiter
 from models.exceptions import (
@@ -40,33 +41,37 @@ from services.llm_parser import parse_medications
 from services.plan_log_service import get_recent_plans, log_plan
 from services.reasoning_service import generate_daily_plan
 from services.knowledge_release import DEFAULT_KNOWLEDGE_ROOT, KnowledgeReleaseError, load_active_release
+from services.security import sign_session_id, verify_session_cookie
 
 api = Blueprint("api", __name__, url_prefix="/api")
 logger = logging.getLogger(__name__)
 
 SESSION_COOKIE_NAME = "rxlogic_sid"
-SESSION_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365
+SESSION_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 90
+MAX_MEDICATIONS_PER_REQUEST = 25
+MAX_MEDICATION_NAME_LENGTH = 120
+MAX_NATURAL_LANGUAGE_LENGTH = 4000
+MAX_DOSAGE_MG = 100000.0
+MAX_FREQUENCY_PER_DAY = 6
 _SESSION_ENVIRON_KEY = "rxlogic.session"
 
 # -- anonymous session resolution ---------------------------------------------
 
 
-def _is_valid_session_id(value: str) -> bool:
-    try:
-        return str(uuid.UUID(value)) == value
-    except ValueError:
-        return False
-
-
 def _resolve_session() -> tuple[str, bool]:
-    """Returns (session_id, is_new) for this request, minting a UUID if the
-    cookie is missing or malformed. Cached on the WSGI environ so it is
-    strictly per-request (flask.g can outlive a request under a preserved
-    test context). The cookie carries no identity, only a history scope."""
+    """Resolve the signed anonymous history-scope cookie for this request.
+
+    The cookie is not authentication. It only scopes the current browser's
+    plan history. An invalid/unsigned value is discarded and replaced with a
+    fresh server-generated UUID.
+    """
     if _SESSION_ENVIRON_KEY not in request.environ:
         cookie_value = request.cookies.get(SESSION_COOKIE_NAME, "")
-        is_new = not _is_valid_session_id(cookie_value)
-        session_id = str(uuid.uuid4()) if is_new else cookie_value
+        signing_key = current_app.config["RXLOGIC_SESSION_SIGNING_KEY"]
+        session_id = verify_session_cookie(cookie_value, signing_key)
+        is_new = session_id is None
+        if is_new:
+            session_id = str(uuid.uuid4())
         request.environ[_SESSION_ENVIRON_KEY] = (session_id, is_new)
     return request.environ[_SESSION_ENVIRON_KEY]
 
@@ -79,37 +84,68 @@ def _get_session_id() -> str:
 def _persist_session_cookie(response):
     session_id, is_new = request.environ.get(_SESSION_ENVIRON_KEY, (None, False))
     if is_new:
+        cookie_value = sign_session_id(session_id, current_app.config["RXLOGIC_SESSION_SIGNING_KEY"])
         response.set_cookie(
             SESSION_COOKIE_NAME,
-            session_id,
+            cookie_value,
             max_age=SESSION_COOKIE_MAX_AGE_SECONDS,
             httponly=True,
+            secure=bool(current_app.config["SESSION_COOKIE_SECURE"]) or request.is_secure,
             samesite="Lax",
-            secure=request.is_secure,
+            path="/",
         )
     return response
+
 
 # -- request parsing: JSON -> typed Medication objects -----------------------
 
 
 def _parse_medication(raw: dict[str, Any]) -> Medication:
     try:
+        if not isinstance(raw, dict):
+            raise ValueError("each medication must be an object")
+        allowed = {"name", "dosage_mg", "frequency_per_day", "timing_preference", "with_food"}
+        unknown = set(raw) - allowed
+        if unknown:
+            raise ValueError(f"unsupported medication fields: {', '.join(sorted(str(x) for x in unknown))}")
+
         name = raw["name"]
-        if not isinstance(name, str) or not name.strip():
-            raise ValueError("'name' must be a non-empty string")
+        if not isinstance(name, str) or not name.strip() or len(name.strip()) > MAX_MEDICATION_NAME_LENGTH:
+            raise ValueError(f"'name' must be a non-empty string of at most {MAX_MEDICATION_NAME_LENGTH} characters")
+        if any(ord(char) < 32 for char in name):
+            raise ValueError("'name' must not contain control characters")
+
+        dosage_mg = raw.get("dosage_mg")
+        if dosage_mg is not None:
+            if isinstance(dosage_mg, bool) or not isinstance(dosage_mg, (int, float)):
+                raise ValueError("'dosage_mg' must be a positive finite number or null")
+            try:
+                finite_dosage = math.isfinite(float(dosage_mg))
+            except OverflowError:
+                finite_dosage = False
+            if not finite_dosage or not 0 < dosage_mg <= MAX_DOSAGE_MG:
+                raise ValueError(f"'dosage_mg' must be greater than 0 and no more than {MAX_DOSAGE_MG:g}")
+
+        frequency = raw.get("frequency_per_day", 1)
+        if isinstance(frequency, bool) or not isinstance(frequency, int) or not 1 <= frequency <= MAX_FREQUENCY_PER_DAY:
+            raise ValueError(f"'frequency_per_day' must be an integer from 1 to {MAX_FREQUENCY_PER_DAY}")
+
+        with_food = raw.get("with_food")
+        if with_food is not None and not isinstance(with_food, bool):
+            raise ValueError("'with_food' must be true, false, or null")
 
         timing_raw = raw.get("timing_preference", TimingPreference.NO_PREFERENCE.value)
         timing_preference = TimingPreference(timing_raw)
 
         return Medication(
-            name=name,
-            dosage_mg=raw.get("dosage_mg"),
-            frequency_per_day=int(raw.get("frequency_per_day", 1)),
+            name=name.strip(),
+            dosage_mg=dosage_mg,
+            frequency_per_day=frequency,
             timing_preference=timing_preference,
-            with_food=raw.get("with_food"),
+            with_food=with_food,
         )
     except (KeyError, ValueError, TypeError) as exc:
-        raise SchemaValidationError(raw_output=str(raw), validation_errors=str(exc)) from exc
+        raise SchemaValidationError(raw_output="<redacted>", validation_errors=str(exc)) from exc
 
 
 def _parse_patient_context(payload: dict[str, Any]) -> dict[str, list[str]]:
@@ -118,21 +154,21 @@ def _parse_patient_context(payload: dict[str, Any]) -> dict[str, list[str]]:
     if raw is None:
         raw = {}
     if not isinstance(raw, dict):
-        raise SchemaValidationError(raw_output=str(raw), validation_errors="'patient_context' must be an object")
+        raise SchemaValidationError(raw_output="<redacted>", validation_errors="'patient_context' must be an object")
     result: dict[str, list[str]] = {}
     for field in ("foods", "conditions"):
         values = raw.get(field, [])
         if not isinstance(values, list) or len(values) > 50:
-            raise SchemaValidationError(raw_output=str(raw), validation_errors=f"patient_context.{field} must be an array with at most 50 items")
+            raise SchemaValidationError(raw_output="<redacted>", validation_errors=f"patient_context.{field} must be an array with at most 50 items")
         cleaned: list[str] = []
         for value in values:
             if not isinstance(value, str) or not value.strip() or len(value.strip()) > 120:
-                raise SchemaValidationError(raw_output=str(raw), validation_errors=f"patient_context.{field} items must be non-empty strings of at most 120 characters")
+                raise SchemaValidationError(raw_output="<redacted>", validation_errors=f"patient_context.{field} items must be non-empty strings of at most 120 characters")
             cleaned.append(value.strip())
         result[field] = cleaned
     unknown = set(raw) - {"foods", "conditions"}
     if unknown:
-        raise SchemaValidationError(raw_output=str(raw), validation_errors=f"unsupported patient_context fields: {', '.join(sorted(unknown))}")
+        raise SchemaValidationError(raw_output="<redacted>", validation_errors=f"unsupported patient_context fields: {', '.join(sorted(unknown))}")
     return result
 
 
@@ -140,10 +176,45 @@ def _parse_medications(payload: dict[str, Any]) -> list[Medication]:
     raw_medications = payload.get("medications")
     if not isinstance(raw_medications, list):
         raise SchemaValidationError(
-            raw_output=str(payload),
+            raw_output="<redacted>",
             validation_errors="'medications' must be a JSON array",
         )
+    if len(raw_medications) > MAX_MEDICATIONS_PER_REQUEST:
+        raise SchemaValidationError(
+            raw_output="<redacted>",
+            validation_errors=f"at most {MAX_MEDICATIONS_PER_REQUEST} medications are accepted per request",
+        )
     return [_parse_medication(m) for m in raw_medications]
+
+
+def _validate_payload_object(payload: Any, allowed_fields: set[str]) -> dict[str, Any]:
+    if not isinstance(payload, dict):
+        raise SchemaValidationError(raw_output="<redacted>", validation_errors="request body must be a JSON object")
+    unknown = set(payload) - allowed_fields
+    if unknown:
+        raise SchemaValidationError(
+            raw_output="<redacted>",
+            validation_errors=f"unsupported request fields: {', '.join(sorted(str(x) for x in unknown))}",
+        )
+    return payload
+
+
+def _revalidate_parsed_medications(medications: Any) -> list[Medication]:
+    """Apply the same API bounds to data extracted by the optional LLM parser."""
+    if not isinstance(medications, list) or len(medications) > MAX_MEDICATIONS_PER_REQUEST:
+        raise SchemaValidationError(raw_output="<redacted>", validation_errors="natural-language extraction returned an invalid medication list")
+    validated: list[Medication] = []
+    for item in medications:
+        if not isinstance(item, Medication):
+            raise SchemaValidationError(raw_output="<redacted>", validation_errors="natural-language extraction returned an invalid medication object")
+        validated.append(_parse_medication({
+            "name": item.name,
+            "dosage_mg": item.dosage_mg,
+            "frequency_per_day": item.frequency_per_day,
+            "timing_preference": item.timing_preference.value,
+            "with_food": item.with_food,
+        }))
+    return validated
 
 
 # -- best-effort logging helper -----------------------------------------------
@@ -260,8 +331,10 @@ def knowledge_status() -> tuple[dict[str, Any], int]:
                         "knowledge_release": manifest["knowledge_release"],
                         "clinical_use_permitted": False}), 200
     except KnowledgeReleaseError as exc:
+        logger.warning("Knowledge status unavailable (%s)", type(exc).__name__)
         return jsonify({"mode": mode, "status": "unavailable",
-                        "error": "approved_knowledge_unavailable", "message": str(exc)}), 503
+                        "error": "approved_knowledge_unavailable",
+                        "message": "The configured approved knowledge release is unavailable."}), 503
 
 
 @api.route("/plan", methods=["POST"])
@@ -269,14 +342,19 @@ def knowledge_status() -> tuple[dict[str, Any], int]:
 def create_plan() -> tuple[dict[str, Any], int]:
     payload = request.get_json(silent=True)
     if payload is None:
-        raise SchemaValidationError(raw_output="<no body>", validation_errors="request body must be JSON")
+        raise SchemaValidationError(raw_output="<redacted>", validation_errors="request body must be JSON")
+    payload = _validate_payload_object(payload, {"medications", "patient_context"})
 
     medications = _parse_medications(payload)
     patient_context = _parse_patient_context(payload)
     try:
         plan = generate_daily_plan(medications, patient_context=patient_context)
     except KnowledgeReleaseError as exc:
-        return jsonify({"error": "approved_knowledge_unavailable", "message": str(exc)}), 503
+        logger.warning("Planning unavailable because the knowledge release failed verification (%s)", type(exc).__name__)
+        return jsonify({
+            "error": "approved_knowledge_unavailable",
+            "message": "The configured approved knowledge release is unavailable.",
+        }), 503
     except ValueError as exc:
         if "RXLOGIC_KNOWLEDGE_MODE" in str(exc):
             return jsonify({"error": "invalid_knowledge_configuration", "message": str(exc)}), 503
@@ -296,18 +374,26 @@ def create_plan_from_text() -> tuple[dict[str, Any], int]:
     """
     payload = request.get_json(silent=True)
     if payload is None:
-        raise SchemaValidationError(raw_output="<no body>", validation_errors="request body must be JSON")
+        raise SchemaValidationError(raw_output="<redacted>", validation_errors="request body must be JSON")
+    payload = _validate_payload_object(payload, {"text", "patient_context"})
 
     user_text = payload.get("text")
-    if not isinstance(user_text, str) or not user_text.strip():
-        raise SchemaValidationError(raw_output=str(payload), validation_errors="'text' must be a non-empty string")
+    if not isinstance(user_text, str) or not user_text.strip() or len(user_text) > MAX_NATURAL_LANGUAGE_LENGTH:
+        raise SchemaValidationError(
+            raw_output="<redacted>",
+            validation_errors=f"'text' must be a non-empty string of at most {MAX_NATURAL_LANGUAGE_LENGTH} characters",
+        )
 
-    medications = parse_medications(user_text)
+    medications = _revalidate_parsed_medications(parse_medications(user_text))
     patient_context = _parse_patient_context(payload)
     try:
         plan = generate_daily_plan(medications, patient_context=patient_context)
     except KnowledgeReleaseError as exc:
-        return jsonify({"error": "approved_knowledge_unavailable", "message": str(exc)}), 503
+        logger.warning("Planning unavailable because the knowledge release failed verification (%s)", type(exc).__name__)
+        return jsonify({
+            "error": "approved_knowledge_unavailable",
+            "message": "The configured approved knowledge release is unavailable.",
+        }), 503
     except ValueError as exc:
         if "RXLOGIC_KNOWLEDGE_MODE" in str(exc):
             return jsonify({"error": "invalid_knowledge_configuration", "message": str(exc)}), 503
@@ -366,7 +452,11 @@ def handle_external_api_error(err: ExternalAPIError):
 
 @api.errorhandler(KnowledgeReleaseError)
 def handle_knowledge_release_error(err: KnowledgeReleaseError):
-    return jsonify({"error": "approved_knowledge_unavailable", "message": str(err)}), 503
+    logger.warning("Knowledge release request failed verification (%s)", type(err).__name__)
+    return jsonify({
+        "error": "approved_knowledge_unavailable",
+        "message": "The configured approved knowledge release is unavailable.",
+    }), 503
 
 
 @api.errorhandler(ValueError)

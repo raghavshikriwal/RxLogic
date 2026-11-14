@@ -16,6 +16,8 @@ const FOOD_OPTIONS = [
   { value: 'false', label: 'Without food' },
 ];
 
+const MAX_MEDICATIONS_PER_REQUEST = 25;
+
 function createMedication() {
   return {
     key: crypto.randomUUID(),
@@ -82,9 +84,9 @@ function validateMedications(medications) {
 
     if (
       dosage !== null &&
-      (!Number.isFinite(dosage) || dosage < 0)
+      (!Number.isFinite(dosage) || dosage <= 0 || dosage > 100000)
     ) {
-      rowErrors.dosage_mg = 'Enter a valid non-negative dosage.';
+      rowErrors.dosage_mg = 'Enter a positive dosage no greater than 100000 mg.';
     }
 
     if (
@@ -153,10 +155,11 @@ export default function MedicationForm({
   }
 
   function addMedication() {
-    setMedications((rows) => [
-      ...rows,
-      createMedication(),
-    ]);
+    setMedications((rows) => (
+      rows.length >= MAX_MEDICATIONS_PER_REQUEST
+        ? rows
+        : [...rows, createMedication()]
+    ));
   }
 
   function removeMedication(key) {
@@ -331,9 +334,14 @@ export default function MedicationForm({
               <button
                 type="button"
                 onClick={addMedication}
+                disabled={medications.length >= MAX_MEDICATIONS_PER_REQUEST}
+                aria-disabled={medications.length >= MAX_MEDICATIONS_PER_REQUEST}
+                title={medications.length >= MAX_MEDICATIONS_PER_REQUEST ? 'Maximum of 25 medications per request' : undefined}
                 className="self-start rounded-full border border-fog px-16 py-8 font-clarkson text-body-sm text-obsidian transition-colors duration-200 ease-editorial hover:border-teal hover:text-teal"
               >
-                + Add another medication
+                {medications.length >= MAX_MEDICATIONS_PER_REQUEST
+                  ? 'Maximum 25 medications reached'
+                  : '+ Add another medication'}
               </button>
             </div>
           ) : (
@@ -479,6 +487,7 @@ function MedicationRow({
             onChange('name', event.target.value)
           }
           placeholder="e.g. Metformin"
+          maxLength={120}
           autoComplete="off"
           aria-invalid={Boolean(errors.name)}
           aria-describedby={
@@ -501,7 +510,8 @@ function MedicationRow({
 
         <input
           type="number"
-          min="0"
+          min="0.001"
+          max="100000"
           step="any"
           inputMode="decimal"
           value={medication.dosage_mg}

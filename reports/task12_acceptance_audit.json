@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0.0",
+  "audit_type": "task12_web_application_security_hardening_audit",
+  "passed": true,
+  "checks": {
+    "signed_session_cookie_round_trip": true,
+    "tampered_session_cookie_rejected": true,
+    "expired_session_cookie_rejected": true,
+    "session_cookie_is_http_only": true,
+    "session_cookie_has_same_site_policy": true,
+    "session_cookie_has_90_day_max_age": true,
+    "session_cookie_secure_in_production": true,
+    "api_cache_is_disabled": true,
+    "nosniff_header_present": true,
+    "frame_protection_present": true,
+    "referrer_policy_present": true,
+    "permissions_policy_present": true,
+    "request_size_limit_configured": true,
+    "oversized_json_request_rejected": true,
+    "production_secret_guard_enforced": true,
+    "production_debug_guard_enforced": true,
+    "production_persistent_database_guard_enforced": true,
+    "production_shared_rate_limit_guard_enforced": true,
+    "trusted_proxy_handling_is_explicit": true,
+    "governance_admin_api_not_exposed": true,
+    "clinical_use_remains_unavailable": true,
+    "production_hsts_enabled": true,
+    "rate_limit_backend_matches_validated_config": true,
+    "deployment_procfile_runs_production_preflight": true
+  },
+  "runtime": {
+    "environment": "development",
+    "max_request_bytes": 65536,
+    "rate_limit_storage": "process_local_memory",
+    "trusted_proxy_hops": 0,
+    "governance_admin_http_routes": [],
+    "clinical_use_permitted": false
+  },
+  "warnings": [
+    "This is an application-control audit, not a penetration test or external security certification.",
+    "The time-bounded anonymous signed cookie scopes browser history; it does not authenticate a user or prevent replay of a stolen token during its validity window.",
+    "Task 11 governance CLI reviewer IDs and role declarations are not authenticated identities or verified professional credentials.",
+    "No public governance/admin HTTP API is exposed. Administrative operations remain local CLI operations and depend on host/shell access controls.",
+    "A successful software security audit does not authorize clinical use.",
+    "Rate limiting uses process-local memory; configure managed Redis before multi-worker or multi-instance production deployment.",
+    "Trusted proxy count is zero; configure the exact reverse-proxy hop count if the host sits behind a proxy and IP-based limits must use the real client IP."
+  ],
+  "limitations": [
+    "The audit does not verify external Redis availability, firewall rules, TLS termination, host hardening, database backups, or secrets-manager access controls.",
+    "Reviewer authentication and professional credential verification require an identity provider and are not implemented by the local CLI actor fields.",
+    "The time-bounded signed anonymous history cookie is a bearer token for history scoping, not a user login and not a substitute for account authentication.",
+    "The audit does not establish regulatory compliance, clinical correctness, or patient-care readiness."
+  ]
+}

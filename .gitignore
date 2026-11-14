@@ -32,4 +32,20 @@ knowledge/cache/*.json
 Thumbs.db
 .vscode/
 .idea/.env
-\n# --- Evidence ingestion artifacts (review staging; never commit source snapshots) ---\nknowledge/ingestion/staging/\n
+
+# --- Evidence ingestion artifacts (review staging; never commit source snapshots) ---
+knowledge/ingestion/staging/
+
+# --- Secrets, credentials, and runtime artifacts (Task 12) ---
+.env.*
+!.env.example
+!frontend/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.sqlite3
+*.db
+*.log
+secrets/

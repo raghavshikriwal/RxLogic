@@ -491,3 +491,38 @@ def test_plan_endpoint_rejects_unknown_runtime_mode(client, monkeypatch):
     response = client.post("/api/plan", json={"medications": [{"name": "Aspirin"}]})
     assert response.status_code == 503
     assert response.get_json()["error"] == "invalid_knowledge_configuration"
+
+
+def test_non_object_json_payload_returns_schema_error(client):
+    response = client.post("/api/plan", json=[{"name": "Metformin"}])
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "schema_validation_error"
+
+
+def test_medication_batch_limit_is_enforced(client):
+    response = client.post("/api/plan", json={"medications": [{"name": f"Drug {i}"} for i in range(26)]})
+    assert response.status_code == 400
+    assert "at most 25" in response.get_json()["message"]
+
+
+@pytest.mark.parametrize("medication", [
+    {"name": "Metformin", "dosage_mg": -1},
+    {"name": "Metformin", "dosage_mg": float("nan")},
+    {"name": "Metformin", "frequency_per_day": 0},
+    {"name": "Metformin", "frequency_per_day": 7},
+    {"name": "Metformin", "frequency_per_day": True},
+    {"name": "Metformin", "with_food": "yes"},
+    {"name": "M" * 121},
+    {"name": "Metformin", "unexpected": "value"},
+])
+def test_medication_field_bounds_are_enforced(client, medication):
+    response = client.post("/api/plan", json={"medications": [medication]})
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "schema_validation_error"
+
+
+def test_natural_language_input_length_is_bounded(client):
+    with patch("routes.api.parse_medications") as parse:
+        response = client.post("/api/plan/nl", json={"text": "x" * 4001})
+    assert response.status_code == 400
+    parse.assert_not_called()

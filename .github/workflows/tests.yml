@@ -1,4 +1,4 @@
-# Runs the pytest suite on every push and pull request targeting `main`.
+# Runs the pytest suite on pushes to main/Task 12 and pull requests targeting main.
 #
 # The suite needs no external services: models/database.py falls back to
 # an in-memory SQLite database whenever DATABASE_URL is unset, so no
@@ -7,7 +7,7 @@ name: Tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, task-12-security-hardening]
   pull_request:
     branches: [main]
 
@@ -61,6 +61,9 @@ jobs:
 
       - name: Run Task 11 release governance audit
         run: python -m scripts.audit_task11 --output reports/task11_acceptance_audit.json
+
+      - name: Run Task 12 web security audit
+        run: python -m scripts.audit_task12 --output reports/task12_acceptance_audit.json
 
       - name: Upload coverage report
         if: always()

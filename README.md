@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/React-18-61DAFB" alt="React">
   <img src="https://img.shields.io/badge/Flask-3.0-black" alt="Flask">
   <img src="https://img.shields.io/badge/Vite-6-646CFF" alt="Vite">
-  <img src="https://img.shields.io/badge/Project%20Tasks-01--11-success" alt="Tasks 01–11">
+  <img src="https://img.shields.io/badge/Project%20Tasks-01--12-success" alt="Tasks 01–12">
   <img src="https://img.shields.io/badge/Status-Research%20Demonstrator-orange" alt="Research Demonstrator">
 </p>
 
@@ -95,18 +95,19 @@ The knowledge-management architecture includes:
 - Integrity-checked runtime loading.
 - Audit trails for knowledge-management operations.
 
-The development has progressed through eleven major implementation tasks, integrating the backend, frontend, reasoning services, medication catalog, knowledge governance, testing infrastructure, and clinical-assessment response architecture.
+The development has progressed through twelve major implementation tasks, integrating the backend, frontend, reasoning services, medication catalog, knowledge governance, testing infrastructure, clinical-assessment response architecture, and web-tier security hardening.
 
 ## Current Project Status
 
-**Task 11 status:** the dual-control release-governance implementation is prepared on the `task-11-knowledge-governance` branch. The focused release/CLI/clinical-knowledge/audit suite passed 46 tests in the implementation environment. Run the full Windows suite before treating Task 11 as finally accepted.
+**Current development status:** Tasks 01–11 are implemented in the supplied Task 11 baseline. Task 11's full Windows regression suite was reported as **399 passed**. Task 12 web-tier security hardening is being developed on `task-12-security-hardening`; its final test/audit results must be recorded after verification in the target Windows environment.
 
 
 | Component | Status |
 |---|---|
 | Tasks 01–09 | Implemented and integrated |
 | Task 10 clinical validation framework | Implemented; clinical validation itself not performed |
-| Task 11 release governance | Implemented on `task-11-knowledge-governance`; full Windows regression pending |
+| Task 11 release governance | Implemented; 399-test full Windows suite reported |
+| Task 12 security hardening | In progress on `task-12-security-hardening` |
 | Backend | Implemented |
 | React frontend | Implemented |
 | Neuro-symbolic reasoning | Implemented |
@@ -118,9 +119,10 @@ The development has progressed through eleven major implementation tasks, integr
 | Evidence review workflow | Implemented |
 | Controlled knowledge releases | Implemented |
 | Task 09 clinical assessment | Integrated |
-| Task 10 Windows regression suite | 384 tests passed (pre-Task 11 snapshot) |
-| Task 11 focused governance suite | 46 tests passed in implementation environment |
-| Task 11 full regression suite | Pending Windows verification |
+| Task 10 Windows regression suite | 384 tests passed (historical Task 10 snapshot) |
+| Task 11 focused governance suite | 46 tests passed |
+| Task 11 full Windows regression suite | 399 tests passed (user-reported) |
+| Task 12 focused security suite | Pending Windows verification |
 | Frontend production build | Passed |
 | npm dependency audit | 0 vulnerabilities reported |
 | Knowledge structural validation | Passed |
@@ -133,7 +135,7 @@ The development has progressed through eleven major implementation tasks, integr
 217a7f9 Update README with complete project documentation
 ```
 
-Task 10 and Task 11 changes are being prepared on a separate working branch and are not yet merged into `main`.
+Task 11 and Task 12 are developed on separate feature branches and are not automatically merged into `main`. Merge only after review and CI verification.
 
 Repository:
 
@@ -872,7 +874,27 @@ Key work:
 - `release-review` and `review-status` CLI commands.
 - Task 11 governance acceptance audit.
 
-The focused Task 11 release/CLI/clinical-knowledge/audit suite passed **46 tests** in the implementation environment. The full project regression suite must still be run on Windows before final acceptance. Reviewer IDs and roles are local CLI declarations, not authenticated identities or verified credentials.
+The focused Task 11 release/CLI/clinical-knowledge/audit suite passed **46 tests**. The subsequent full Windows regression suite passed **399 tests**. Reviewer IDs and roles are local CLI declarations, not authenticated identities or verified credentials.
+
+## Task 12 — Security and Deployment Hardening
+
+Hardened the Flask web tier and established production configuration gates.
+
+Key work:
+
+- Time-bounded HMAC-SHA256 signed anonymous history-scope cookies with tamper/expiry rejection.
+- Production startup requirements for a 32+ byte signing key, persistent PostgreSQL database, shared Redis rate-limit backend, and disabled debug mode.
+- Explicit trusted-proxy configuration; proxy headers are not trusted by default.
+- 64 KiB request-body limit and bounded medication/free-text input validation.
+- Revalidation of LLM-extracted medication objects before reasoning.
+- Redaction of raw request data from schema-validation messages.
+- Security headers, HTML Content Security Policy, API no-store headers, and production HSTS.
+- Generic API exception messages to avoid leaking internal details.
+- Configurable rate-limit storage and production deployment preflight.
+- Python dependency, Bandit, and frontend dependency audit workflows.
+- Task 12 security audit, tests, changelog, and protocol documentation.
+
+The signed history cookie is not user authentication. Knowledge-governance operations remain local CLI workflows; reviewer/admin identity authentication and credential verification still require a separately integrated identity provider. Task 12 security verification results must be recorded only after the full target-environment test and audit commands have run.
 
 ---
 
@@ -1164,7 +1186,7 @@ docs/TASK_09_API_CONTRACT.md
 | Frontend build tool | Vite 6 |
 | Styling | Tailwind CSS 3 |
 | Client routing | React Router 7 |
-| Backend framework | Flask 3 |
+| Backend framework | Flask 3.1.3 |
 | API rate limiting | Flask-Limiter |
 | Language model integration | Ollama |
 | Default local LLM | phi3:mini |
@@ -1173,7 +1195,7 @@ docs/TASK_09_API_CONTRACT.md
 | Fuzzy logic | scikit-fuzzy |
 | Scheduling | CSP and backtracking |
 | Planning | Goal-stack planner |
-| Persistence | SQLAlchemy 2 |
+| Persistence | SQLAlchemy 2.0.57 |
 | Database migrations | Alembic |
 | Development database | SQLite |
 | Production database option | PostgreSQL |
@@ -1181,7 +1203,7 @@ docs/TASK_09_API_CONTRACT.md
 | Coverage | pytest-cov |
 | Source integrity | SHA-256 |
 | External sources | RxNav/RxNorm, openFDA, DailyMed |
-| Application server | Gunicorn |
+| Application server | Gunicorn 26.2.0 |
 | Deployment | Render |
 | CI/CD | GitHub Actions |
 
@@ -1463,6 +1485,10 @@ The reference configuration is maintained in `.env.example`.
 | `PORT` | Application port |
 | `RXLOGIC_KNOWLEDGE_MODE` | Knowledge loading mode |
 | `RXLOGIC_KNOWLEDGE_ROOT` | Optional knowledge-root override |
+| `RXLOGIC_ENV` | `development`, `test`, or `production` |
+| `RXLOGIC_SESSION_SIGNING_KEY` | Required in production; unique random secret of at least 32 bytes |
+| `RXLOGIC_RATE_LIMIT_STORAGE_URI` | Shared Redis URL required in production; `memory://` is process-local development only |
+| `RXLOGIC_TRUSTED_PROXY_HOPS` | Explicit number of trusted reverse proxies; default `0` |
 
 ## Knowledge Modes
 
@@ -1492,15 +1518,15 @@ Testing is performed at multiple levels.
 
 ## 19.1 Latest Full Python Regression Suite
 
-The latest user-reported Windows full-suite run before Task 11 reported:
+The latest user-reported Windows full-suite run for the Task 11 baseline reported:
 
 ```text
-384 passed
+399 passed
 0 failed
-109.29 seconds
+112.31 seconds
 ```
 
-That result corresponds to the Task 10 snapshot, before the Task 11 release-governance changes. Run the full suite again on the Task 11 branch.
+This result includes the Task 11 release-governance changes and precedes Task 12 security hardening.
 
 Command:
 
@@ -1517,19 +1543,33 @@ python -m pytest -q
 | Task 08 | 366 passed |
 | Task 09 | 377 passed |
 | Task 10 | **384 passed** |
-| Task 11 focused release/CLI/clinical-knowledge/audit suite | **46 passed** (implementation environment; not full-suite total) |
+| Task 11 focused release/CLI/clinical-knowledge/audit suite | **46 passed** |
+| Task 11 full Windows regression | **399 passed** |
 
 These are historical suite totals from different project snapshots. They must not be added together.
 
-The Task 10 result is the latest user-reported full-suite result. Task 11 has not yet received a full Windows regression run.
+The Task 11 result is the latest user-reported full-suite result. Task 12 verification is pending until its dedicated tests and complete regression suite are run in the target Windows environment.
 
-## 19.3 Task 11 Implementation-Environment Verification
+## 19.3 Task 11 Windows Verification
 
-The Task 11-focused release, CLI, clinical-knowledge, and audit subset reported **46 passed**. A broader dependency-available subset reported **307 passed**; this deliberately excluded test modules whose runtime dependencies (`flask`, `psycopg2`, and `scikit-fuzzy`) were unavailable in that implementation environment. These are not a full-suite result. Run `python -m pytest -q` in the project's fully provisioned Windows environment before accepting Task 11.
+The focused release/CLI/clinical-knowledge/audit subset reported **46 passed**. The subsequent full Windows regression run reported **399 passed in 112.31 seconds**.
 
 The Task 11 structural audit passed with zero release bundles, zero release-review events, and no active release. This is the expected fail-closed baseline; it does not evidence a clinical approval or active knowledge publication.
 
-## 19.4 Focused Task 09 Verification
+## 19.4 Task 12 Security Verification
+
+Run the dedicated security tests and audit after applying Task 12:
+
+```powershell
+python -m pytest tests\test_security.py tests\test_app_security.py -q
+python -m scripts.audit_task12 --output reports\task12_acceptance_audit.json
+python -m scripts.security_preflight
+python -m pytest -q
+```
+
+The repository's security workflow performs Python dependency auditing, Bandit static analysis, and a frontend npm dependency audit. Record the actual Task 12 Windows results here only after they are observed.
+
+## 19.5 Focused Task 09 Verification
 
 | Test category | Result |
 |---|---:|
@@ -1541,7 +1581,7 @@ The Task 11 structural audit passed with zero release bundles, zero release-revi
 
 Focused test counts overlap with the full suite.
 
-## 19.4 Knowledge Structural Validation
+## 19.6 Knowledge Structural Validation
 
 The knowledge-validation workflow checks:
 
@@ -1561,7 +1601,7 @@ Structural validation: PASSED
 
 Structural validation does not prove clinical correctness.
 
-## 19.5 Task 09 Acceptance Audit
+## 19.7 Task 09 Acceptance Audit
 
 Latest Task 09 audit:
 
@@ -1573,7 +1613,7 @@ This is an important limitation.
 
 The system must not generate positive clinical findings when no approved assertion exists.
 
-## 19.6 Frontend Verification
+## 19.8 Frontend Verification
 
 From the frontend directory:
 
@@ -1590,13 +1630,18 @@ npm audit: 0 vulnerabilities
 Production build: PASSED
 ```
 
-## 19.7 Run All Main Checks
+## 19.9 Run All Main Checks
 
 From the repository root:
 
 ```powershell
 # Python regression suite
 python -m pytest -q
+
+# Task 12 focused security tests and software-control audit
+python -m pytest tests\test_security.py tests\test_app_security.py tests\test_task12_audit.py -q
+python -m scripts.audit_task12 --output reports\task12_acceptance_audit.json
+python -m scripts.security_preflight
 
 # Knowledge structural validation
 python -m services.knowledge_validation
@@ -1634,7 +1679,7 @@ Set-Location ..
 
 The exact command-line arguments for individual scripts should be confirmed with their `--help` output if the local revision differs.
 
-## 19.8 CI/CD
+## 19.10 CI/CD
 
 The GitHub Actions workflow is located at:
 
@@ -1814,6 +1859,32 @@ Task 09 patient context and context-derived findings are not persisted in plan h
 
 Do not submit personally identifying information, medical records, or real patient medication regimens.
 
+## Task 12 Web-Tier Controls
+
+- Time-bounded HMAC-SHA256 signed anonymous history cookies; tampered/expired tokens are rejected, and cookie signing is not user authentication.
+- Production startup requires a strong `RXLOGIC_SESSION_SIGNING_KEY`, a persistent PostgreSQL URL, shared Redis rate-limit storage, and `FLASK_DEBUG=false`.
+- The Python requirements use `Flask-Limiter[redis]` so the Redis rate-limit storage backend is available in production installs.
+- The Task 12 dependency baseline updates Flask, Gunicorn, Requests, and python-dotenv to address identified advisories and current patch releases; CI runs dependency and static-security scans.
+- Request bodies are capped at 64 KiB; medication batches, names, dose-field syntax, frequency fields, and free-text parser input have explicit bounds.
+- Parsed LLM output is revalidated before entering the reasoning pipeline.
+- API responses are not cacheable; security headers, HTML Content Security Policy, and generic API error handling are enabled.
+- Reverse-proxy headers are trusted only when an explicit proxy-hop count is configured.
+- Automated Python dependency, Bandit, and frontend dependency scans are configured in CI.
+
+The production preflight command is:
+
+```powershell
+python -m scripts.security_preflight
+```
+
+The reproducible software-control audit is:
+
+```powershell
+python -m scripts.audit_task12 --output reports\task12_acceptance_audit.json
+```
+
+These controls do not establish that external infrastructure is correctly configured. In particular, the deployment operator must supply and verify managed Redis, TLS termination, database backups, secrets-manager access controls, host security, and the correct proxy-hop setting.
+
 ## Production Governance Limitations
 
 CLI actor IDs and role strings are audit metadata. They are not authenticated identities.
@@ -1851,7 +1922,8 @@ The current project has important limitations.
 15. Local Task 11 reviewer IDs and role strings are not authenticated identities or credential verification.
 16. Task 11's SHA-256 review chain is tamper-evident, not a digital signature or external trust anchor.
 17. Pre-Task-11 releases remain inspectable but must be rebuilt and dual-reviewed before promotion or active runtime loading.
-18. The Task 11 full Windows regression run is still pending in the current branch.
+18. The Task 11 full Windows regression suite passed 399 tests in the user-reported environment.
+19. The Task 12 security work does not implement reviewer identity authentication or clinical authorization.
 
 These limitations are intentionally documented rather than hidden.
 
@@ -2002,9 +2074,9 @@ No.
 
 It is an educational and software-engineering demonstrator and is not clinically validated or authorized for patient-care use.
 
-## Q17. What does 377 passed tests mean?
+## Q17. What does 399 passed tests mean?
 
-It means the latest reported automated regression suite passed 377 tests in the reported Windows environment.
+It means the Task 11 baseline's latest reported automated regression suite passed 399 tests in the reported Windows environment.
 
 It does not establish clinical correctness or patient-care safety.
 
@@ -2039,7 +2111,7 @@ Use synthetic demonstration data only.
 
 RxLogic demonstrates a modular approach to combining neural input interpretation with deterministic symbolic reasoning and evidence-governed knowledge management.
 
-Across Tasks 01–11, the project evolved from an initial medication-reasoning application into a broader software-engineering demonstrator incorporating:
+Across Tasks 01–12, the project evolved from an initial medication-reasoning application into a broader software-engineering demonstrator incorporating:
 
 - Full-stack application architecture.
 - Optional natural-language parsing.
@@ -2055,8 +2127,9 @@ Across Tasks 01–11, the project evolved from an initial medication-reasoning a
 - Immutable release management.
 - Clinical-assessment integration.
 - Automated testing and structural audits.
+- Time-bounded signed anonymous history-scope cookies, input limits, HTTP security headers, production configuration gates, and CI security scans.
 
-The latest user-reported pre-Task-11 Windows snapshot passed 384 automated tests. Task 11 adds a focused 46-test release/CLI/clinical-knowledge/audit suite in the implementation environment; the full Task 11 Windows regression run is pending.
+The latest user-reported Task 11 Windows snapshot passed 399 automated tests. Task 12 adds application security controls and a separate security verification workflow; its Windows results must be recorded after execution.
 
 The project also explicitly documents the limits of its current knowledge base and the absence of clinical validation.
 
