@@ -127,13 +127,13 @@ def test_all_unknown_medications_are_reported_together():
     meds = [
         Medication(name="Zolpidem"),
         Medication(name="Warfarin"),
-        Medication(name="Xanax"),
+        Medication(name="Trazodone"),
     ]
 
     with pytest.raises(UnknownMedicationError) as exc_info:
         generate_daily_plan(meds)
 
-    assert exc_info.value.medication_names == ("Zolpidem", "Xanax")
+    assert exc_info.value.medication_names == ("Zolpidem", "Trazodone")
 
 
 def test_known_medication_lookup_is_case_insensitive():

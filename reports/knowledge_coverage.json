@@ -1,17 +1,38 @@
 {
   "schema_version": "1.1.0",
-  "knowledge_release": "rxlogic-task08-development-2026-11-13",
+  "knowledge_release": "rxlogic-task13-development-2026-11-14",
   "inventory_type": "development_knowledge_coverage_not_clinical_validation",
-  "medication_count": 11,
+  "medication_count": 24,
   "drug_drug_interactions": {
     "counts": {
-      "total": 55,
-      "assertion_present_unreviewed": 12,
+      "total": 276,
+      "assertion_present_unreviewed": 40,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 43,
+      "not_evaluated": 236,
       "conflicting_evidence": 0
     },
     "pairs": [
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "alprazolam",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "amiodarone",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "amlodipine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
       {
         "medication_a": "acetaminophen",
         "medication_b": "amoxicillin",
@@ -35,6 +56,34 @@
       },
       {
         "medication_a": "acetaminophen",
+        "medication_b": "calcium carbonate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "clarithromycin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "clopidogrel",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "digoxin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
         "medication_b": "ibuprofen",
         "status": "not_evaluated",
         "rule_id": null,
@@ -63,7 +112,21 @@
       },
       {
         "medication_a": "acetaminophen",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
         "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "nitroglycerin",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -77,6 +140,575 @@
       },
       {
         "medication_a": "acetaminophen",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "acetaminophen",
+        "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "amiodarone",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "amlodipine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "amoxicillin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "aspirin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "atorvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "calcium carbonate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "clarithromycin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "clopidogrel",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "digoxin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "ibuprofen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "levothyroxine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "tramadol",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-ALPRAZOLAM-TRAMADOL",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-ULTRAM-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "alprazolam",
+        "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "amlodipine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "amoxicillin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "aspirin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "atorvastatin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-AMIODARONE-ATORVASTATIN",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-DAILYMED-AMIODARONE",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "calcium carbonate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "clarithromycin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "clopidogrel",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "digoxin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-AMIODARONE-DIGOXIN",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-DAILYMED-AMIODARONE",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "ibuprofen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "levothyroxine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "metoprolol",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-AMIODARONE-METOPROLOL",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-DAILYMED-AMIODARONE",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "simvastatin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-AMIODARONE-SIMVASTATIN",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-ZOCOR-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          },
+          {
+            "source_id": "SRC-CITED-DAILYMED-SIMVASTATIN",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          },
+          {
+            "source_id": "SRC-CITED-DAILYMED-AMIODARONE",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amiodarone",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-AMIODARONE-WARFARIN",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-DAILYMED-AMIODARONE",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "amoxicillin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "aspirin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "atorvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "calcium carbonate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "clarithromycin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "clopidogrel",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "digoxin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "ibuprofen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "levothyroxine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "sildenafil",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-AMLODIPINE-SILDENAFIL",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-PFIZER-VIAGRA",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "simvastatin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-AMLODIPINE-SIMVASTATIN",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-ZOCOR-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          },
+          {
+            "source_id": "SRC-CITED-DAILYMED-SIMVASTATIN",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          },
+          {
+            "source_id": "SRC-CITED-MHRA-SIMVASTATIN-2012",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "amlodipine",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amlodipine",
         "medication_b": "warfarin",
         "status": "not_evaluated",
         "rule_id": null,
@@ -98,6 +730,34 @@
       },
       {
         "medication_a": "amoxicillin",
+        "medication_b": "calcium carbonate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "clarithromycin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "clopidogrel",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "digoxin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
         "medication_b": "ibuprofen",
         "status": "not_evaluated",
         "rule_id": null,
@@ -126,6 +786,29 @@
       },
       {
         "medication_a": "amoxicillin",
+        "medication_b": "methotrexate",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-AMOXICILLIN-METHOTREXATE",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-METHOTREXATE-2026",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          },
+          {
+            "source_id": "SRC-CITED-CFP-MTX-2014",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "amoxicillin",
         "medication_b": "metoprolol",
         "status": "not_evaluated",
         "rule_id": null,
@@ -133,7 +816,42 @@
       },
       {
         "medication_a": "amoxicillin",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
         "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "amoxicillin",
+        "medication_b": "tramadol",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -157,6 +875,34 @@
       {
         "medication_a": "aspirin",
         "medication_b": "atorvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "calcium carbonate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "clarithromycin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "clopidogrel",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "digoxin",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -200,6 +946,29 @@
       },
       {
         "medication_a": "aspirin",
+        "medication_b": "methotrexate",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-ASPIRIN-METHOTREXATE",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-METHOTREXATE-2026",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          },
+          {
+            "source_id": "SRC-CITED-CFP-MTX-2014",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "aspirin",
         "medication_b": "metoprolol",
         "status": "not_evaluated",
         "rule_id": null,
@@ -207,7 +976,51 @@
       },
       {
         "medication_a": "aspirin",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
         "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "sertraline",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-ASPIRIN-SERTRALINE",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-ZOLOFT-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "aspirin",
+        "medication_b": "tramadol",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -227,6 +1040,43 @@
             "source_quality_assessments": []
           }
         ]
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "calcium carbonate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "clarithromycin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-ATORVASTATIN-CLARITHROMYCIN",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-BIAXIN-2018",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "clopidogrel",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "digoxin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
       },
       {
         "medication_a": "atorvastatin",
@@ -258,6 +1108,13 @@
       },
       {
         "medication_a": "atorvastatin",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
         "medication_b": "metoprolol",
         "status": "not_evaluated",
         "rule_id": null,
@@ -265,7 +1122,42 @@
       },
       {
         "medication_a": "atorvastatin",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
         "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "atorvastatin",
+        "medication_b": "tramadol",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -285,6 +1177,498 @@
             "source_quality_assessments": []
           }
         ]
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "clarithromycin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "clopidogrel",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "digoxin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "ibuprofen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "levothyroxine",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-CALCIUM-CARBONATE-LEVOTHYROXINE",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-SYNTHROID-2022",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "calcium carbonate",
+        "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "clopidogrel",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "digoxin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-CLARITHROMYCIN-DIGOXIN",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-BIAXIN-2018",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "ibuprofen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "levothyroxine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "simvastatin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-CLARITHROMYCIN-SIMVASTATIN",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-BIAXIN-2018",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          },
+          {
+            "source_id": "SRC-CITED-FDA-ZOCOR-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clarithromycin",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-CLARITHROMYCIN-WARFARIN",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-BIAXIN-2018",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "digoxin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "ibuprofen",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-CLOPIDOGREL-IBUPROFEN",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-PLAVIX-2019",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "levothyroxine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "omeprazole",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-CLOPIDOGREL-OMEPRAZOLE",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-PLAVIX-2019",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "sertraline",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-CLOPIDOGREL-SERTRALINE",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-PLAVIX-2019",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          },
+          {
+            "source_id": "SRC-CITED-FDA-ZOLOFT-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "clopidogrel",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-CLOPIDOGREL-WARFARIN",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-PLAVIX-2019",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "ibuprofen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "levothyroxine",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "lisinopril",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "metformin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "digoxin",
+        "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
       },
       {
         "medication_a": "ibuprofen",
@@ -318,6 +1702,29 @@
       },
       {
         "medication_a": "ibuprofen",
+        "medication_b": "methotrexate",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-IBUPROFEN-METHOTREXATE",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-METHOTREXATE-2026",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          },
+          {
+            "source_id": "SRC-CITED-CFP-MTX-2014",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "ibuprofen",
         "medication_b": "metoprolol",
         "status": "assertion_present_unreviewed",
         "rule_id": "DDI-IBUPROFEN-METOPROLOL",
@@ -334,7 +1741,51 @@
       },
       {
         "medication_a": "ibuprofen",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "ibuprofen",
         "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "ibuprofen",
+        "medication_b": "sertraline",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-IBUPROFEN-SERTRALINE",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-ZOLOFT-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "ibuprofen",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "ibuprofen",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "ibuprofen",
+        "medication_b": "tramadol",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -371,7 +1822,21 @@
       },
       {
         "medication_a": "levothyroxine",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "levothyroxine",
         "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "levothyroxine",
+        "medication_b": "nitroglycerin",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -391,6 +1856,34 @@
             "source_quality_assessments": []
           }
         ]
+      },
+      {
+        "medication_a": "levothyroxine",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "levothyroxine",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "levothyroxine",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "levothyroxine",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
       },
       {
         "medication_a": "levothyroxine",
@@ -426,6 +1919,13 @@
       },
       {
         "medication_a": "lisinopril",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "lisinopril",
         "medication_b": "metoprolol",
         "status": "assertion_present_unreviewed",
         "rule_id": "DDI-LISINOPRIL-METOPROLOL",
@@ -442,7 +1942,42 @@
       },
       {
         "medication_a": "lisinopril",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "lisinopril",
         "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "lisinopril",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "lisinopril",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "lisinopril",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "lisinopril",
+        "medication_b": "tramadol",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -456,6 +1991,13 @@
       },
       {
         "medication_a": "metformin",
+        "medication_b": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metformin",
         "medication_b": "metoprolol",
         "status": "not_evaluated",
         "rule_id": null,
@@ -463,7 +2005,42 @@
       },
       {
         "medication_a": "metformin",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metformin",
         "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metformin",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metformin",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metformin",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metformin",
+        "medication_b": "tramadol",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -476,6 +2053,85 @@
         "evidence": []
       },
       {
+        "medication_a": "methotrexate",
+        "medication_b": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "methotrexate",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "methotrexate",
+        "medication_b": "omeprazole",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-METHOTREXATE-OMEPRAZOLE",
+        "evidence_strength": "limited",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-PFIZERCA-METHOTREXATE",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          },
+          {
+            "source_id": "SRC-CITED-FDA-METHOTREXATE-2026",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "methotrexate",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "methotrexate",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "methotrexate",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "methotrexate",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "methotrexate",
+        "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metoprolol",
+        "medication_b": "nitroglycerin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
         "medication_a": "metoprolol",
         "medication_b": "omeprazole",
         "status": "not_evaluated",
@@ -484,7 +2140,114 @@
       },
       {
         "medication_a": "metoprolol",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metoprolol",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metoprolol",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metoprolol",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "metoprolol",
         "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "nitroglycerin",
+        "medication_b": "omeprazole",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "nitroglycerin",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "nitroglycerin",
+        "medication_b": "sildenafil",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-NITROGLYCERIN-SILDENAFIL",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-VIAGRA-2017",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "nitroglycerin",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "nitroglycerin",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "nitroglycerin",
+        "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "omeprazole",
+        "medication_b": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "omeprazole",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "omeprazole",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "omeprazole",
+        "medication_b": "tramadol",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -504,20 +2267,151 @@
             "source_quality_assessments": []
           }
         ]
+      },
+      {
+        "medication_a": "sertraline",
+        "medication_b": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "sertraline",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "sertraline",
+        "medication_b": "tramadol",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-SERTRALINE-TRAMADOL",
+        "evidence_strength": "strong",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-ULTRAM-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          },
+          {
+            "source_id": "SRC-CITED-FDA-ZOLOFT-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "sertraline",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-SERTRALINE-WARFARIN",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-ZOLOFT-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "sildenafil",
+        "medication_b": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "sildenafil",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "sildenafil",
+        "medication_b": "warfarin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "simvastatin",
+        "medication_b": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication_a": "simvastatin",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-SIMVASTATIN-WARFARIN",
+        "evidence_strength": "moderate",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-ZOCOR-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
+      },
+      {
+        "medication_a": "tramadol",
+        "medication_b": "warfarin",
+        "status": "assertion_present_unreviewed",
+        "rule_id": "DDI-TRAMADOL-WARFARIN",
+        "evidence_strength": "limited",
+        "evidence": [
+          {
+            "source_id": "SRC-CITED-FDA-ULTRAM-2023",
+            "source_verification_state": "citation_recorded_pending_review",
+            "source_quality_assessment": "not_assessed",
+            "source_quality_tier": "not_assessed",
+            "source_quality_assessments": []
+          }
+        ]
       }
     ]
   },
   "drug_food_guidance": {
     "counts": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 4,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 7,
+      "not_evaluated": 20,
       "conflicting_evidence": 0
     },
     "medications": [
       {
         "medication": "acetaminophen",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "alprazolam",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "amiodarone",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "amlodipine",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -536,6 +2430,30 @@
       },
       {
         "medication": "atorvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "calcium carbonate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "clarithromycin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "clopidogrel",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "digoxin",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -581,7 +2499,19 @@
         ]
       },
       {
+        "medication": "methotrexate",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
         "medication": "metoprolol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "nitroglycerin",
         "status": "not_evaluated",
         "rule_id": null,
         "evidence": []
@@ -601,6 +2531,30 @@
         ]
       },
       {
+        "medication": "sertraline",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "sildenafil",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "simvastatin",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
+        "medication": "tramadol",
+        "status": "not_evaluated",
+        "rule_id": null,
+        "evidence": []
+      },
+      {
         "medication": "warfarin",
         "status": "assertion_present_unreviewed",
         "rule_id": "FOOD-WARFARIN",
@@ -618,15 +2572,33 @@
   },
   "drug_food_interactions": {
     "counts": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 11,
+      "not_evaluated": 24,
       "conflicting_evidence": 0
     },
     "medications": [
       {
         "medication": "acetaminophen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "alprazolam",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "amiodarone",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "amlodipine",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -645,6 +2617,30 @@
       },
       {
         "medication": "atorvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "calcium carbonate",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "clarithromycin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "clopidogrel",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "digoxin",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -674,13 +2670,49 @@
         "assertions": []
       },
       {
+        "medication": "methotrexate",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
         "medication": "metoprolol",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
       },
       {
+        "medication": "nitroglycerin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
         "medication": "omeprazole",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "sertraline",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "sildenafil",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "simvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "tramadol",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -698,15 +2730,33 @@
   },
   "contraindications": {
     "counts": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 11,
+      "not_evaluated": 24,
       "conflicting_evidence": 0
     },
     "medications": [
       {
         "medication": "acetaminophen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "alprazolam",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "amiodarone",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "amlodipine",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -725,6 +2775,30 @@
       },
       {
         "medication": "atorvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "calcium carbonate",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "clarithromycin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "clopidogrel",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "digoxin",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -754,13 +2828,49 @@
         "assertions": []
       },
       {
+        "medication": "methotrexate",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
         "medication": "metoprolol",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
       },
       {
+        "medication": "nitroglycerin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
         "medication": "omeprazole",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "sertraline",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "sildenafil",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "simvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "tramadol",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -775,15 +2885,33 @@
   },
   "dosage_references": {
     "counts": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 11,
+      "not_evaluated": 24,
       "conflicting_evidence": 0
     },
     "medications": [
       {
         "medication": "acetaminophen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "alprazolam",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "amiodarone",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "amlodipine",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -802,6 +2930,30 @@
       },
       {
         "medication": "atorvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "calcium carbonate",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "clarithromycin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "clopidogrel",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "digoxin",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -831,13 +2983,49 @@
         "assertions": []
       },
       {
+        "medication": "methotrexate",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
         "medication": "metoprolol",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
       },
       {
+        "medication": "nitroglycerin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
         "medication": "omeprazole",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "sertraline",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "sildenafil",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "simvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "tramadol",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -852,15 +3040,33 @@
   },
   "administration_instructions": {
     "counts": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 11,
+      "not_evaluated": 24,
       "conflicting_evidence": 0
     },
     "medications": [
       {
         "medication": "acetaminophen",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "alprazolam",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "amiodarone",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "amlodipine",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -879,6 +3085,30 @@
       },
       {
         "medication": "atorvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "calcium carbonate",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "clarithromycin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "clopidogrel",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "digoxin",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -908,13 +3138,49 @@
         "assertions": []
       },
       {
+        "medication": "methotrexate",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
         "medication": "metoprolol",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
       },
       {
+        "medication": "nitroglycerin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
         "medication": "omeprazole",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "sertraline",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "sildenafil",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "simvastatin",
+        "status": "not_evaluated",
+        "assertion_count": 0,
+        "assertions": []
+      },
+      {
+        "medication": "tramadol",
         "status": "not_evaluated",
         "assertion_count": 0,
         "assertions": []
@@ -928,9 +3194,9 @@
     ]
   },
   "evidence_appraisal": {
-    "source_count": 3,
+    "source_count": 17,
     "source_quality_assessed": 0,
-    "source_quality_not_assessed": 3,
+    "source_quality_not_assessed": 17,
     "note": "Source identity/integrity, source quality, and assertion evidence strength are distinct attributes."
   },
   "interpretation": [

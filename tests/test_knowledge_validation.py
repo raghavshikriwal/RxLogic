@@ -23,9 +23,10 @@ def test_migrated_interaction_rules_have_stable_ids_and_review_state():
 
 def test_legacy_source_labels_are_explicitly_unverified():
     data = json.loads((ROOT / "evidence_sources.json").read_text(encoding="utf-8"))
-    assert data["sources"]
-    assert all(source["verification_status"] == "unverified" for source in data["sources"])
-    assert all(source["locator"] is None for source in data["sources"])
+    legacy = [s for s in data["sources"] if s["source_id"].startswith("SRC-LEGACY-")]
+    assert legacy
+    assert all(source["verification_status"] == "unverified" for source in legacy)
+    assert all(source["locator"] is None for source in legacy)
 
 
 def test_rule_engine_uses_stable_ids_for_migrated_dataset():

@@ -11,6 +11,50 @@
   },
   "medications": [
     {
+      "canonical_name": "acetaminophen",
+      "rxcui": "161",
+      "aliases": [
+        "paracetamol"
+      ],
+      "identity_status": "added_task08_identity_only",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/161",
+      "clinical_coverage_status": "identity_only_not_evaluated"
+    },
+    {
+      "canonical_name": "alprazolam",
+      "rxcui": "596",
+      "aliases": [
+        "xanax",
+        "alprax"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/596",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "amiodarone",
+      "rxcui": "703",
+      "aliases": [
+        "cordarone",
+        "pacerone"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/703",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "amlodipine",
+      "rxcui": "17767",
+      "aliases": [
+        "norvasc",
+        "amlodac",
+        "stamlo"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/17767",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
       "canonical_name": "amoxicillin",
       "rxcui": "723",
       "aliases": [
@@ -44,6 +88,49 @@
       ],
       "identity_status": "existing_catalog_entry",
       "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "calcium carbonate",
+      "rxcui": "1897",
+      "aliases": [
+        "tums"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/1897",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "clarithromycin",
+      "rxcui": "21212",
+      "aliases": [
+        "biaxin",
+        "klacid"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/21212",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "clopidogrel",
+      "rxcui": "32968",
+      "aliases": [
+        "plavix",
+        "clopilet",
+        "deplatt"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/32968",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "digoxin",
+      "rxcui": "3407",
+      "aliases": [
+        "lanoxin"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/3407",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
     },
     {
       "canonical_name": "ibuprofen",
@@ -91,6 +178,18 @@
       "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
     },
     {
+      "canonical_name": "methotrexate",
+      "rxcui": "6851",
+      "aliases": [
+        "trexall",
+        "rheumatrex",
+        "folitrax"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/6851",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
       "canonical_name": "metoprolol",
       "rxcui": "6918",
       "aliases": [
@@ -105,6 +204,18 @@
       "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
     },
     {
+      "canonical_name": "nitroglycerin",
+      "rxcui": "4917",
+      "aliases": [
+        "nitrostat",
+        "nitroglycerine",
+        "glyceryl trinitrate"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/4917",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
       "canonical_name": "omeprazole",
       "rxcui": "7646",
       "aliases": [
@@ -116,6 +227,49 @@
       "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
     },
     {
+      "canonical_name": "sertraline",
+      "rxcui": "36437",
+      "aliases": [
+        "zoloft"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/36437",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "sildenafil",
+      "rxcui": "136411",
+      "aliases": [
+        "viagra",
+        "revatio",
+        "cenforce"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/136411",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "simvastatin",
+      "rxcui": "36567",
+      "aliases": [
+        "zocor"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/36567",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
+      "canonical_name": "tramadol",
+      "rxcui": "10689",
+      "aliases": [
+        "ultram",
+        "tramal"
+      ],
+      "identity_status": "added_task13_rule_expansion",
+      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/10689",
+      "clinical_coverage_status": "cited_assertions_unreviewed_partial"
+    },
+    {
       "canonical_name": "warfarin",
       "rxcui": "11289",
       "aliases": [
@@ -124,16 +278,6 @@
       ],
       "identity_status": "existing_catalog_entry",
       "clinical_coverage_status": "legacy_assertions_unreviewed_partial"
-    },
-    {
-      "canonical_name": "acetaminophen",
-      "rxcui": "161",
-      "aliases": [
-        "paracetamol"
-      ],
-      "identity_status": "added_task08_identity_only",
-      "identity_reference": "https://purl.bioontology.org/ontology/RXNORM/161",
-      "clinical_coverage_status": "identity_only_not_evaluated"
     }
   ],
   "interpretation": [

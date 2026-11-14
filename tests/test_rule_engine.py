@@ -325,8 +325,8 @@ def test_find_unknown_medications_flags_uncovered_drug(engine):
 
 
 def test_find_unknown_medications_preserves_input_order_and_original_spelling(engine):
-    meds = [_med("Zolpidem"), _med("Warfarin"), _med("Xanax")]
-    assert engine.find_unknown_medications(meds) == ["Zolpidem", "Xanax"]
+    meds = [_med("Zolpidem"), _med("Warfarin"), _med("Trazodone")]
+    assert engine.find_unknown_medications(meds) == ["Zolpidem", "Trazodone"]
 
 
 def test_find_unknown_medications_deduplicates_case_insensitively(engine):
@@ -360,11 +360,11 @@ def test_assess_coverage_is_complete_when_every_drug_is_known(engine):
 
 
 def test_assess_coverage_lists_unknown_drugs_as_unchecked(engine):
-    coverage = engine.assess_coverage([_med("Warfarin"), _med("Zolpidem"), _med("Xanax")])
+    coverage = engine.assess_coverage([_med("Warfarin"), _med("Zolpidem"), _med("Trazodone")])
 
     assert coverage.total == 3
     assert coverage.checked == 1
-    assert coverage.unchecked == ("Zolpidem", "Xanax")
+    assert coverage.unchecked == ("Zolpidem", "Trazodone")
 
 
 def test_assess_coverage_counts_distinct_drugs_case_insensitively(engine):

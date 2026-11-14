@@ -77,9 +77,9 @@ def test_reviewed_and_conflicting_assertion_states_are_preserved(tmp_path):
 def test_current_dataset_inventory_counts_expected_pairs():
     root = Path(__file__).resolve().parent.parent / "knowledge"
     report = build_coverage_report(root)
-    assert report["medication_count"] == 11
-    assert report["drug_drug_interactions"]["counts"]["total"] == 55
-    assert report["drug_drug_interactions"]["counts"]["assertion_present_unreviewed"] == 12
-    assert report["drug_drug_interactions"]["counts"]["not_evaluated"] == 43
+    assert report["medication_count"] == 24
+    assert report["drug_drug_interactions"]["counts"]["total"] == 276
+    assert report["drug_drug_interactions"]["counts"]["assertion_present_unreviewed"] == 40
+    assert report["drug_drug_interactions"]["counts"]["not_evaluated"] == 236
     assert report["drug_food_guidance"]["counts"]["assertion_present_unreviewed"] == 4
-    assert report["drug_food_guidance"]["counts"]["not_evaluated"] == 7
+    assert report["drug_food_guidance"]["counts"]["not_evaluated"] == 20

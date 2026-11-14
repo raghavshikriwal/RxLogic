@@ -12,48 +12,48 @@
   },
   "validation_errors": [],
   "catalog_audit": {
-    "catalog_medication_count": 11,
-    "runtime_medication_count": 11,
+    "catalog_medication_count": 24,
+    "runtime_medication_count": 24,
     "catalog_entries_missing_from_runtime": [],
     "rxcui_mismatches": [],
     "runtime_entries_missing_from_catalog": [],
     "passed": true
   },
   "coverage_summary": {
-    "medication_count": 11,
+    "medication_count": 24,
     "drug_drug_interactions": {
-      "total": 55,
-      "assertion_present_unreviewed": 12,
+      "total": 276,
+      "assertion_present_unreviewed": 40,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 43,
+      "not_evaluated": 236,
       "conflicting_evidence": 0
     },
     "drug_food_guidance": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 4,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 7,
+      "not_evaluated": 20,
       "conflicting_evidence": 0
     },
     "contraindications": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 11,
+      "not_evaluated": 24,
       "conflicting_evidence": 0
     },
     "dosage_references": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 11,
+      "not_evaluated": 24,
       "conflicting_evidence": 0
     },
     "administration_instructions": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 11,
+      "not_evaluated": 24,
       "conflicting_evidence": 0
     }
   },

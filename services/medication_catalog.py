@@ -16,6 +16,19 @@ DEFAULT_CATALOG_PATH = PROJECT_ROOT / "knowledge" / "medication_catalog.json"
 _NAME = re.compile(r"^[a-z][a-z0-9 .'-]{1,99}$")
 _RXCUI = re.compile(r"^[0-9]{1,12}$")
 
+COVERAGE_STATUSES = frozenset({
+    "identity_only_not_evaluated",
+    "legacy_assertions_unreviewed_partial",
+    "cited_assertions_unreviewed_partial",
+})
+IDENTITY_STATUSES = frozenset({
+    "existing_catalog_entry",
+    "added_task08_identity_only",
+    "added_task13_rule_expansion",
+})
+# Entries added after the original catalog must say where their identity came from.
+IDENTITY_STATUSES_REQUIRING_REFERENCE = IDENTITY_STATUSES - {"existing_catalog_entry"}
+
 
 class MedicationCatalogError(ValueError):
     """Raised when the identity catalog is malformed or inconsistent."""
@@ -67,11 +80,11 @@ def validate_medication_catalog(payload: Any) -> list[str]:
             if alias in terms or alias in canonical:
                 errors.append(f"duplicate or colliding medication term: {alias}")
             terms[alias] = name
-        if row.get("clinical_coverage_status") not in {"identity_only_not_evaluated", "legacy_assertions_unreviewed_partial"}:
+        if row.get("clinical_coverage_status") not in COVERAGE_STATUSES:
             errors.append(f"{prefix}.clinical_coverage_status is invalid")
-        if row.get("identity_status") not in {"existing_catalog_entry", "added_task08_identity_only"}:
+        if row.get("identity_status") not in IDENTITY_STATUSES:
             errors.append(f"{prefix}.identity_status is invalid")
-        if row.get("identity_status") == "added_task08_identity_only" and not str(row.get("identity_reference", "")).startswith("https://"):
+        if row.get("identity_status") in IDENTITY_STATUSES_REQUIRING_REFERENCE and not str(row.get("identity_reference", "")).startswith("https://"):
             errors.append(f"{prefix}.identity_reference must be HTTPS")
     for term in terms:
         if term in canonical:

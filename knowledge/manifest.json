@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
-  "knowledge_release": "rxlogic-task08-development-2026-11-13",
+  "knowledge_release": "rxlogic-task13-development-2026-11-14",
   "release_status": "development_unreviewed",
-  "created_date": "2026-11-13",
+  "created_date": "2026-11-14",
   "datasets": {
     "interaction_rules": {
       "path": "interaction_rules.json",
@@ -28,7 +28,7 @@
   "publication_policy": {
     "runtime_may_load_unreviewed_records": true,
     "clinical_use_permitted": false,
-    "note": "Existing records are retained for educational/demo compatibility. Every migrated assertion remains needs_clinical_review; legacy source labels are not verified citations. Task 08 adds identity-only acetaminophen/paracetamol catalog coverage; it adds no clinical assertions for this medication."
+    "note": "Existing records are retained for educational/demo compatibility. Every migrated assertion remains needs_clinical_review; legacy source labels are not verified citations. Task 08 adds identity-only acetaminophen/paracetamol catalog coverage; it adds no clinical assertions for this medication. Task 13 adds 13 medications and 28 label-cited, unreviewed interaction rules; citations are recorded but pending clinical review."
   },
   "task08_schema_version": "1.0.0"
 }

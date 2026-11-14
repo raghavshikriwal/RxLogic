@@ -1,5 +1,5 @@
 {
-  "source_note": "RxNav's live Drug-Drug Interaction API was permanently discontinued by NLM in Jan 2024. This file is a manually curated rule set based on well-documented, publicly known interactions (ONC High-Priority style pairs), cross-referenced against openFDA label warnings. See README Scope & Limitations.",
+  "source_note": "RxNav's live Drug-Drug Interaction API was permanently discontinued by NLM in Jan 2024. This file is a manually curated rule set based on well-documented, publicly known interactions (ONC High-Priority style pairs), cross-referenced against openFDA label warnings. See README Scope & Limitations. Task 13 adds 28 rules that each cite FDA/DailyMed labels or regulator notices (see evidence_sources.json, SRC-CITED-*); all remain needs_clinical_review and are not clinically validated.",
   "medications": {
     "metformin": "6809",
     "aspirin": "1191",
@@ -11,7 +11,20 @@
     "metoprolol": "6918",
     "amoxicillin": "723",
     "levothyroxine": "10582",
-    "acetaminophen": "161"
+    "acetaminophen": "161",
+    "simvastatin": "36567",
+    "amlodipine": "17767",
+    "clopidogrel": "32968",
+    "calcium carbonate": "1897",
+    "methotrexate": "6851",
+    "sildenafil": "136411",
+    "nitroglycerin": "4917",
+    "digoxin": "3407",
+    "amiodarone": "703",
+    "tramadol": "10689",
+    "alprazolam": "596",
+    "sertraline": "36437",
+    "clarithromycin": "21212"
   },
   "interaction_rules": [
     {
@@ -186,8 +199,412 @@
       ],
       "review_status": "needs_clinical_review",
       "jurisdiction": "unspecified"
+    },
+    {
+      "medication_a": "amlodipine",
+      "medication_b": "simvastatin",
+      "severity": "moderate",
+      "evidence": "strong",
+      "description": "Amlodipine increases simvastatin exposure (CYP3A4), raising the risk of myopathy and rhabdomyolysis; the simvastatin label limits the daily simvastatin dose (20 mg) when it is used with amlodipine.",
+      "source": "FDA ZOCOR label (2023); DailyMed simvastatin SPL; MHRA Drug Safety Update (Oct 2012)",
+      "rule_id": "DDI-AMLODIPINE-SIMVASTATIN",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-ZOCOR-2023",
+        "SRC-CITED-DAILYMED-SIMVASTATIN",
+        "SRC-CITED-MHRA-SIMVASTATIN-2012"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "amiodarone",
+      "medication_b": "simvastatin",
+      "severity": "moderate",
+      "evidence": "strong",
+      "description": "Amiodarone raises simvastatin plasma concentrations, increasing the risk of myopathy and rhabdomyolysis; the labels cap the co-administered simvastatin dose (20 mg/day).",
+      "source": "FDA ZOCOR label (2023); DailyMed simvastatin and amiodarone SPLs",
+      "rule_id": "DDI-AMIODARONE-SIMVASTATIN",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-ZOCOR-2023",
+        "SRC-CITED-DAILYMED-SIMVASTATIN",
+        "SRC-CITED-DAILYMED-AMIODARONE"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "simvastatin",
+      "medication_b": "warfarin",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "Simvastatin can prolong the INR in patients taking coumarin anticoagulants; the simvastatin label advises INR monitoring when simvastatin is started, stopped, or its dose is changed.",
+      "source": "FDA ZOCOR label (2023), section 7.2",
+      "rule_id": "DDI-SIMVASTATIN-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-ZOCOR-2023"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "clarithromycin",
+      "medication_b": "simvastatin",
+      "severity": "severe",
+      "evidence": "strong",
+      "description": "Clarithromycin strongly inhibits CYP3A4 and markedly raises simvastatin exposure; concomitant use is contraindicated because of the risk of myopathy and rhabdomyolysis.",
+      "source": "FDA BIAXIN label (2018), section 4; FDA ZOCOR label (2023)",
+      "rule_id": "DDI-CLARITHROMYCIN-SIMVASTATIN",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-BIAXIN-2018",
+        "SRC-CITED-FDA-ZOCOR-2023"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "clopidogrel",
+      "medication_b": "omeprazole",
+      "severity": "moderate",
+      "evidence": "strong",
+      "description": "Omeprazole inhibits CYP2C19 and reduces formation of clopidogrel's active metabolite, diminishing its antiplatelet effect, including when doses are taken 12 hours apart; the clopidogrel label advises avoiding concomitant use of omeprazole or esomeprazole.",
+      "source": "FDA PLAVIX label (2019), sections 5.1 and 7.1",
+      "rule_id": "DDI-CLOPIDOGREL-OMEPRAZOLE",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-PLAVIX-2019"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "clopidogrel",
+      "medication_b": "ibuprofen",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "Concomitant NSAID use with clopidogrel increases the risk of gastrointestinal bleeding.",
+      "source": "FDA PLAVIX label (2019), section 7.3",
+      "rule_id": "DDI-CLOPIDOGREL-IBUPROFEN",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-PLAVIX-2019"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "clopidogrel",
+      "medication_b": "warfarin",
+      "severity": "severe",
+      "evidence": "moderate",
+      "description": "Clopidogrel did not change S-warfarin pharmacokinetics or INR in studies, but co-administration increases bleeding risk through independent effects on hemostasis.",
+      "source": "FDA PLAVIX label (2019), section 7.4",
+      "rule_id": "DDI-CLOPIDOGREL-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-PLAVIX-2019"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "clopidogrel",
+      "medication_b": "sertraline",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "SSRIs and SNRIs, including sertraline, impair platelet function and add to the bleeding risk of clopidogrel.",
+      "source": "FDA PLAVIX label (2019), section 7.5; FDA ZOLOFT label (2023), section 5.3",
+      "rule_id": "DDI-CLOPIDOGREL-SERTRALINE",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-PLAVIX-2019",
+        "SRC-CITED-FDA-ZOLOFT-2023"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "calcium carbonate",
+      "medication_b": "levothyroxine",
+      "severity": "moderate",
+      "evidence": "strong",
+      "separation_minutes": 240,
+      "description": "Calcium carbonate can bind levothyroxine in the gut and reduce its absorption, risking hypothyroidism; the label advises administering levothyroxine at least 4 hours apart from calcium carbonate.",
+      "source": "FDA SYNTHROID label (2022), section 7",
+      "rule_id": "DDI-CALCIUM-CARBONATE-LEVOTHYROXINE",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-SYNTHROID-2022"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "ibuprofen",
+      "medication_b": "methotrexate",
+      "severity": "severe",
+      "evidence": "moderate",
+      "description": "NSAIDs can elevate and prolong methotrexate levels, with reports of severe and sometimes fatal bone-marrow and gastrointestinal toxicity, mainly with high-dose methotrexate; caution and monitoring are advised at lower doses.",
+      "source": "FDA methotrexate label (2026), section 7.1; Can Fam Physician 2014, Table 1",
+      "rule_id": "DDI-IBUPROFEN-METHOTREXATE",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-METHOTREXATE-2026",
+        "SRC-CITED-CFP-MTX-2014"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "aspirin",
+      "medication_b": "methotrexate",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "Salicylates, notably high-dose aspirin, can raise methotrexate exposure and the risk of bone-marrow suppression and other methotrexate toxicity.",
+      "source": "FDA methotrexate label (2026), section 7.1; Can Fam Physician 2014, Table 1",
+      "rule_id": "DDI-ASPIRIN-METHOTREXATE",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-METHOTREXATE-2026",
+        "SRC-CITED-CFP-MTX-2014"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "amoxicillin",
+      "medication_b": "methotrexate",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "Penicillins can reduce renal clearance of methotrexate, raising its levels and the risk of haematologic and gastrointestinal toxicity; close monitoring is advised.",
+      "source": "FDA methotrexate label (2026), section 7.1; Can Fam Physician 2014, Table 1",
+      "rule_id": "DDI-AMOXICILLIN-METHOTREXATE",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-METHOTREXATE-2026",
+        "SRC-CITED-CFP-MTX-2014"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "methotrexate",
+      "medication_b": "omeprazole",
+      "severity": "moderate",
+      "evidence": "limited",
+      "description": "Proton pump inhibitors may delay methotrexate elimination and raise its levels, mainly at high methotrexate doses; the evidence is largely case reports and population pharmacokinetic data.",
+      "source": "Pfizer Canada methotrexate monograph, section 9.4; FDA methotrexate label (2026), section 7.1",
+      "rule_id": "DDI-METHOTREXATE-OMEPRAZOLE",
+      "evidence_source_ids": [
+        "SRC-CITED-PFIZERCA-METHOTREXATE",
+        "SRC-CITED-FDA-METHOTREXATE-2026"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "nitroglycerin",
+      "medication_b": "sildenafil",
+      "severity": "severe",
+      "evidence": "strong",
+      "description": "Sildenafil potentiates the hypotensive effect of organic nitrates; co-administration, including nitroglycerin, is contraindicated because of the risk of severe, potentially life-threatening hypotension.",
+      "source": "FDA VIAGRA label (2017), sections 4.1 and 7.1",
+      "rule_id": "DDI-NITROGLYCERIN-SILDENAFIL",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-VIAGRA-2017"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "amlodipine",
+      "medication_b": "sildenafil",
+      "severity": "mild",
+      "evidence": "moderate",
+      "description": "Sildenafil produces additional blood-pressure lowering when given with amlodipine; monitor for symptomatic hypotension.",
+      "source": "Pfizer VIAGRA label, section 7.3",
+      "rule_id": "DDI-AMLODIPINE-SILDENAFIL",
+      "evidence_source_ids": [
+        "SRC-CITED-PFIZER-VIAGRA"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "amiodarone",
+      "medication_b": "warfarin",
+      "severity": "severe",
+      "evidence": "strong",
+      "description": "Amiodarone potentiates warfarin's anticoagulant response and can result in serious or fatal bleeding; close INR monitoring is required.",
+      "source": "DailyMed amiodarone SPL, section 7",
+      "rule_id": "DDI-AMIODARONE-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-CITED-DAILYMED-AMIODARONE"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "amiodarone",
+      "medication_b": "metoprolol",
+      "severity": "moderate",
+      "evidence": "strong",
+      "description": "Beta blockers add to amiodarone's negative chronotropic effects, which can cause bradycardia, sinus arrest, and AV block; heart rate should be monitored.",
+      "source": "DailyMed amiodarone SPL, section 7",
+      "rule_id": "DDI-AMIODARONE-METOPROLOL",
+      "evidence_source_ids": [
+        "SRC-CITED-DAILYMED-AMIODARONE"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "amiodarone",
+      "medication_b": "digoxin",
+      "severity": "severe",
+      "evidence": "strong",
+      "description": "Amiodarone raises digoxin concentrations; the label advises reducing digoxin by half or discontinuing it, and monitoring for digoxin toxicity.",
+      "source": "DailyMed amiodarone SPL, section 7",
+      "rule_id": "DDI-AMIODARONE-DIGOXIN",
+      "evidence_source_ids": [
+        "SRC-CITED-DAILYMED-AMIODARONE"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "amiodarone",
+      "medication_b": "atorvastatin",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "Amiodarone can raise plasma concentrations of HMG-CoA reductase inhibitors, including atorvastatin, increasing the risk of myopathy; a lower starting statin dose may be required.",
+      "source": "DailyMed amiodarone SPL, section 7",
+      "rule_id": "DDI-AMIODARONE-ATORVASTATIN",
+      "evidence_source_ids": [
+        "SRC-CITED-DAILYMED-AMIODARONE"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "sertraline",
+      "medication_b": "tramadol",
+      "severity": "severe",
+      "evidence": "strong",
+      "description": "Combining tramadol with serotonergic drugs such as sertraline increases the risk of serotonin syndrome and seizures; use together only when clearly warranted and monitor for symptoms.",
+      "source": "FDA ULTRAM label (2023); FDA ZOLOFT label (2023), section 5.2",
+      "rule_id": "DDI-SERTRALINE-TRAMADOL",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-ULTRAM-2023",
+        "SRC-CITED-FDA-ZOLOFT-2023"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "alprazolam",
+      "medication_b": "tramadol",
+      "severity": "severe",
+      "evidence": "strong",
+      "description": "Boxed warning: opioids used with benzodiazepines or other CNS depressants can cause profound sedation, respiratory depression, coma, and death; concomitant use is reserved for patients without alternatives.",
+      "source": "FDA ULTRAM label (2023), boxed warning",
+      "rule_id": "DDI-ALPRAZOLAM-TRAMADOL",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-ULTRAM-2023"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "tramadol",
+      "medication_b": "warfarin",
+      "severity": "moderate",
+      "evidence": "limited",
+      "description": "Postmarketing reports describe altered warfarin effect, including elevated INR, with tramadol; monitor INR and watch for bleeding.",
+      "source": "FDA ULTRAM label (2023), section 7",
+      "rule_id": "DDI-TRAMADOL-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-ULTRAM-2023"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "sertraline",
+      "medication_b": "warfarin",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "SSRIs increase bleeding risk and can alter anticoagulant effect when combined with warfarin; the label advises careful INR monitoring when sertraline is started or stopped.",
+      "source": "FDA ZOLOFT label (2023), sections 5.3 and 7.1",
+      "rule_id": "DDI-SERTRALINE-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-ZOLOFT-2023"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "aspirin",
+      "medication_b": "sertraline",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "Aspirin and other antiplatelet drugs taken with sertraline increase the risk of bleeding, including gastrointestinal bleeding.",
+      "source": "FDA ZOLOFT label (2023), section 5.3",
+      "rule_id": "DDI-ASPIRIN-SERTRALINE",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-ZOLOFT-2023"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "ibuprofen",
+      "medication_b": "sertraline",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "NSAIDs taken with sertraline increase the risk of bleeding, including gastrointestinal bleeding.",
+      "source": "FDA ZOLOFT label (2023), section 5.3",
+      "rule_id": "DDI-IBUPROFEN-SERTRALINE",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-ZOLOFT-2023"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "clarithromycin",
+      "medication_b": "warfarin",
+      "severity": "severe",
+      "evidence": "moderate",
+      "description": "Clarithromycin can potentiate warfarin's anticoagulant effect, with reports of INR elevation and serious bleeding; INR should be monitored closely.",
+      "source": "FDA BIAXIN label (2018), section 7",
+      "rule_id": "DDI-CLARITHROMYCIN-WARFARIN",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-BIAXIN-2018"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "atorvastatin",
+      "medication_b": "clarithromycin",
+      "severity": "moderate",
+      "evidence": "moderate",
+      "description": "Clarithromycin raises atorvastatin exposure (CYP3A4 inhibition); rare rhabdomyolysis has been reported, and the lowest necessary statin dose and caution are advised.",
+      "source": "FDA BIAXIN label (2018), sections 5.4 and 7",
+      "rule_id": "DDI-ATORVASTATIN-CLARITHROMYCIN",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-BIAXIN-2018"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
+    },
+    {
+      "medication_a": "clarithromycin",
+      "medication_b": "digoxin",
+      "severity": "severe",
+      "evidence": "moderate",
+      "description": "Clarithromycin inhibits P-glycoprotein and can raise digoxin exposure, with reports of digoxin toxicity including potentially fatal arrhythmias; monitor digoxin concentrations.",
+      "source": "FDA BIAXIN label (2018), section 7",
+      "rule_id": "DDI-CLARITHROMYCIN-DIGOXIN",
+      "evidence_source_ids": [
+        "SRC-CITED-FDA-BIAXIN-2018"
+      ],
+      "review_status": "needs_clinical_review",
+      "jurisdiction": "US"
     }
   ],
   "schema_version": "2.0.0",
-  "knowledge_release": "rxlogic-task08-development-2026-11-13"
+  "knowledge_release": "rxlogic-task13-development-2026-11-14"
 }

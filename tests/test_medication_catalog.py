@@ -17,7 +17,7 @@ def test_catalog_validates_and_matches_runtime_medication_map():
     catalog = load_medication_catalog()
     report = audit_catalog_against_runtime(DEFAULT_CATALOG_PATH, ROOT / 'knowledge' / 'interaction_rules.json')
     assert report['passed'] is True
-    assert report['catalog_medication_count'] == 11
+    assert report['catalog_medication_count'] == 24
     assert validate_medication_catalog(catalog) == []
 
 

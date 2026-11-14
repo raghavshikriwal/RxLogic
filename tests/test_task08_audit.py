@@ -9,5 +9,5 @@ def test_task08_audit_passes_structural_identity_and_governance_checks():
     assert report['checks']['acetaminophen_identity_is_registered'] is True
     assert report['checks']['paracetamol_alias_is_registered'] is True
     assert report['clinical_assertions_added_for_acetaminophen'] == 0
-    assert report['coverage_summary']['drug_drug_interactions']['total'] == 55
+    assert report['coverage_summary']['drug_drug_interactions']['total'] == 276
     assert 'not clinical validation' in ' '.join(report['limitations']).lower()

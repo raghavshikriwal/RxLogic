@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "audit_type": "task07_knowledge_governance_structural_audit_not_clinical_validation",
-  "knowledge_release": "rxlogic-task08-development-2026-11-13",
+  "knowledge_release": "rxlogic-task13-development-2026-11-14",
   "passed": true,
   "checks": {
     "knowledge_structurally_valid": true,
@@ -22,47 +22,47 @@
   "clinical_assertions_are_empty_pending_review": true,
   "clinical_assertion_records_present": false,
   "coverage_summary": {
-    "medication_count": 11,
+    "medication_count": 24,
     "drug_drug_interactions": {
-      "total": 55,
-      "assertion_present_unreviewed": 12,
+      "total": 276,
+      "assertion_present_unreviewed": 40,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 43,
+      "not_evaluated": 236,
       "conflicting_evidence": 0
     },
     "drug_food_guidance": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 4,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 7,
+      "not_evaluated": 20,
       "conflicting_evidence": 0
     },
     "contraindications": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 11,
+      "not_evaluated": 24,
       "conflicting_evidence": 0
     },
     "dosage_references": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 11,
+      "not_evaluated": 24,
       "conflicting_evidence": 0
     },
     "administration_instructions": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 11,
+      "not_evaluated": 24,
       "conflicting_evidence": 0
     },
     "drug_food_component_interactions": {
-      "total": 11,
+      "total": 24,
       "assertion_present_unreviewed": 0,
       "assertion_present_reviewed": 0,
-      "not_evaluated": 11,
+      "not_evaluated": 24,
       "conflicting_evidence": 0
     }
   },
