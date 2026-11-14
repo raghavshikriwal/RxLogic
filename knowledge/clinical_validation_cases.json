@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "dataset_id": "rxlogic-clinical-validation-development",
+  "policy": {
+    "contains_patient_data": false,
+    "clinical_reference_cases_require_independent_adjudication": true,
+    "software_invariant_tests_are_not_clinical_evidence": true,
+    "empty_cases_mean_not_evaluated": true
+  },
+  "cases": []
+}

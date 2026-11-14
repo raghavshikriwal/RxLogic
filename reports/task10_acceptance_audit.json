@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0.0",
+  "audit_type": "task10_clinical_validation_protocol_and_software_safety_audit",
+  "passed": true,
+  "checks": {
+    "no_unapproved_findings_emitted": true,
+    "empty_knowledge_fails_closed": true,
+    "missing_knowledge_not_declared_safe": true,
+    "patient_specific_dose_not_generated": true,
+    "clinical_use_not_permitted": true,
+    "validation_dataset_schema_valid": true,
+    "no_unreviewed_case_counted_as_adjudicated": true,
+    "reviewer_ids_present_for_adjudicated_cases": true
+  },
+  "validation_dataset_errors": [],
+  "case_counts": {
+    "total": 0,
+    "clinical_reference": 0,
+    "adjudicated_clinical_reference": 0,
+    "software_invariant": 0
+  },
+  "reviewer_agreement": {
+    "status": "not_evaluable",
+    "n": 0,
+    "raw_agreement": null,
+    "cohens_kappa": null
+  },
+  "clinical_performance_metrics": null,
+  "runtime_probe": {
+    "status": "insufficient_approved_knowledge",
+    "finding_count": 0,
+    "clinical_use_permitted": false,
+    "dosage_safety": {
+      "status": "reference_only_not_a_prescription",
+      "matching_approved_reference_count": 0,
+      "patient_specific_dosing_generated": false,
+      "message": "RxLogic does not calculate, select, or recommend a patient-specific dose."
+    }
+  },
+  "clinical_validation_status": "not_performed",
+  "limitations": [
+    "This audit verifies software behavior and validation-data governance; it does not establish clinical correctness.",
+    "No clinical reference cases or adjudicated labels are fabricated or bundled.",
+    "Reviewer role strings are not identity or credential authentication.",
+    "Clinical performance metrics require independent adjudication and versioned model predictions.",
+    "Clinical use remains prohibited unless separately authorized through appropriate governance and validation."
+  ]
+}
