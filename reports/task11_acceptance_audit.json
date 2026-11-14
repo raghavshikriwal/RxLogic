@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "audit_type": "task11_release_governance_and_dual_control_audit",
+  "passed": true,
+  "checks": {
+    "versioned_dual_control_policy_valid": true,
+    "release_review_log_hash_chain_valid": true,
+    "all_release_manifests_and_datasets_valid": true,
+    "release_review_states_are_verifiable": true,
+    "active_release_has_current_dual_approval": true,
+    "runtime_active_release_loads_fail_closed_integrity_checks": true,
+    "active_pointer_absent_or_active_release_has_current_dual_approval": true,
+    "clinical_use_remains_disabled": true
+  },
+  "release_count": 0,
+  "release_review_event_count": 0,
+  "active_release_status": "no_active_release_fail_closed",
+  "active_release_id": null,
+  "releases": [],
+  "errors": [],
+  "limitations": [
+    "CLI reviewer IDs and role strings are audit declarations, not authenticated identities or verified professional credentials.",
+    "The local SHA-256 hash chain is tamper-evident, not a digital signature or external trust anchor.",
+    "The audit verifies release governance and runtime integrity, not clinical correctness or comprehensive evidence coverage.",
+    "Clinical use remains prohibited; independent clinical validation and separate deployment authorization are not established.",
+    "Concurrent release mutations must be serialized by deployment operations; JSONL storage is not a multi-host transaction system."
+  ]
+}

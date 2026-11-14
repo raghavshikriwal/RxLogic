@@ -9,7 +9,16 @@ from services.clinical_knowledge import validate_clinical_assertions
 from services.evidence_ingestion import EvidenceMetadata, ingest_json_document
 from services.evidence_review import record_review_decision
 from services.knowledge_curation import CurationError, create_candidate, record_clinical_decision
-from services.knowledge_release import create_release, load_active_release, promote_release
+from services.knowledge_release import (
+    create_release, load_active_release, promote_release, record_release_review,
+)
+
+
+def _approve_release(release_id: str, knowledge: Path):
+    record_release_review(release_id, "release-clinical-reviewer", "clinical_pharmacist",
+                          "clinical_release", "approved", "Synthetic test-only review", knowledge)
+    record_release_review(release_id, "release-governance-reviewer", "knowledge_steward",
+                          "governance_release", "approved", "Synthetic test-only governance approval", knowledge)
 
 
 def _accepted_evidence(tmp_path: Path):
@@ -76,6 +85,8 @@ def test_approved_task07_assertion_is_in_release_but_does_not_claim_clinical_use
     record_clinical_decision(candidate["candidate_id"], "approved", "independent-pharmacist", "clinical_pharmacist", "Synthetic test approval", curation, staging)
     knowledge = tmp_path / "knowledge"
     knowledge.mkdir()
+    policy = Path(__file__).resolve().parent.parent / "knowledge" / "release_governance_policy.json"
+    (knowledge / "release_governance_policy.json").write_bytes(policy.read_bytes())
     (knowledge / "interaction_rules.json").write_text(json.dumps({"medications":{"warfarin":"11289"},"interaction_rules":[]}), encoding="utf-8")
     manifest = create_release([candidate["candidate_id"]], "steward", "Synthetic release", curation, staging, knowledge)
     release_file = knowledge / "releases" / manifest["knowledge_release"] / "clinical_assertions.json"
@@ -83,7 +94,8 @@ def test_approved_task07_assertion_is_in_release_but_does_not_claim_clinical_use
     assert len(assertions["contraindications"]) == 1
     assert assertions["contraindications"][0]["review_status"] == "clinically_approved"
     assert manifest["publication_policy"]["clinical_use_permitted"] is False
-    promote_release(manifest["knowledge_release"], "steward", "knowledge_steward", knowledge, curation, staging)
+    _approve_release(manifest["knowledge_release"], knowledge)
+    promote_release(manifest["knowledge_release"], "independent-promoter", "knowledge_steward", knowledge, curation, staging)
     runtime = load_active_release(knowledge)
     assert len(runtime["clinical_assertions"]["contraindications"]) == 1
     assert runtime["manifest"]["publication_policy"]["clinical_use_permitted"] is False
@@ -105,6 +117,8 @@ def test_single_release_can_contain_all_task07_assertion_families(tmp_path):
         candidates.append(candidate)
     knowledge = tmp_path / "knowledge"
     knowledge.mkdir()
+    policy = Path(__file__).resolve().parent.parent / "knowledge" / "release_governance_policy.json"
+    (knowledge / "release_governance_policy.json").write_bytes(policy.read_bytes())
     (knowledge / "interaction_rules.json").write_text(json.dumps({"medications":{"warfarin":"11289"},"interaction_rules":[]}), encoding="utf-8")
     manifest = create_release([item["candidate_id"] for item in candidates], "steward", "Synthetic full-domain release", curation, staging, knowledge)
     bundle_path = knowledge / "releases" / manifest["knowledge_release"]
@@ -115,7 +129,8 @@ def test_single_release_can_contain_all_task07_assertion_families(tmp_path):
     assert any(item["quality"] == "high" and item["rationale"] for item in appraisals)
     assert all(item["clinical_reviewer_role"] == "clinical_pharmacist" for item in appraisals)
     assert all(item["clinical_decision_id"] for item in appraisals)
-    promote_release(manifest["knowledge_release"], "steward", "knowledge_steward", knowledge, curation, staging)
+    _approve_release(manifest["knowledge_release"], knowledge)
+    promote_release(manifest["knowledge_release"], "independent-promoter", "knowledge_steward", knowledge, curation, staging)
     active = load_active_release(knowledge)
     assert all(len(active["clinical_assertions"][key]) == 1 for key in ("drug_food_interactions", "contraindications", "dosage_references", "administration_instructions"))
 

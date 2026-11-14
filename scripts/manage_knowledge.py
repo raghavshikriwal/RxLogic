@@ -19,6 +19,8 @@ from services.knowledge_release import (
     list_releases,
     load_active_release,
     promote_release,
+    record_release_review,
+    release_review_status,
     rollback_release,
 )
 
@@ -52,10 +54,21 @@ def build_parser() -> argparse.ArgumentParser:
     promote.add_argument("release_id")
     promote.add_argument("--actor-id", required=True)
     promote.add_argument("--actor-role", required=True, choices=["knowledge_steward", "administrator"])
+    release_review = commands.add_parser("release-review", help="Record independent release-level clinical/governance review")
+    release_review.add_argument("release_id")
+    release_review.add_argument("--reviewer-id", required=True)
+    release_review.add_argument("--reviewer-role", required=True,
+                                choices=["clinical_pharmacist", "physician", "knowledge_steward", "administrator"])
+    release_review.add_argument("--review-type", required=True, choices=["clinical_release", "governance_release"])
+    release_review.add_argument("--decision", required=True, choices=["approved", "rejected"])
+    release_review.add_argument("--rationale", required=True)
+    review_status = commands.add_parser("review-status", help="Show release-level dual-control review state")
+    review_status.add_argument("release_id")
     rollback = commands.add_parser("rollback", help="Restore a previously promoted release")
     rollback.add_argument("release_id")
     rollback.add_argument("--actor-id", required=True)
     rollback.add_argument("--actor-role", required=True, choices=["knowledge_steward", "administrator"])
+    rollback.add_argument("--rationale", required=True, help="Required reason for the rollback")
     inspect = commands.add_parser("inspect", help="Inspect and verify one immutable release")
     inspect.add_argument("release_id")
     return parser
@@ -89,8 +102,15 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "promote":
             result = promote_release(args.release_id, args.actor_id, args.actor_role,
                                      args.knowledge_root, args.curation_root, args.staging_root)
+        elif args.command == "release-review":
+            result = record_release_review(args.release_id, args.reviewer_id, args.reviewer_role,
+                                           args.review_type, args.decision, args.rationale, args.knowledge_root)
+        elif args.command == "review-status":
+            result = release_review_status(args.release_id, args.knowledge_root)
         elif args.command == "rollback":
-            result = rollback_release(args.release_id, args.actor_id, args.actor_role, args.knowledge_root)
+            result = rollback_release(args.release_id, args.actor_id, args.actor_role,
+                                      args.knowledge_root, args.rationale,
+                                      args.curation_root, args.staging_root)
         else:
             result = inspect_release(args.release_id, args.knowledge_root)
         print(json.dumps(result, ensure_ascii=False, indent=2))

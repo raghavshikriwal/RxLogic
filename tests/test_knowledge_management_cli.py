@@ -68,3 +68,22 @@ def test_cli_exposes_task07_candidate_creation_and_decision(tmp_path, capsys):
                  "--reviewer-role", "physician", "--rationale", "Synthetic independent review"]) == 0
     decision = json.loads(capsys.readouterr().out)
     assert decision["decision"] == "approved"
+
+
+def test_cli_requires_rollback_rationale():
+    with pytest.raises(SystemExit) as exc:
+        main(["rollback", "RXK-20261113T010101Z-ABCDEF12", "--actor-id", "steward",
+              "--actor-role", "knowledge_steward"])
+    assert exc.value.code == 2
+
+
+def test_cli_exposes_release_review_commands(tmp_path, capsys):
+    from scripts.manage_knowledge import build_parser
+    parser = build_parser()
+    args = parser.parse_args([
+        "--knowledge-root", str(tmp_path), "release-review", "RXK-20261113T010101Z-ABCDEF12",
+        "--reviewer-id", "pharmacist-01", "--reviewer-role", "clinical_pharmacist",
+        "--review-type", "clinical_release", "--decision", "approved", "--rationale", "test only",
+    ])
+    assert args.command == "release-review"
+    assert args.review_type == "clinical_release"

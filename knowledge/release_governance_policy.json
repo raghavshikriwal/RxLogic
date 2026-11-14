@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "policy_id": "rxlogic-release-governance-v1",
+  "review_requirements": [
+    {
+      "review_type": "clinical_release",
+      "allowed_roles": ["clinical_pharmacist", "physician"],
+      "minimum_approvals": 1
+    },
+    {
+      "review_type": "governance_release",
+      "allowed_roles": ["administrator", "knowledge_steward"],
+      "minimum_approvals": 1
+    }
+  ],
+  "separation_of_duties": {
+    "release_reviewers_differ_from_release_creator": true,
+    "release_reviewers_differ_from_candidate_authors": true,
+    "release_reviewers_differ_from_candidate_clinical_approvers": true,
+    "clinical_and_governance_reviewers_are_distinct": true,
+    "promoter_differs_from_creator_and_all_reviewers": true
+  },
+  "rollback_requires_rationale": true,
+  "review_log": {
+    "format": "append_only_jsonl",
+    "integrity": "sha256_hash_chain",
+    "manifest_binding": "raw_manifest_sha256"
+  },
+  "identity_and_security_boundary": {
+    "local_cli_authenticates_reviewer_identity": false,
+    "local_cli_authenticates_reviewer_credentials": false,
+    "hash_chain_is_digital_signature": false,
+    "note": "Actor IDs and roles are audit declarations. Production use requires authenticated identities, access controls, protected backups, and externally anchored or digitally signed audit records."
+  },
+  "clinical_use_permitted": false
+}

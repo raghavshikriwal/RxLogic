@@ -56,6 +56,12 @@ jobs:
       - name: Run Task 09 structural acceptance audit
         run: python -m scripts.audit_task09 --output reports/task09_acceptance_audit.json
 
+      - name: Run Task 10 clinical validation protocol audit
+        run: python -m scripts.audit_task10 --output reports/task10_acceptance_audit.json
+
+      - name: Run Task 11 release governance audit
+        run: python -m scripts.audit_task11 --output reports/task11_acceptance_audit.json
+
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4

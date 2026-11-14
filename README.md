@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/React-18-61DAFB" alt="React">
   <img src="https://img.shields.io/badge/Flask-3.0-black" alt="Flask">
   <img src="https://img.shields.io/badge/Vite-6-646CFF" alt="Vite">
-  <img src="https://img.shields.io/badge/Project%20Tasks-01--09-success" alt="Tasks 01–09">
+  <img src="https://img.shields.io/badge/Project%20Tasks-01--11-success" alt="Tasks 01–11">
   <img src="https://img.shields.io/badge/Status-Research%20Demonstrator-orange" alt="Research Demonstrator">
 </p>
 
@@ -95,13 +95,18 @@ The knowledge-management architecture includes:
 - Integrity-checked runtime loading.
 - Audit trails for knowledge-management operations.
 
-The development has progressed through nine major implementation tasks, integrating the backend, frontend, reasoning services, medication catalog, knowledge governance, testing infrastructure, and clinical-assessment response architecture.
+The development has progressed through eleven major implementation tasks, integrating the backend, frontend, reasoning services, medication catalog, knowledge governance, testing infrastructure, and clinical-assessment response architecture.
 
 ## Current Project Status
+
+**Task 11 status:** the dual-control release-governance implementation is prepared on the `task-11-knowledge-governance` branch. The focused release/CLI/clinical-knowledge/audit suite passed 46 tests in the implementation environment. Run the full Windows suite before treating Task 11 as finally accepted.
+
 
 | Component | Status |
 |---|---|
 | Tasks 01–09 | Implemented and integrated |
+| Task 10 clinical validation framework | Implemented; clinical validation itself not performed |
+| Task 11 release governance | Implemented on `task-11-knowledge-governance`; full Windows regression pending |
 | Backend | Implemented |
 | React frontend | Implemented |
 | Neuro-symbolic reasoning | Implemented |
@@ -113,18 +118,22 @@ The development has progressed through nine major implementation tasks, integrat
 | Evidence review workflow | Implemented |
 | Controlled knowledge releases | Implemented |
 | Task 09 clinical assessment | Integrated |
-| Python regression suite | 377 tests passed |
+| Task 10 Windows regression suite | 384 tests passed (pre-Task 11 snapshot) |
+| Task 11 focused governance suite | 46 tests passed in implementation environment |
+| Task 11 full regression suite | Pending Windows verification |
 | Frontend production build | Passed |
 | npm dependency audit | 0 vulnerabilities reported |
 | Knowledge structural validation | Passed |
 | Clinical validation | Not performed |
 | Patient-care authorization | Not authorized |
 
-**Latest Task 09 GitHub commit:**
+**Latest recorded `main`-branch commit before Tasks 10–11 work:**
 
 ```text
-cb448f2 Complete RxLogic Task 09
+217a7f9 Update README with complete project documentation
 ```
+
+Task 10 and Task 11 changes are being prepared on a separate working branch and are not yet merged into `main`.
 
 Repository:
 
@@ -830,6 +839,41 @@ The Task 09 full regression suite was reported at **377 passing tests**.
 
 The current Task 09 structural audit reports zero approved runtime clinical assertions. This means the application must not invent clinical findings when no approved assertion is available.
 
+## Task 10 — Clinical Validation and Reliability Framework
+
+Added a structured framework for future independent clinical-reference evaluation and software safety invariants.
+
+Key work:
+
+- Versioned clinical validation case registry, intentionally empty by default.
+- Two-reviewer decision and independent-adjudication requirements.
+- Reviewer agreement and Cohen's kappa reporting.
+- Confusion-matrix and binary metric calculations with undefined values represented as `null`.
+- Runtime probes for fail-closed behavior, missing knowledge, and non-patient-specific dosage handling.
+- Task 10 acceptance audit and validation protocol.
+
+The user-reported Windows Task 10 full regression suite passed **384 tests**. This is software test evidence only. No clinical reference cases were supplied, so clinical validation remains `not_performed` and clinical performance metrics are unavailable.
+
+## Task 11 — Release Governance and Dual Control
+
+Strengthened the existing immutable-release workflow with independent release-level approval and promotion separation.
+
+Key work:
+
+- Versioned release-governance policy.
+- Release manifest context recording creator, candidate authors, and candidate-level clinical approvers.
+- Separate clinical-release and governance-release approvals.
+- Reviewer-role constraints and independent reviewer identities.
+- Promoter separation from all authors and reviewers.
+- Append-only SHA-256 hash-chained release-review log bound to the exact manifest hash.
+- Active-pointer and promotion-event binding to the release-review digest.
+- Runtime verification of current dual-control approvals.
+- Required rollback rationale and renewed evidence/approval checks.
+- `release-review` and `review-status` CLI commands.
+- Task 11 governance acceptance audit.
+
+The focused Task 11 release/CLI/clinical-knowledge/audit suite passed **46 tests** in the implementation environment. The full project regression suite must still be run on Windows before final acceptance. Reviewer IDs and roles are local CLI declarations, not authenticated identities or verified credentials.
+
 ---
 
 # 10. Medication Catalog and Knowledge Coverage
@@ -1175,6 +1219,9 @@ RxLogic/
 │   ├── knowledge_curation.py
 │   ├── knowledge_release.py
 │   ├── knowledge_validation.py
+│   ├── clinical_validation.py
+│   ├── task10_audit.py
+│   ├── task11_audit.py
 │   ├── clinical_knowledge.py
 │   ├── clinical_reasoning.py
 │   ├── food_rules.py
@@ -1193,6 +1240,8 @@ RxLogic/
 │   ├── food_rules.json
 │   ├── clinical_assertions.json
 │   ├── evidence_sources.json
+│   ├── release_governance_policy.json
+│   ├── release_review_events.jsonl (created when reviews are recorded)
 │   ├── ingestion/
 │   ├── staging/
 │   ├── curation/
@@ -1207,7 +1256,9 @@ RxLogic/
 │   ├── audit_medication_catalog.py
 │   ├── audit_task07.py
 │   ├── audit_task08.py
-│   └── audit_task09.py
+│   ├── audit_task09.py
+│   ├── audit_task10.py
+│   └── audit_task11.py
 │
 ├── frontend/
 │   ├── src/
@@ -1238,14 +1289,21 @@ RxLogic/
 │   ├── TASK_08_CHANGELOG.md
 │   ├── TASK_08_ACCEPTANCE_AUDIT.md
 │   ├── TASK_09_CHANGELOG.md
-│   └── TASK_09_API_CONTRACT.md
+│   ├── TASK_09_API_CONTRACT.md
+│   ├── TASK_10_CHANGELOG.md
+│   ├── TASK_10_VALIDATION_PROTOCOL.md
+│   ├── TASK_11_CHANGELOG.md
+│   ├── TASK_11_RELEASE_GOVERNANCE_PROTOCOL.md
+│   └── TASK_11_ACCEPTANCE_AUDIT.md
 │
 ├── reports/
 │   ├── knowledge_coverage.json
 │   ├── medication_catalog_audit.json
 │   ├── task07_acceptance_audit.json
 │   ├── task08_acceptance_audit.json
-│   └── task09_acceptance_audit.json
+│   ├── task09_acceptance_audit.json
+│   ├── task10_acceptance_audit.json
+│   └── task11_acceptance_audit.json
 │
 └── .github/
     └── workflows/
@@ -1434,13 +1492,15 @@ Testing is performed at multiple levels.
 
 ## 19.1 Latest Full Python Regression Suite
 
-The latest Task 09 Windows verification reported:
+The latest user-reported Windows full-suite run before Task 11 reported:
 
 ```text
-377 passed
+384 passed
 0 failed
-24.21 seconds
+109.29 seconds
 ```
+
+That result corresponds to the Task 10 snapshot, before the Task 11 release-governance changes. Run the full suite again on the Task 11 branch.
 
 Command:
 
@@ -1455,13 +1515,21 @@ python -m pytest -q
 | Task 06 | 337 passed |
 | Task 07 | 358 passed |
 | Task 08 | 366 passed |
-| Task 09 | **377 passed** |
+| Task 09 | 377 passed |
+| Task 10 | **384 passed** |
+| Task 11 focused release/CLI/clinical-knowledge/audit suite | **46 passed** (implementation environment; not full-suite total) |
 
 These are historical suite totals from different project snapshots. They must not be added together.
 
-The Task 09 result is the latest reported full-suite result.
+The Task 10 result is the latest user-reported full-suite result. Task 11 has not yet received a full Windows regression run.
 
-## 19.3 Focused Task 09 Verification
+## 19.3 Task 11 Implementation-Environment Verification
+
+The Task 11-focused release, CLI, clinical-knowledge, and audit subset reported **46 passed**. A broader dependency-available subset reported **307 passed**; this deliberately excluded test modules whose runtime dependencies (`flask`, `psycopg2`, and `scikit-fuzzy`) were unavailable in that implementation environment. These are not a full-suite result. Run `python -m pytest -q` in the project's fully provisioned Windows environment before accepting Task 11.
+
+The Task 11 structural audit passed with zero release bundles, zero release-review events, and no active release. This is the expected fail-closed baseline; it does not evidence a clinical approval or active knowledge publication.
+
+## 19.4 Focused Task 09 Verification
 
 | Test category | Result |
 |---|---:|
@@ -1547,6 +1615,12 @@ python -m scripts.audit_task08 --output reports\task08_acceptance_audit.json
 
 # Task 09 audit
 python -m scripts.audit_task09 --output reports\task09_acceptance_audit.json
+
+# Task 10 audit
+python -m scripts.audit_task10 --output reports\task10_acceptance_audit.json
+
+# Task 11 release-governance audit
+python -m scripts.audit_task11 --output reports\task11_acceptance_audit.json
 
 # Frontend verification
 Set-Location frontend
@@ -1634,10 +1708,17 @@ Conflict assessment
 Immutable release
       |
       v
-Explicit promotion
+Independent clinical-release review
       |
       v
-Runtime integrity checks
+Independent governance-release review
+      |
+      v
+Separate steward/administrator promotion
+      |
+      v
+Runtime verifies manifest, promotion chain,
+release-review chain and review digest
 ```
 
 A schema-valid candidate is not automatically clinically correct.
@@ -1711,7 +1792,10 @@ RxLogic uses multiple software-level controls.
 - Independent clinical-review requirement.
 - Conflict assessment.
 - Explicit release promotion.
-- Audited rollback.
+- Dual-control release-level clinical and governance review.
+- Separation between release authors, reviewers, and promoter.
+- Hash-chained release-review audit log bound to the manifest digest.
+- Rationale-bearing, revalidated rollback.
 - Fail-closed active-release loading.
 
 ## Runtime Controls
@@ -1734,15 +1818,15 @@ Do not submit personally identifying information, medical records, or real patie
 
 CLI actor IDs and role strings are audit metadata. They are not authenticated identities.
 
-A production governance deployment would require:
+A production governance deployment would still require:
 
 - Strong identity management.
-- Authenticated reviewer roles.
-- Authorization checks.
-- Secure approval workflows.
-- Dual-control release promotion.
+- Authenticated reviewer roles and credential verification.
+- Authorization checks enforced by an identity provider.
+- Signed release manifests or externally anchored audit records.
 - Operational key management.
-- Protected audit storage.
+- Protected audit storage and backups.
+- Multi-process/multi-host governance coordination.
 
 ---
 
@@ -1764,6 +1848,10 @@ The current project has important limitations.
 12. The hosted deployment does not host Ollama.
 13. The current CLI governance workflow is not a replacement for authenticated institutional review.
 14. No valid active approved knowledge release is configured in the latest reported snapshot.
+15. Local Task 11 reviewer IDs and role strings are not authenticated identities or credential verification.
+16. Task 11's SHA-256 review chain is tamper-evident, not a digital signature or external trust anchor.
+17. Pre-Task-11 releases remain inspectable but must be rebuilt and dual-reviewed before promotion or active runtime loading.
+18. The Task 11 full Windows regression run is still pending in the current branch.
 
 These limitations are intentionally documented rather than hidden.
 
@@ -1951,7 +2039,7 @@ Use synthetic demonstration data only.
 
 RxLogic demonstrates a modular approach to combining neural input interpretation with deterministic symbolic reasoning and evidence-governed knowledge management.
 
-Across Tasks 01–09, the project evolved from an initial medication-reasoning application into a broader software-engineering demonstrator incorporating:
+Across Tasks 01–11, the project evolved from an initial medication-reasoning application into a broader software-engineering demonstrator incorporating:
 
 - Full-stack application architecture.
 - Optional natural-language parsing.
@@ -1968,7 +2056,7 @@ Across Tasks 01–09, the project evolved from an initial medication-reasoning a
 - Clinical-assessment integration.
 - Automated testing and structural audits.
 
-The latest reported Task 09 snapshot passed 377 automated tests and successfully built the frontend.
+The latest user-reported pre-Task-11 Windows snapshot passed 384 automated tests. Task 11 adds a focused 46-test release/CLI/clinical-knowledge/audit suite in the implementation environment; the full Task 11 Windows regression run is pending.
 
 The project also explicitly documents the limits of its current knowledge base and the absence of clinical validation.
 
