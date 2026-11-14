@@ -8,6 +8,11 @@ that cannot run Ollama (e.g. Render). Default behaviour is unchanged.
 - Provider chosen at call time via `LLM_PROVIDER` (`ollama` default | `anthropic`).
 - `tests/test_llm_providers.py` (38 cases), `tests/conftest.py` (isolates LLM env vars so a local `.env` cannot change which backend a test exercises).
 
+## Addendum — free-tier providers
+- `LLM_PROVIDER=gemini` (`GEMINI_API_KEY`, optional `GEMINI_MODEL`, default `gemini-3.8-flash`) and `LLM_PROVIDER=groq` (`GROQ_API_KEY`, optional `GROQ_MODEL`, default `llama-3.1-8b-instant`).
+- Both use one `OpenAICompatibleBackend` (OpenAI chat-completions format over plain `requests`). `LLM_API_NAMES` now includes "Gemini" and "Groq", so `routes/api.py` needs no change.
+- Default model names are unverified against live accounts; on `status=404` set `GEMINI_MODEL` / `GROQ_MODEL`. Free tiers may use submitted text for model improvement: synthetic data only.
+
 ## Changed
 - `LLMParser(backend=None)` replaces `LLMParser(base_url, model)`; schema validation is unchanged and still applies to every backend.
 - `routes/api.py`: the `ExternalAPIError` handler returns `llm_api_error` for any name in `LLM_API_NAMES` (previously only `"Ollama"`). No other change.

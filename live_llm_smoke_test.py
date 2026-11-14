@@ -12,6 +12,11 @@ Run from the project root (same folder as app.py):
     $env:ANTHROPIC_API_KEY = "<your key>"
     python live_llm_smoke_test.py
 
+    # Free hosted providers (PowerShell):
+    $env:LLM_PROVIDER = "gemini"; $env:GEMINI_API_KEY = "<your key>"
+    $env:LLM_PROVIDER = "groq";   $env:GROQ_API_KEY = "<your key>"
+    python live_llm_smoke_test.py
+
 This calls services.llm_parser.parse_medications() directly, skipping Flask,
 routing and the frontend, so a failure here means the LLM layer itself is the
 problem. Use synthetic text only.

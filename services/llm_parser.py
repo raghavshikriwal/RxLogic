@@ -5,7 +5,9 @@ Extracts medication name, dosage, frequency and timing preference from free
 text using a pluggable LLM backend:
 
 * ``ollama``    -- a locally hosted model (default; no data leaves the machine).
-* ``anthropic`` -- Anthropic's hosted Messages API.
+* ``anthropic`` -- Anthropic's hosted Messages API (paid).
+* ``gemini``    -- Google Gemini API via its OpenAI-compatible endpoint (free tier).
+* ``groq``      -- Groq's OpenAI-compatible API (free tier).
 
 The provider is resolved at call time from the environment (``LLM_PROVIDER``),
 so deployment configuration changes never require a code change. Whatever a
@@ -37,15 +39,19 @@ logger = logging.getLogger(__name__)
 
 PROVIDER_OLLAMA = "ollama"
 PROVIDER_ANTHROPIC = "anthropic"
-SUPPORTED_PROVIDERS = (PROVIDER_OLLAMA, PROVIDER_ANTHROPIC)
+PROVIDER_GEMINI = "gemini"
+PROVIDER_GROQ = "groq"
+SUPPORTED_PROVIDERS = (PROVIDER_OLLAMA, PROVIDER_ANTHROPIC, PROVIDER_GEMINI, PROVIDER_GROQ)
 DEFAULT_PROVIDER = PROVIDER_OLLAMA
 
 OLLAMA_API_NAME = "Ollama"
 ANTHROPIC_API_NAME = "Anthropic"
+GEMINI_API_NAME = "Gemini"
+GROQ_API_NAME = "Groq"
 # Every ExternalAPIError.api_name that means "the LLM layer failed". The API
 # layer maps these to the `llm_api_error` code so clients can fall back to
 # structured input.
-LLM_API_NAMES = frozenset({OLLAMA_API_NAME, ANTHROPIC_API_NAME})
+LLM_API_NAMES = frozenset({OLLAMA_API_NAME, ANTHROPIC_API_NAME, GEMINI_API_NAME, GROQ_API_NAME})
 
 # -- Ollama (local) -----------------------------------------------------------
 
@@ -85,6 +91,17 @@ ANTHROPIC_TIMEOUT_SECONDS = 30
 # Sized for the API's 25-medication request cap (a few dozen tokens each).
 ANTHROPIC_MAX_OUTPUT_TOKENS = 1024
 EXTRACTION_TEMPERATURE = 0.0  # deterministic extraction, not creative generation
+
+# -- OpenAI-compatible hosted APIs (Gemini, Groq: both have free tiers) --------
+# Both expose POST {base}/chat/completions with a Bearer key. Model names change
+# often, so they are only defaults: override with GEMINI_MODEL / GROQ_MODEL.
+
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant"
+OPENAI_COMPAT_TIMEOUT_SECONDS = 30
+OPENAI_COMPAT_MAX_OUTPUT_TOKENS = 1024
 
 _SYSTEM_PROMPT = """You are a strict information-extraction module. Given a user's \
 free-text description of medications they take, extract a JSON array of \
@@ -217,6 +234,59 @@ class AnthropicBackend:
         return text
 
 
+class OpenAICompatibleBackend:
+    """Any hosted API that speaks the OpenAI chat-completions format (Gemini,
+    Groq, ...), called over plain HTTPS (no SDK)."""
+
+    def __init__(self, api_name: str, api_url: str, api_key: str, model: str) -> None:
+        if not api_key or not api_key.strip():
+            raise ValueError(f"a {api_name} API key is required")
+        self.api_name = api_name
+        self._api_url = api_url
+        self._api_key = api_key.strip()
+        self.model = model
+
+    def complete(self, system_prompt: str, user_text: str) -> str:
+        try:
+            response = requests.post(
+                self._api_url,
+                headers={
+                    "Authorization": f"Bearer {self._api_key}",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": self.model,
+                    "temperature": EXTRACTION_TEMPERATURE,
+                    "max_tokens": OPENAI_COMPAT_MAX_OUTPUT_TOKENS,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_text},
+                    ],
+                },
+                timeout=OPENAI_COMPAT_TIMEOUT_SECONDS,
+            )
+            response.raise_for_status()
+            payload = response.json()
+        except (requests.RequestException, ValueError) as exc:
+            status_code = getattr(getattr(exc, "response", None), "status_code", None)
+            # Failure class and status only: never the request or response body.
+            logger.warning("%s request failed (%s, status=%s)", self.api_name, type(exc).__name__, status_code)
+            raise ExternalAPIError(api_name=self.api_name, status_code=status_code) from exc
+
+        return self._extract_text(payload)
+
+    def _extract_text(self, payload: Any) -> str:
+        text = None
+        try:
+            text = payload["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError):
+            pass
+        if not isinstance(text, str) or not text.strip():
+            logger.warning("%s response contained no text content", self.api_name)
+            raise ExternalAPIError(api_name=self.api_name)
+        return text
+
+
 def _setting(env: Mapping[str, str], name: str, default: str = "") -> str:
     """Return a trimmed setting, treating unset and blank values as the default."""
     return (env.get(name) or "").strip() or default
@@ -242,6 +312,20 @@ def build_backend(environ: Mapping[str, str] | None = None) -> LLMBackend:
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY is required when LLM_PROVIDER=anthropic")
         return AnthropicBackend(api_key=api_key, model=_setting(env, "ANTHROPIC_MODEL", DEFAULT_ANTHROPIC_MODEL))
+    if provider == PROVIDER_GEMINI:
+        api_key = _setting(env, "GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY is required when LLM_PROVIDER=gemini")
+        return OpenAICompatibleBackend(
+            GEMINI_API_NAME, GEMINI_API_URL, api_key, _setting(env, "GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
+        )
+    if provider == PROVIDER_GROQ:
+        api_key = _setting(env, "GROQ_API_KEY")
+        if not api_key:
+            raise ValueError("GROQ_API_KEY is required when LLM_PROVIDER=groq")
+        return OpenAICompatibleBackend(
+            GROQ_API_NAME, GROQ_API_URL, api_key, _setting(env, "GROQ_MODEL", DEFAULT_GROQ_MODEL)
+        )
     raise ValueError(f"LLM_PROVIDER must be one of: {', '.join(SUPPORTED_PROVIDERS)}")
 
 

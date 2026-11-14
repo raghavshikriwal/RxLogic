@@ -25,10 +25,13 @@ from services.llm_parser import (
     ANTHROPIC_MAX_OUTPUT_TOKENS,
     ANTHROPIC_TIMEOUT_SECONDS,
     DEFAULT_ANTHROPIC_MODEL,
+    GEMINI_API_URL,
+    GROQ_API_URL,
     LLM_API_NAMES,
     AnthropicBackend,
     LLMParser,
     OllamaBackend,
+    OpenAICompatibleBackend,
     build_backend,
     parse_medications,
 )
@@ -284,7 +287,79 @@ def test_failures_never_leak_the_api_key_or_user_text(mock_post, caplog):
 
 
 def test_every_llm_provider_name_is_registered_for_error_mapping():
-    assert LLM_API_NAMES == {"Ollama", "Anthropic"}
+    assert LLM_API_NAMES == {"Ollama", "Anthropic", "Gemini", "Groq"}
+
+
+# -- OpenAI-compatible free providers (Gemini, Groq) ----------------------------
+
+
+def _openai_response(text: str = VALID_ARRAY) -> Mock:
+    response = Mock()
+    response.raise_for_status = Mock()
+    response.json.return_value = {"choices": [{"message": {"role": "assistant", "content": text}}]}
+    return response
+
+
+@pytest.mark.parametrize(
+    "provider, key_var, url, name",
+    [
+        ("gemini", "GEMINI_API_KEY", GEMINI_API_URL, "Gemini"),
+        ("groq", "GROQ_API_KEY", GROQ_API_URL, "Groq"),
+    ],
+)
+class TestOpenAICompatibleProviders:
+    def test_builds_backend_and_overrides_model(self, provider, key_var, url, name):
+        env = {"LLM_PROVIDER": provider.upper(), key_var: f" {API_KEY} ", f"{provider.upper()}_MODEL": "my-model"}
+        backend = build_backend(env)
+
+        assert isinstance(backend, OpenAICompatibleBackend)
+        assert backend.api_name == name and backend.model == "my-model"
+
+    def test_missing_key_is_a_configuration_error(self, provider, key_var, url, name):
+        with pytest.raises(ValueError, match=key_var):
+            build_backend({"LLM_PROVIDER": provider})
+
+    @patch("services.llm_parser.requests.post")
+    def test_request_is_well_formed_and_reply_is_parsed(self, mock_post, provider, key_var, url, name):
+        mock_post.return_value = _openai_response()
+        backend = build_backend({"LLM_PROVIDER": provider, key_var: API_KEY})
+
+        result = LLMParser(backend).parse("sertraline 50 mg every morning")
+
+        assert mock_post.call_args.args == (url,)
+        kwargs = mock_post.call_args.kwargs
+        assert kwargs["headers"]["Authorization"] == f"Bearer {API_KEY}"
+        assert kwargs["json"]["messages"][0]["role"] == "system"
+        assert kwargs["json"]["messages"][1] == {"role": "user", "content": "sertraline 50 mg every morning"}
+        assert [m.name for m in result] == ["sertraline"]
+
+    @pytest.mark.parametrize("payload", [{}, {"choices": []}, {"choices": [{"message": {"content": "  "}}]}, ["x"]])
+    @patch("services.llm_parser.requests.post")
+    def test_reply_without_text_raises_external_api_error(self, mock_post, payload, provider, key_var, url, name):
+        response = Mock()
+        response.raise_for_status = Mock()
+        response.json.return_value = payload
+        mock_post.return_value = response
+
+        with pytest.raises(ExternalAPIError) as excinfo:
+            build_backend({"LLM_PROVIDER": provider, key_var: API_KEY}).complete("s", "u")
+
+        assert excinfo.value.api_name == name
+
+    @pytest.mark.parametrize("status", [401, 404, 429])
+    @patch("services.llm_parser.requests.post")
+    def test_http_errors_carry_status_and_never_leak_secrets(self, mock_post, status, provider, key_var, url, name, caplog):
+        response = Mock()
+        response.raise_for_status.side_effect = requests.HTTPError(response=Mock(status_code=status))
+        mock_post.return_value = response
+
+        with caplog.at_level("DEBUG"):
+            with pytest.raises(ExternalAPIError) as excinfo:
+                build_backend({"LLM_PROVIDER": provider, key_var: API_KEY}).complete("s", "secret user text")
+
+        assert excinfo.value.api_name == name and excinfo.value.status_code == status
+        assert f"status={status}" in caplog.text
+        assert API_KEY not in caplog.text and "secret user text" not in caplog.text
 
 
 @patch("routes.api.parse_medications")
