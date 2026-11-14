@@ -1,31 +1,60 @@
 """
 Natural-language -> structured Medication parsing (Layer 1, Section 4.1).
 
-Calls a small, locally-hosted LLM via Ollama to extract medication
-name, dosage, frequency and timing preference from free text. Output
-is validated against the strict schema before ever reaching the
-symbolic reasoning core (Section 4.1: the LLM never talks to the
-reasoning engine directly with unstructured text).
+Extracts medication name, dosage, frequency and timing preference from free
+text using a pluggable LLM backend:
 
-Section 4.3 litmus test: this module is entirely optional. If Ollama
-is unreachable or this file is never called, the system still works
-end-to-end via structured input straight into
+* ``ollama``    -- a locally hosted model (default; no data leaves the machine).
+* ``anthropic`` -- Anthropic's hosted Messages API.
+
+The provider is resolved at call time from the environment (``LLM_PROVIDER``),
+so deployment configuration changes never require a code change. Whatever a
+backend returns is treated as untrusted text: it is validated against the
+strict schema before reaching the symbolic reasoning core (Section 4.1), and
+this module depends only on ``models.*``.
+
+Section 4.3 litmus test: this module is entirely optional. If the backend is
+unreachable or this file is never called, the system still works end-to-end
+via structured input straight into
 services.reasoning_service.generate_daily_plan().
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import os
-from typing import Any
+from typing import Any, Mapping, Protocol
 
 import requests
 
 from models.exceptions import ExternalAPIError, SchemaValidationError
 from models.schemas import Medication, TimingPreference
 
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "phi3:mini")
+logger = logging.getLogger(__name__)
+
+# -- provider registry --------------------------------------------------------
+
+PROVIDER_OLLAMA = "ollama"
+PROVIDER_ANTHROPIC = "anthropic"
+SUPPORTED_PROVIDERS = (PROVIDER_OLLAMA, PROVIDER_ANTHROPIC)
+DEFAULT_PROVIDER = PROVIDER_OLLAMA
+
+OLLAMA_API_NAME = "Ollama"
+ANTHROPIC_API_NAME = "Anthropic"
+# Every ExternalAPIError.api_name that means "the LLM layer failed". The API
+# layer maps these to the `llm_api_error` code so clients can fall back to
+# structured input.
+LLM_API_NAMES = frozenset({OLLAMA_API_NAME, ANTHROPIC_API_NAME})
+
+# -- Ollama (local) -----------------------------------------------------------
+
+DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434"
+DEFAULT_OLLAMA_MODEL = "phi3:mini"
+# Import-time values are retained for scripts (e.g. diagnose_case2_timeout.py);
+# the parser itself resolves configuration when a backend is built.
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", DEFAULT_OLLAMA_BASE_URL)
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", DEFAULT_OLLAMA_MODEL)
 
 # 60s rather than a tighter bound: local CPU inference speed varies a lot
 # across machines, and this is a hard ceiling for the whole request, not
@@ -45,6 +74,17 @@ REQUEST_TIMEOUT_SECONDS = 60
 # nothing on the happy path but guarantees every request resolves in
 # bounded time instead of tying up a worker indefinitely.
 MAX_OUTPUT_TOKENS = 300
+
+# -- Anthropic (hosted) -------------------------------------------------------
+
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+ANTHROPIC_API_VERSION = "2023-06-01"
+DEFAULT_ANTHROPIC_MODEL = "claude-haiku-5-5"
+# Hosted inference is fast; a short ceiling frees web workers quickly.
+ANTHROPIC_TIMEOUT_SECONDS = 30
+# Sized for the API's 25-medication request cap (a few dozen tokens each).
+ANTHROPIC_MAX_OUTPUT_TOKENS = 1024
+EXTRACTION_TEMPERATURE = 0.0  # deterministic extraction, not creative generation
 
 _SYSTEM_PROMPT = """You are a strict information-extraction module. Given a user's \
 free-text description of medications they take, extract a JSON array of \
@@ -67,43 +107,157 @@ Example output:
 """
 
 
-class LLMParser:
-    """Thin, replaceable interface layer. Everything downstream of this
-    class operates only on typed Medication objects, never on raw text."""
+# -- backends -----------------------------------------------------------------
 
-    def __init__(self, base_url: str = OLLAMA_BASE_URL, model: str = OLLAMA_MODEL):
+
+class LLMBackend(Protocol):
+    """One text-completion provider. Implementations raise ExternalAPIError on
+    any transport, HTTP or response-shape failure and never log user text or
+    credentials."""
+
+    api_name: str
+
+    def complete(self, system_prompt: str, user_text: str) -> str:
+        """Return the model's raw text reply."""
+
+
+class OllamaBackend:
+    """Locally hosted model served by Ollama."""
+
+    api_name = OLLAMA_API_NAME
+
+    def __init__(self, base_url: str = DEFAULT_OLLAMA_BASE_URL, model: str = DEFAULT_OLLAMA_MODEL) -> None:
         self.base_url = base_url
         self.model = model
 
-    def parse(self, user_text: str) -> list[Medication]:
-        raw_json = self._call_ollama(user_text)
-        return self._validate_and_convert(raw_json)
-
-    # -- LLM call -----------------------------------------------------------
-
-    def _call_ollama(self, user_text: str) -> str:
+    def complete(self, system_prompt: str, user_text: str) -> str:
         try:
             response = requests.post(
                 f"{self.base_url}/api/chat",
                 json={
                     "model": self.model,
                     "messages": [
-                        {"role": "system", "content": _SYSTEM_PROMPT},
+                        {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_text},
                     ],
                     "stream": False,
                     "options": {
-                        "temperature": 0.0,  # deterministic extraction, not creative generation
-                        "num_predict": MAX_OUTPUT_TOKENS,  # bounded generation -- see comment above
+                        "temperature": EXTRACTION_TEMPERATURE,
+                        "num_predict": MAX_OUTPUT_TOKENS,  # bounded generation -- see above
                     },
                 },
                 timeout=REQUEST_TIMEOUT_SECONDS,
             )
             response.raise_for_status()
         except requests.RequestException as exc:
-            raise ExternalAPIError(api_name="Ollama", status_code=getattr(exc.response, "status_code", None)) from exc
+            raise ExternalAPIError(api_name=self.api_name, status_code=getattr(exc.response, "status_code", None)) from exc
 
         return response.json()["message"]["content"]
+
+
+class AnthropicBackend:
+    """Anthropic's hosted Messages API, called over plain HTTPS (no SDK)."""
+
+    api_name = ANTHROPIC_API_NAME
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = DEFAULT_ANTHROPIC_MODEL,
+        api_url: str = ANTHROPIC_API_URL,
+    ) -> None:
+        if not api_key or not api_key.strip():
+            raise ValueError("an Anthropic API key is required")
+        self._api_key = api_key.strip()
+        self.model = model
+        self._api_url = api_url
+
+    def complete(self, system_prompt: str, user_text: str) -> str:
+        try:
+            response = requests.post(
+                self._api_url,
+                headers={
+                    "x-api-key": self._api_key,
+                    "anthropic-version": ANTHROPIC_API_VERSION,
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": self.model,
+                    "max_tokens": ANTHROPIC_MAX_OUTPUT_TOKENS,
+                    "temperature": EXTRACTION_TEMPERATURE,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": user_text}],
+                },
+                timeout=ANTHROPIC_TIMEOUT_SECONDS,
+            )
+            response.raise_for_status()
+            payload = response.json()
+        except (requests.RequestException, ValueError) as exc:
+            status_code = getattr(getattr(exc, "response", None), "status_code", None)
+            # Log the failure class and status only: never the request (user
+            # text, API key) or the response body.
+            logger.warning("Anthropic request failed (%s, status=%s)", type(exc).__name__, status_code)
+            raise ExternalAPIError(api_name=self.api_name, status_code=status_code) from exc
+
+        return self._extract_text(payload)
+
+    def _extract_text(self, payload: Any) -> str:
+        """Concatenate the reply's text blocks; anything else is an upstream fault."""
+        blocks = payload.get("content") if isinstance(payload, dict) else None
+        text = ""
+        if isinstance(blocks, list):
+            text = "".join(
+                block["text"]
+                for block in blocks
+                if isinstance(block, dict) and block.get("type") == "text" and isinstance(block.get("text"), str)
+            )
+        if not text.strip():
+            logger.warning("Anthropic response contained no text content")
+            raise ExternalAPIError(api_name=self.api_name)
+        return text
+
+
+def _setting(env: Mapping[str, str], name: str, default: str = "") -> str:
+    """Return a trimmed setting, treating unset and blank values as the default."""
+    return (env.get(name) or "").strip() or default
+
+
+def build_backend(environ: Mapping[str, str] | None = None) -> LLMBackend:
+    """Build the configured backend from environment settings.
+
+    Raises ValueError for an unsupported provider or a missing credential, so a
+    misconfiguration surfaces as a configuration error rather than as a
+    misleading "LLM unreachable" failure.
+    """
+    env = os.environ if environ is None else environ
+    provider = _setting(env, "LLM_PROVIDER", DEFAULT_PROVIDER).lower()
+
+    if provider == PROVIDER_OLLAMA:
+        return OllamaBackend(
+            base_url=_setting(env, "OLLAMA_BASE_URL", DEFAULT_OLLAMA_BASE_URL),
+            model=_setting(env, "OLLAMA_MODEL", DEFAULT_OLLAMA_MODEL),
+        )
+    if provider == PROVIDER_ANTHROPIC:
+        api_key = _setting(env, "ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY is required when LLM_PROVIDER=anthropic")
+        return AnthropicBackend(api_key=api_key, model=_setting(env, "ANTHROPIC_MODEL", DEFAULT_ANTHROPIC_MODEL))
+    raise ValueError(f"LLM_PROVIDER must be one of: {', '.join(SUPPORTED_PROVIDERS)}")
+
+
+# -- parser -------------------------------------------------------------------
+
+
+class LLMParser:
+    """Thin, replaceable interface layer. Everything downstream of this
+    class operates only on typed Medication objects, never on raw text."""
+
+    def __init__(self, backend: LLMBackend | None = None) -> None:
+        self._backend = backend if backend is not None else build_backend()
+
+    def parse(self, user_text: str) -> list[Medication]:
+        raw_json = self._backend.complete(_SYSTEM_PROMPT, user_text)
+        return self._validate_and_convert(raw_json)
 
     # -- validation: raw LLM text -> typed Medication objects ----------------
 

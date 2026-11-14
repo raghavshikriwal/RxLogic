@@ -1,19 +1,20 @@
 """
-Live smoke test for services.llm_parser against a REAL, running Ollama
-instance -- no mocking, unlike tests/test_llm_parser.py.
+Live smoke test for services.llm_parser against the REAL configured provider
+-- no mocking, unlike tests/test_llm_parser.py and tests/test_llm_providers.py.
 
-Run from the RxLogic project root (same folder as app.py):
+Run from the project root (same folder as app.py):
+
+    # Local Ollama (default): `ollama pull phi3:mini` and `ollama serve` first
     python live_llm_smoke_test.py
 
-Prerequisites:
-    - Ollama installed and serving (see steps in chat)
-    - Model pulled: `ollama pull phi3:mini`
-    - Same Python env as the rest of the project
+    # Hosted Anthropic API (PowerShell):
+    $env:LLM_PROVIDER = "anthropic"
+    $env:ANTHROPIC_API_KEY = "<your key>"
+    python live_llm_smoke_test.py
 
-This calls services.llm_parser.parse_medications() directly -- it
-skips Flask, routing, and the built frontend entirely, so a failure
-here means the LLM layer itself is the problem, not something else
-in the stack.
+This calls services.llm_parser.parse_medications() directly, skipping Flask,
+routing and the frontend, so a failure here means the LLM layer itself is the
+problem. Use synthetic text only.
 """
 
 from __future__ import annotations
@@ -23,8 +24,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from models.exceptions import ExternalAPIError, SchemaValidationError
-from services.llm_parser import parse_medications
+from services.llm_parser import build_backend, parse_medications
 
 TEST_CASES = [
     "I take metformin twice a day and just got prescribed aspirin",
@@ -33,28 +38,37 @@ TEST_CASES = [
 ]
 
 
-def main() -> None:
-    print("Testing services.llm_parser.parse_medications() against real Ollama\n")
-    for i, text in enumerate(TEST_CASES, 1):
-        print(f"--- Case {i}: {text!r} ---")
+def main() -> int:
+    try:
+        backend = build_backend()
+    except ValueError as exc:
+        print(f"Configuration error: {exc}")
+        return 2
+
+    print(f"Provider: {backend.api_name} (model: {getattr(backend, 'model', 'n/a')})\n")
+    failures = 0
+    for index, text in enumerate(TEST_CASES, 1):
+        print(f"--- Case {index}: {text!r} ---")
         try:
-            medications = parse_medications(text)
-            for m in medications:
+            for medication in parse_medications(text):
                 print(
-                    f"  -> {m.name} | {m.frequency_per_day}x/day | "
-                    f"timing={m.timing_preference.value} | "
-                    f"dosage_mg={m.dosage_mg} | with_food={m.with_food}"
+                    f"  -> {medication.name} | {medication.frequency_per_day}x/day | "
+                    f"timing={medication.timing_preference.value} | "
+                    f"dosage_mg={medication.dosage_mg} | with_food={medication.with_food}"
                 )
         except ExternalAPIError as exc:
+            failures += 1
             print(f"  ExternalAPIError: {exc}")
-            print("  -> Ollama unreachable/erroring. This is the graceful-degradation")
-            print("     path -- expected if Ollama isn't installed or isn't running.")
+            print("  -> Provider unreachable or rejected the request (check key, model, network).")
         except SchemaValidationError as exc:
+            failures += 1
             print(f"  SchemaValidationError: {exc}")
-            print("  -> Ollama responded, but the output didn't parse as the expected")
-            print("     JSON schema. Worth looking at the raw_output in the error.")
+            print("  -> Provider replied, but the output did not match the expected JSON schema.")
         print()
+
+    print("PASS" if not failures else f"{failures} case(s) failed")
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

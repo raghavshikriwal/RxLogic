@@ -37,7 +37,7 @@ from models.schemas import (
     NameResolution,
     TimingPreference,
 )
-from services.llm_parser import parse_medications
+from services.llm_parser import LLM_API_NAMES, parse_medications
 from services.plan_log_service import get_recent_plans, log_plan
 from services.reasoning_service import generate_daily_plan
 from services.knowledge_release import DEFAULT_KNOWLEDGE_ROOT, KnowledgeReleaseError, load_active_release
@@ -440,13 +440,13 @@ def handle_constraint_unsatisfiable_error(err: ConstraintUnsatisfiableError):
 
 @api.errorhandler(ExternalAPIError)
 def handle_external_api_error(err: ExternalAPIError):
-    # Ollama failures (Layer 1, LLM parser) and RxNav/openFDA failures
-    # (drug-data client) both raise ExternalAPIError, but they are
-    # different failure modes for the user: one means "the AI parser
-    # is down, try structured input instead", the other means "drug
-    # lookup is temporarily unavailable". Keep them distinguishable
-    # past this handler instead of collapsing both into one code.
-    error_code = "llm_api_error" if err.api_name == "Ollama" else "external_api_error"
+    # LLM-provider failures (Layer 1 parser: Ollama or Anthropic) and
+    # RxNav/openFDA failures (drug-data client) all raise ExternalAPIError,
+    # but they are different failure modes for the user: one means "the AI
+    # parser is down, try structured input instead", the other means "drug
+    # lookup is temporarily unavailable". Keep them distinguishable past
+    # this handler instead of collapsing both into one code.
+    error_code = "llm_api_error" if err.api_name in LLM_API_NAMES else "external_api_error"
     return jsonify({"error": error_code, "message": str(err)}), 502
 
 
