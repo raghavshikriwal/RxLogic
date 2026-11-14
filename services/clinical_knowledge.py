@@ -12,6 +12,40 @@ DOMAINS = (
     "drug_food_interactions", "contraindications", "dosage_references",
     "administration_instructions",
 )
+# Descriptive monograph domains. They are optional in a dataset so releases
+# built before they existed remain valid, but every record in them must carry
+# a source locator. They describe a medication; they never drive patient-
+# specific reasoning.
+STATEMENT_DOMAINS = (
+    "medication_overviews", "drug_classes", "therapeutic_categories",
+    "mechanisms_of_action", "approved_indications", "precautions", "adverse_effects",
+)
+EXTENDED_DOMAINS = STATEMENT_DOMAINS + ("drug_supplement_interactions",)
+ALL_DOMAINS = DOMAINS + EXTENDED_DOMAINS
+CANDIDATE_TYPE_TO_DOMAIN = {
+    "drug_food_interaction": "drug_food_interactions",
+    "contraindication": "contraindications",
+    "dosage_reference": "dosage_references",
+    "administration_instruction": "administration_instructions",
+    "medication_overview": "medication_overviews",
+    "drug_class": "drug_classes",
+    "therapeutic_category": "therapeutic_categories",
+    "mechanism_of_action": "mechanisms_of_action",
+    "approved_indication": "approved_indications",
+    "precaution": "precautions",
+    "adverse_effect": "adverse_effects",
+    "drug_supplement_interaction": "drug_supplement_interactions",
+}
+DOMAIN_TO_CANDIDATE_TYPE = {domain: kind for kind, domain in CANDIDATE_TYPE_TO_DOMAIN.items()}
+# Fields that identify "the same assertion" inside one release (duplicate guard).
+DOMAIN_IDENTITY_FIELDS = {
+    "drug_food_interactions": ("medication", "food_or_component"),
+    "contraindications": ("medication", "condition_or_population"),
+    "dosage_references": ("medication", "indication", "population", "route"),
+    "administration_instructions": ("medication", "instruction"),
+    "drug_supplement_interactions": ("medication", "supplement_or_component"),
+    **{domain: ("medication", "statement") for domain in STATEMENT_DOMAINS},
+}
 EVIDENCE_STRENGTHS = frozenset({"strong", "moderate", "limited", "unknown"})
 SEVERITIES = frozenset({"mild", "moderate", "severe", "unknown"})
 SOURCE_TYPES = frozenset({"fda_label", "rxnorm_concept", "dailymed_spl", "clinical_guideline", "systematic_review", "regulatory_notice", "other"})
@@ -26,6 +60,22 @@ class ClinicalKnowledgeValidationError(ValueError):
     """Raised for malformed Task 07 knowledge datasets."""
 
 
+def is_release_usable(record: dict[str, Any]) -> bool:
+    """True only for explicitly approved records with an acceptable conflict state.
+
+    This is the single definition of "approved and usable" shared by clinical
+    reasoning and the medication knowledge API, so the two can never disagree.
+    """
+    return (
+        record.get("review_status") == "clinically_approved"
+        and record.get("conflict_status") in {"no_known_conflict", "resolved"}
+        and isinstance(record.get("evidence_source_ids"), list)
+        and bool(record["evidence_source_ids"])
+        and all(isinstance(ref, str) and ref.strip() for ref in record["evidence_source_ids"])
+        and (record.get("conflict_status") != "resolved" or bool(str(record.get("conflict_resolution", "")).strip()))
+    )
+
+
 def validate_clinical_assertions(
     payload: dict[str, Any], medication_names: set[str] | None = None,
     source_ids: set[str] | None = None,
@@ -37,8 +87,10 @@ def validate_clinical_assertions(
         return ["clinical_assertions: root must be an object"]
     if payload.get("schema_version") != SCHEMA_VERSION:
         errors.append(f"clinical_assertions: schema_version must be {SCHEMA_VERSION}")
-    for domain in DOMAINS:
+    for domain in ALL_DOMAINS:
         records = payload.get(domain)
+        if records is None and domain in EXTENDED_DOMAINS:
+            continue  # optional domain absent from an older dataset
         if not isinstance(records, list):
             errors.append(f"clinical_assertions: {domain} must be an array")
             continue
@@ -92,6 +144,13 @@ def validate_clinical_assertions(
                             errors.append(f"{prefix}: unknown evidence source {ref!r}")
             if not isinstance(record.get("jurisdiction"), str) or not record["jurisdiction"].strip():
                 errors.append(f"{prefix}: jurisdiction is required")
+            locator = record.get("source_locator")
+            if locator is not None and (not isinstance(locator, str) or not locator.strip()):
+                errors.append(f"{prefix}: source_locator must be a non-empty string when present")
+            elif locator is None and domain in EXTENDED_DOMAINS:
+                errors.append(f"{prefix}: source_locator is required")
+            if not isinstance(record.get("applicability_notes", ""), str):
+                errors.append(f"{prefix}: applicability_notes must be a string")
             if domain == "drug_food_interactions":
                 if record.get("severity") not in SEVERITIES:
                     errors.append(f"{prefix}: invalid severity")
@@ -113,6 +172,15 @@ def validate_clinical_assertions(
             elif domain == "administration_instructions":
                 if not isinstance(record.get("instruction"), str) or not record["instruction"].strip():
                     errors.append(f"{prefix}: instruction is required")
+            elif domain in STATEMENT_DOMAINS:
+                if not isinstance(record.get("statement"), str) or not record["statement"].strip():
+                    errors.append(f"{prefix}: statement is required")
+            elif domain == "drug_supplement_interactions":
+                if record.get("severity") not in SEVERITIES:
+                    errors.append(f"{prefix}: invalid severity")
+                for field in ("supplement_or_component", "clinical_effect"):
+                    if not isinstance(record.get(field), str) or not record[field].strip():
+                        errors.append(f"{prefix}: {field} is required")
     return errors
 
 

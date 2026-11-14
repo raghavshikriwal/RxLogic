@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from models.schemas import Medication
+from services.clinical_knowledge import is_release_usable
 
 DEFAULT_ASSERTIONS_PATH = Path(__file__).resolve().parent.parent / "knowledge" / "clinical_assertions.json"
 DOMAINS = (
@@ -24,14 +25,7 @@ def _tokens(values: Iterable[str] | None) -> set[str]:
 
 
 def _is_usable(record: dict[str, Any]) -> bool:
-    return (
-        record.get("review_status") == "clinically_approved"
-        and record.get("conflict_status") in {"no_known_conflict", "resolved"}
-        and isinstance(record.get("evidence_source_ids"), list)
-        and bool(record["evidence_source_ids"])
-        and all(isinstance(ref, str) and ref.strip() for ref in record["evidence_source_ids"])
-        and (record.get("conflict_status") != "resolved" or bool(str(record.get("conflict_resolution", "")).strip()))
-    )
+    return is_release_usable(record)
 
 
 class ClinicalReasoningEngine:

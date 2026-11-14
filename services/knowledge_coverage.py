@@ -11,7 +11,7 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any
 
-from services.clinical_knowledge import DOMAINS, classify_assertion
+from services.clinical_knowledge import ALL_DOMAINS, DOMAINS, EXTENDED_DOMAINS, classify_assertion
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_KNOWLEDGE_ROOT = PROJECT_ROOT / "knowledge"
@@ -128,7 +128,7 @@ def build_coverage_report(knowledge_root: Path = DEFAULT_KNOWLEDGE_ROOT) -> dict
                                   "evidence": _source_summary(list(rule.get("evidence_source_ids", [])), source_map)})
 
     clinical_domains: dict[str, Any] = {}
-    for domain in DOMAINS:
+    for domain in ALL_DOMAINS:
         assertions = clinical.get(domain, []) if isinstance(clinical.get(domain, []), list) else []
         rows = []
         by_medication: dict[str, list[dict[str, Any]]] = {}
@@ -152,7 +152,7 @@ def build_coverage_report(knowledge_root: Path = DEFAULT_KNOWLEDGE_ROOT) -> dict
         clinical_domains[domain] = {"counts": counts(rows), "medications": rows}
 
     return {
-        "schema_version": "1.1.0",
+        "schema_version": "1.2.0",
         "knowledge_release": interactions.get("knowledge_release", "unknown"),
         "inventory_type": "development_knowledge_coverage_not_clinical_validation",
         "medication_count": len(medications),
@@ -167,6 +167,7 @@ def build_coverage_report(knowledge_root: Path = DEFAULT_KNOWLEDGE_ROOT) -> dict
         "contraindications": clinical_domains["contraindications"],
         "dosage_references": clinical_domains["dosage_references"],
         "administration_instructions": clinical_domains["administration_instructions"],
+        "monograph_domains": {domain: clinical_domains[domain] for domain in EXTENDED_DOMAINS},
         "evidence_appraisal": {
             "source_count": len(source_map),
             "source_quality_assessed": sum(bool(item.get("source_quality_assessments")) or bool(item.get("source_quality_tier") and item.get("source_quality_tier") != "not_assessed") for item in source_map.values()),

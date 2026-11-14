@@ -20,7 +20,10 @@ from services.evidence_review import DEFAULT_STAGING_ROOT, EvidenceReviewError, 
 from services.knowledge_curation import (
     CurationError, DEFAULT_CURATION_ROOT, _accepted_evidence, _read_jsonl,
 )
-from services.clinical_knowledge import validate_clinical_assertions, validate_release_evidence_sources
+from services.clinical_knowledge import (
+    ALL_DOMAINS, CANDIDATE_TYPE_TO_DOMAIN, DOMAIN_IDENTITY_FIELDS,
+    validate_clinical_assertions, validate_release_evidence_sources,
+)
 from services.medication_catalog import validate_medication_catalog
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -205,12 +208,7 @@ def create_release(
     selected = [_candidate_and_approval(cid, Path(curation_root), Path(staging_root)) for cid in candidate_ids]
     interactions: list[dict] = []
     foods: list[dict] = []
-    clinical_assertions: dict[str, list[dict]] = {
-        "drug_food_interactions": [],
-        "contraindications": [],
-        "dosage_references": [],
-        "administration_instructions": [],
-    }
+    clinical_assertions: dict[str, list[dict]] = {domain: [] for domain in ALL_DOMAINS}
     seen: set[tuple] = set()
     evidence_sources: dict[str, dict] = {}
     for candidate, approval in selected:
@@ -218,7 +216,7 @@ def create_release(
         rule_id = f"{candidate['candidate_type'].upper()}-{candidate['candidate_id']}"
         evidence_ids = [item.get("source_id") for item in candidate["evidence"] if item.get("source_id")]
         rule.update({"rule_id": rule_id, "evidence_source_ids": sorted(set(evidence_ids)), "review_status": "clinically_approved"})
-        if candidate["candidate_type"] in {"drug_food_interaction", "contraindication", "dosage_reference", "administration_instruction"}:
+        if candidate["candidate_type"] in CANDIDATE_TYPE_TO_DOMAIN:
             rule["assertion_id"] = rule_id
         rule["jurisdiction"] = rule.get("jurisdiction", "unspecified")
         if candidate["candidate_type"] == "interaction_rule":
@@ -233,19 +231,9 @@ def create_release(
                 raise KnowledgeReleaseError(f"duplicate food rule in release: {key}")
             seen.add(key)
             foods.append(rule)
-        elif candidate["candidate_type"] in {"drug_food_interaction", "contraindication", "dosage_reference", "administration_instruction"}:
-            domain = {
-                "drug_food_interaction": "drug_food_interactions",
-                "contraindication": "contraindications",
-                "dosage_reference": "dosage_references",
-                "administration_instruction": "administration_instructions",
-            }[candidate["candidate_type"]]
-            identity_fields = {
-                "drug_food_interaction": ("medication", "food_or_component"),
-                "contraindication": ("medication", "condition_or_population"),
-                "dosage_reference": ("medication", "indication", "population", "route"),
-                "administration_instruction": ("medication", "instruction"),
-            }[candidate["candidate_type"]]
+        elif candidate["candidate_type"] in CANDIDATE_TYPE_TO_DOMAIN:
+            domain = CANDIDATE_TYPE_TO_DOMAIN[candidate["candidate_type"]]
+            identity_fields = DOMAIN_IDENTITY_FIELDS[domain]
             key = (candidate["candidate_type"],) + tuple(str(rule.get(field, "")).casefold() for field in identity_fields)
             if key in seen:
                 raise KnowledgeReleaseError(f"duplicate {candidate['candidate_type']} assertion in release: {key}")

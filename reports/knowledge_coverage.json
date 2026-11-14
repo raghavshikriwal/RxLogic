@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "knowledge_release": "rxlogic-task13-development-2026-11-14",
   "inventory_type": "development_knowledge_coverage_not_clinical_validation",
   "medication_count": 24,
@@ -3192,6 +3192,1248 @@
         "assertions": []
       }
     ]
+  },
+  "monograph_domains": {
+    "medication_overviews": {
+      "counts": {
+        "total": 24,
+        "assertion_present_unreviewed": 0,
+        "assertion_present_reviewed": 0,
+        "not_evaluated": 24,
+        "conflicting_evidence": 0
+      },
+      "medications": [
+        {
+          "medication": "acetaminophen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "alprazolam",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amiodarone",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amlodipine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amoxicillin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "aspirin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "atorvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "calcium carbonate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clarithromycin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clopidogrel",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "digoxin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "ibuprofen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "levothyroxine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "lisinopril",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metformin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "methotrexate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metoprolol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "nitroglycerin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "omeprazole",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sertraline",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sildenafil",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "simvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "tramadol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "warfarin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        }
+      ]
+    },
+    "drug_classes": {
+      "counts": {
+        "total": 24,
+        "assertion_present_unreviewed": 0,
+        "assertion_present_reviewed": 0,
+        "not_evaluated": 24,
+        "conflicting_evidence": 0
+      },
+      "medications": [
+        {
+          "medication": "acetaminophen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "alprazolam",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amiodarone",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amlodipine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amoxicillin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "aspirin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "atorvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "calcium carbonate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clarithromycin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clopidogrel",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "digoxin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "ibuprofen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "levothyroxine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "lisinopril",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metformin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "methotrexate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metoprolol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "nitroglycerin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "omeprazole",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sertraline",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sildenafil",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "simvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "tramadol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "warfarin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        }
+      ]
+    },
+    "therapeutic_categories": {
+      "counts": {
+        "total": 24,
+        "assertion_present_unreviewed": 0,
+        "assertion_present_reviewed": 0,
+        "not_evaluated": 24,
+        "conflicting_evidence": 0
+      },
+      "medications": [
+        {
+          "medication": "acetaminophen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "alprazolam",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amiodarone",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amlodipine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amoxicillin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "aspirin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "atorvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "calcium carbonate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clarithromycin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clopidogrel",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "digoxin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "ibuprofen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "levothyroxine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "lisinopril",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metformin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "methotrexate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metoprolol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "nitroglycerin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "omeprazole",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sertraline",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sildenafil",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "simvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "tramadol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "warfarin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        }
+      ]
+    },
+    "mechanisms_of_action": {
+      "counts": {
+        "total": 24,
+        "assertion_present_unreviewed": 0,
+        "assertion_present_reviewed": 0,
+        "not_evaluated": 24,
+        "conflicting_evidence": 0
+      },
+      "medications": [
+        {
+          "medication": "acetaminophen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "alprazolam",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amiodarone",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amlodipine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amoxicillin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "aspirin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "atorvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "calcium carbonate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clarithromycin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clopidogrel",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "digoxin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "ibuprofen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "levothyroxine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "lisinopril",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metformin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "methotrexate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metoprolol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "nitroglycerin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "omeprazole",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sertraline",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sildenafil",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "simvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "tramadol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "warfarin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        }
+      ]
+    },
+    "approved_indications": {
+      "counts": {
+        "total": 24,
+        "assertion_present_unreviewed": 0,
+        "assertion_present_reviewed": 0,
+        "not_evaluated": 24,
+        "conflicting_evidence": 0
+      },
+      "medications": [
+        {
+          "medication": "acetaminophen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "alprazolam",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amiodarone",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amlodipine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amoxicillin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "aspirin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "atorvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "calcium carbonate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clarithromycin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clopidogrel",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "digoxin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "ibuprofen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "levothyroxine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "lisinopril",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metformin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "methotrexate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metoprolol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "nitroglycerin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "omeprazole",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sertraline",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sildenafil",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "simvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "tramadol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "warfarin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        }
+      ]
+    },
+    "precautions": {
+      "counts": {
+        "total": 24,
+        "assertion_present_unreviewed": 0,
+        "assertion_present_reviewed": 0,
+        "not_evaluated": 24,
+        "conflicting_evidence": 0
+      },
+      "medications": [
+        {
+          "medication": "acetaminophen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "alprazolam",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amiodarone",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amlodipine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amoxicillin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "aspirin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "atorvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "calcium carbonate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clarithromycin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clopidogrel",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "digoxin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "ibuprofen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "levothyroxine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "lisinopril",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metformin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "methotrexate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metoprolol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "nitroglycerin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "omeprazole",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sertraline",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sildenafil",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "simvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "tramadol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "warfarin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        }
+      ]
+    },
+    "adverse_effects": {
+      "counts": {
+        "total": 24,
+        "assertion_present_unreviewed": 0,
+        "assertion_present_reviewed": 0,
+        "not_evaluated": 24,
+        "conflicting_evidence": 0
+      },
+      "medications": [
+        {
+          "medication": "acetaminophen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "alprazolam",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amiodarone",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amlodipine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amoxicillin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "aspirin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "atorvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "calcium carbonate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clarithromycin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clopidogrel",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "digoxin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "ibuprofen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "levothyroxine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "lisinopril",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metformin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "methotrexate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metoprolol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "nitroglycerin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "omeprazole",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sertraline",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sildenafil",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "simvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "tramadol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "warfarin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        }
+      ]
+    },
+    "drug_supplement_interactions": {
+      "counts": {
+        "total": 24,
+        "assertion_present_unreviewed": 0,
+        "assertion_present_reviewed": 0,
+        "not_evaluated": 24,
+        "conflicting_evidence": 0
+      },
+      "medications": [
+        {
+          "medication": "acetaminophen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "alprazolam",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amiodarone",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amlodipine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "amoxicillin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "aspirin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "atorvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "calcium carbonate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clarithromycin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "clopidogrel",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "digoxin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "ibuprofen",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "levothyroxine",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "lisinopril",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metformin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "methotrexate",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "metoprolol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "nitroglycerin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "omeprazole",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sertraline",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "sildenafil",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "simvastatin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "tramadol",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        },
+        {
+          "medication": "warfarin",
+          "status": "not_evaluated",
+          "assertion_count": 0,
+          "assertions": []
+        }
+      ]
+    }
   },
   "evidence_appraisal": {
     "source_count": 17,

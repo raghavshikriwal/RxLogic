@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from services.clinical_knowledge import CANDIDATE_TYPE_TO_DOMAIN, STATEMENT_DOMAINS
 from services.evidence_review import (
     DEFAULT_STAGING_ROOT,
     EvidenceReviewError,
@@ -25,10 +26,15 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CURATION_ROOT = PROJECT_ROOT / "knowledge" / "curation"
 CANDIDATE_FILE = "candidates.jsonl"
 DECISION_FILE = "candidate_decisions.jsonl"
-CANDIDATE_TYPES = frozenset({
-    "interaction_rule", "food_rule", "drug_food_interaction",
-    "contraindication", "dosage_reference", "administration_instruction",
-})
+CANDIDATE_TYPES = frozenset({"interaction_rule", "food_rule", *CANDIDATE_TYPE_TO_DOMAIN})
+# Statement-style monograph candidates: one sourced statement about a medication.
+STATEMENT_CANDIDATE_TYPES = frozenset(
+    kind for kind, domain in CANDIDATE_TYPE_TO_DOMAIN.items() if domain in STATEMENT_DOMAINS
+)
+# Candidate types whose released records are clinical assertions (Task 07+).
+CLINICAL_ASSERTION_TYPES = frozenset(CANDIDATE_TYPE_TO_DOMAIN)
+# Types that must cite where in the source the statement was found.
+LOCATOR_REQUIRED_TYPES = STATEMENT_CANDIDATE_TYPES | {"drug_supplement_interaction"}
 CLINICAL_APPROVER_ROLES = frozenset({"clinical_pharmacist", "physician"})
 SEVERITIES = frozenset({"mild", "moderate", "severe", "unknown"})
 EVIDENCE_STRENGTHS = frozenset({"strong", "moderate", "limited", "unknown"})
@@ -131,9 +137,31 @@ def _validate_rule(rule_type: str, rule: dict[str, Any]) -> dict[str, Any]:
         _required_text(normalized, "instruction", 2000)
         if normalized.get("evidence_strength") not in EVIDENCE_STRENGTHS:
             raise CurationError("evidence_strength must be strong, moderate, limited, or unknown")
+    elif rule_type in STATEMENT_CANDIDATE_TYPES:
+        normalized["medication"] = _required_text(normalized, "medication", 200).lower()
+        _required_text(normalized, "statement", 2000)
+        if normalized.get("evidence_strength") not in EVIDENCE_STRENGTHS:
+            raise CurationError("evidence_strength must be strong, moderate, limited, or unknown")
+    elif rule_type == "drug_supplement_interaction":
+        normalized["medication"] = _required_text(normalized, "medication", 200).lower()
+        normalized["supplement_or_component"] = _required_text(normalized, "supplement_or_component", 200).lower()
+        _required_text(normalized, "clinical_effect")
+        if normalized.get("severity") not in SEVERITIES:
+            raise CurationError("severity must be mild, moderate, severe, or unknown")
+        if normalized.get("evidence_strength") not in EVIDENCE_STRENGTHS:
+            raise CurationError("evidence_strength must be strong, moderate, limited, or unknown")
     else:
         raise CurationError(f"unsupported candidate_type: {rule_type!r}")
     normalized["source"] = _required_text(normalized, "source", 1000)
+    # A source locator says where in the cited document the statement lives
+    # (section, set ID, version). Mandatory for monograph domains.
+    locator = normalized.get("source_locator")
+    if locator is None and rule_type in LOCATOR_REQUIRED_TYPES:
+        raise CurationError("source_locator is required for this candidate type")
+    if locator is not None:
+        normalized["source_locator"] = _required_text(normalized, "source_locator", 1000)
+    if "source_excerpt" in normalized:
+        normalized["source_excerpt"] = _required_text(normalized, "source_excerpt", 4000)
     # Preserve evidence appraisal separately from clinical severity. Unknown is
     # explicit and never silently upgraded based on source identity.
     normalized["evidence_strength"] = normalized.get("evidence_strength", normalized.get("evidence", "unknown"))
@@ -208,7 +236,7 @@ def create_candidate(
 ) -> dict[str, Any]:
     """Create a human-authored candidate backed only by accepted, hash-verified evidence."""
     if candidate_type not in CANDIDATE_TYPES:
-        raise CurationError("candidate_type must be interaction_rule or food_rule")
+        raise CurationError(f"candidate_type must be one of: {', '.join(sorted(CANDIDATE_TYPES))}")
     author = _required_text({"author_id": author_id}, "author_id", 200)
     reason = _required_text({"rationale": rationale}, "rationale", 4000)
     if not isinstance(evidence_record_ids, list) or not evidence_record_ids:
@@ -284,9 +312,7 @@ def record_clinical_decision(
         raise CurationError("candidate evidence references no longer match the verified accepted evidence")
     if reviewer == candidate.get("author_id"):
         raise CurationError("candidate author cannot clinically approve or reject their own candidate")
-    if decision == "approved" and candidate.get("candidate_type") in {
-        "drug_food_interaction", "contraindication", "dosage_reference", "administration_instruction"
-    } and candidate.get("rule", {}).get("conflict_status") not in {"no_known_conflict", "resolved"}:
+    if decision == "approved" and candidate.get("candidate_type") in CLINICAL_ASSERTION_TYPES and candidate.get("rule", {}).get("conflict_status") not in {"no_known_conflict", "resolved"}:
         raise CurationError("Task 07 assertions require an explicit conflict assessment before clinical approval")
     previous = [d for d in _read_jsonl(Path(curation_root) / DECISION_FILE) if d.get("candidate_id") == candidate_id]
     if previous and previous[-1].get("decision") == "approved":

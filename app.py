@@ -18,6 +18,7 @@ from werkzeug.utils import safe_join
 from extensions import limiter
 from models.database import init_db
 from routes.api import api
+from routes.knowledge_api import knowledge_api
 from services.security import build_security_settings
 
 LOG_FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
@@ -66,6 +67,7 @@ def create_app() -> Flask:
     init_db()
     limiter.init_app(app)
     app.register_blueprint(api)
+    app.register_blueprint(knowledge_api)
     _register_frontend_route(app)
     _register_info_route(app)
     _register_security_hooks(app)

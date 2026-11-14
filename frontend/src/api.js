@@ -98,3 +98,17 @@ export function listPlans(limit = 20) {
 export function checkHealth() {
   return request('/api/health', { method: 'GET' });
 }
+
+/** GET /api/medications — every catalog medication identity with its assessment state. */
+export function listMedications() {
+  return request('/api/medications', { method: 'GET' });
+}
+
+/**
+ * GET /api/medications/<name>/clinical — evidence-traceable clinical profile.
+ * All clinical content is served by the backend from the governed knowledge release.
+ * @param {string} name - catalog canonical name or alias
+ */
+export function getMedicationClinicalProfile(name, { signal } = {}) {
+  return request(`/api/medications/${encodeURIComponent(name)}/clinical`, { method: 'GET', signal });
+}

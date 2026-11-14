@@ -1,9 +1,17 @@
 {
   "schema_version": "1.0.0",
   "knowledge_release": "rxlogic-task13-development-2026-11-14",
-  "source_note": "No Task 07 clinical assertions have been added. Empty arrays mean not assessed, not absence of risk or a negative finding.",
+  "source_note": "No clinical assertions have been added to the development dataset. Empty arrays mean not assessed, not absence of risk or a negative finding. Assertions enter an approved release only through evidence review, independent clinical approval and release promotion.",
   "drug_food_interactions": [],
   "contraindications": [],
   "dosage_references": [],
-  "administration_instructions": []
+  "administration_instructions": [],
+  "medication_overviews": [],
+  "drug_classes": [],
+  "therapeutic_categories": [],
+  "mechanisms_of_action": [],
+  "approved_indications": [],
+  "precautions": [],
+  "adverse_effects": [],
+  "drug_supplement_interactions": []
 }

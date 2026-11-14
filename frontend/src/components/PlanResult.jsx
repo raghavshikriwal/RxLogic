@@ -33,7 +33,7 @@ export default function PlanResult({ plan }) {
             <CoverageSummary coverage={plan.coverage} />
             <WarningsPanel warnings={plan.warnings} />
             <FoodGuidance guidance={plan.food_guidance} />
-            <ClinicalAssessment assessment={plan.clinical_assessment} />
+            <ClinicalAssessment assessment={plan.clinical_assessment} medications={plan.entries.map((entry) => entry.medication)} />
           </div>
         </div>
       </div>

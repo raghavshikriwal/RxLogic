@@ -49,3 +49,6 @@ knowledge/ingestion/staging/
 *.db
 *.log
 secrets/
+
+# Task 15: transient SSR render-test bundles
+frontend/tests/.render-*/

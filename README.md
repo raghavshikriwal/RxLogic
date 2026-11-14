@@ -2154,3 +2154,52 @@ See the [LICENSE](LICENSE) file for the full license text.
 </p>
 
 > **Final Disclaimer:** RxLogic is not a medical device, has not been clinically validated, and is not authorized for patient-care use. Its knowledge base is incomplete. No output should be interpreted as a diagnosis, prescription, dosing instruction, or confirmation of medication safety. Always consult a qualified healthcare professional for real medication decisions.
+
+
+## Medication knowledge API and evidence dashboard (Task 15)
+
+RxLogic is an **educational, explainable demonstrator**. It is not a medical device and clinical use is not
+permitted. Nothing in this repository has been clinically validated by a qualified reviewer.
+
+### Endpoints (read-only; existing `/api` contracts are unchanged)
+
+| Endpoint | Purpose | Errors |
+|---|---|---|
+| `GET /api/medications` | All 24 catalog identities with their assessment state | `503` if the active release is unavailable |
+| `GET /api/medications/<name>/clinical` | Evidence-traceable profile for one medication (canonical name or alias) across 12 clinical domains plus drug–drug interactions | `404 unknown_medication`, `503 approved_knowledge_unavailable`, `503 configuration_error` |
+
+Rules the profile enforces:
+
+- A finding is shown as **approved** only when it comes from an integrity-verified **active release**
+  (`RXLOGIC_KNOWLEDGE_MODE=active_release`), is explicitly `clinically_approved`, has an explicit conflict state
+  (`no_known_conflict` or `resolved` with a written resolution) and cites at least one evidence source.
+- In the default `legacy_development` mode nothing is shown as approved. Development records appear only as IDs with
+  an `unverified_development_record` label; their claim text is withheld.
+- Records that are unapproved, rejected, withdrawn, source-less or lacking a conflict assessment are listed by ID with an
+  `exclusion_reason` and no claim text. Conflicting evidence is listed separately and never shown as a finding.
+- An empty domain means **not assessed**. It is never reported as "no risk" or a negative finding.
+- Dosage entries are source-scoped references and always carry `patient_specific: false`.
+- Source citations (publisher, title, version, date, URL) and per-finding section locators are preserved.
+
+### How clinical content enters the system (the only path)
+
+Source ingestion → evidence review → candidate creation → independent clinical approval → knowledge release →
+two release reviews → independent promotion → runtime retrieval. AI/drafting tools never approve anything.
+Details: `docs/TASK_15_CHANGELOG.md` and `docs/TASK_15_AUDIT_REPORT.md`.
+
+### Run locally (Windows PowerShell)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+pytest                                   # full Python suite
+cd frontend
+npm install
+npm test                                 # helper unit tests + server-side render tests
+npm run build                            # production bundle into frontend/dist
+cd ..
+python app.py                            # serves the API (and frontend/dist when built)
+```
+
+Set `RXLOGIC_KNOWLEDGE_MODE=active_release` only after a release has been promoted through the governance workflow.
