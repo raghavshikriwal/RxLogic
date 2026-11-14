@@ -65,13 +65,32 @@ def test_fetches_and_stages_openfda_label(client, session):
 
 
 def test_fetches_and_stages_dailymed_spl(client, session):
-    session.get.return_value = response({"data": [{"setid": "abc", "title": "Example"}]})
+    import uuid
+    setid = "123e4567-e89b-12d3-a456-426614174000"
+    search = response({
+        "columns": ["SETID", "TITLE", "SPL_VERSION", "PUBLISHED_DATE"],
+        "data": [[setid, "Example label", "2", "2025-01-15"]],
+    })
+    xml = b"""<document xmlns="urn:hl7-org:v3"><title>Example label</title><component><structuredBody><component><section><code code="34067-9" displayName="INDICATIONS AND USAGE"/><title>INDICATIONS AND USAGE</title><text>Verbatim label text.</text></section></component></structuredBody></component></document>"""
+    label = Mock()
+    label.content = xml
+    label.iter_content.return_value = [xml]
+    label.headers = {"Content-Length": str(len(xml))}
+    label.status_code = 200
+    label.raise_for_status.return_value = None
+    label.close.return_value = None
+    session.get.side_effect = [search, label]
+
     result = client.fetch_and_stage_dailymed_labels("metformin", page_size=5)
     assert_staged(result, "DailyMed", 1)
-    assert session.get.call_args.args[0] == DAILYMED_SPL_URL
-    assert session.get.call_args.kwargs["params"] == {
+    assert session.get.call_args_list[0].args[0] == DAILYMED_SPL_URL
+    assert session.get.call_args_list[0].kwargs["params"] == {
         "drug_name": "metformin", "name_type": "both", "pagesize": 5, "page": 1
     }
+    artifact = json.loads(Path(result.ingestion.artifact_path).read_text(encoding="utf-8"))
+    assert artifact["payload"]["set_id"] == str(uuid.UUID(setid))
+    assert artifact["payload"]["sections"][0]["original_text"] == "Verbatim label text."
+    assert artifact["payload"]["review_status"] == "pending_clinical_review"
 
 
 @pytest.mark.parametrize("method,args", [

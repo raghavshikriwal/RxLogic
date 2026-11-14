@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import KnowledgeSection from './KnowledgeSection.jsx';
+import ExternalKnowledgeLookup from './ExternalKnowledgeLookup.jsx';
 import { assessmentSummary, isAuthoritative, orderedSections, statusTally } from '../lib/clinicalProfile.js';
 
 const TALLY_ITEMS = [
@@ -59,6 +60,7 @@ export default function MedicationProfileCard({ profile, defaultExpanded = false
           {openAll ? 'Collapse all sections' : 'Expand all sections'}
         </button>
       </header>
+      <ExternalKnowledgeLookup medicationName={medication.canonical_name} />
       <ul className="mt-16 flex flex-col gap-8">
         {sections.map((section) => (
           <KnowledgeSection key={`${section.domain}-${epoch}`} section={section} defaultExpanded={openAll} />

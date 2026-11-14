@@ -1,4 +1,4 @@
-﻿# Task 15 — Audit, integration and validation report
+# Task 15 — Audit, integration and validation report
 
 **Scope:** the Task 15 overlay (clinical knowledge profile API, curation/release extensions, label-drafting aid,
 evidence dashboard) was merged onto the Task 14 repository and audited. No clinical content was added, approved
@@ -104,7 +104,7 @@ screens. Nothing is hard-coded or filled in. **Not visually inspected in a brows
 - Dosage, contraindication, adverse-effect, mechanism, indication and interaction content must come from
   authoritative sources (e.g. FDA labels) via the workflow above and be approved by an independent qualified
   pharmacist or physician. Nothing here is clinically validated.
-- At the time of the original audit, `frontend/dist/` had not been rebuilt. This was subsequently corrected and verified; see Section 10.
+- `frontend/dist/` was **not rebuilt**. The committed bundle predates all Task 15 UI work; run `npm run build`
   before serving the production bundle.
 
 ## 9. Files
@@ -125,33 +125,3 @@ Changed in this audit pass on top of the Task 15 delivery: `services/clinical_pr
 `routes/knowledge_api.py`, `frontend/src/components/{KnowledgeSection,MedicationProfileCard,ClinicalAssessment}.jsx`,
 `frontend/src/lib/clinicalProfile.js`, `frontend/src/lib/clinicalProfile.test.js`, `frontend/tests/render.test.mjs`,
 `tests/test_task15_clinical_knowledge.py`, `.github/workflows/tests.yml`, `README.md`, `docs/TASK_15_CHANGELOG.md`.
-
-## 10. Final Windows Verification — 15 November 2026
-
-The project was subsequently verified on the developer's Windows environment using the installed project dependencies.
-
-| Verification | Result |
-|---|---|
-| Python backend test suite | 642 passed, 0 failed |
-| Backend security tests | 9 passed |
-| Task 15 clinical knowledge tests | Passed as part of the full suite |
-| Frontend tests (`npm test`) | 26 passed, 0 failed |
-| Frontend production build (`npm run build`) | Successful |
-| npm security audit | 0 vulnerabilities |
-| Backend execution time | 178.15 seconds |
-
-### Environment and warnings
-
-- Windows PowerShell environment.
-- Python 3.14.7.
-- pytest 9.1.1.
-- Frontend build using Vite 6.4.6.
-- 102 NumPy deprecation warnings were reported by scikit-fuzzy. These did not cause test failures.
-
-### Final verification conclusion
-
-The complete backend test suite passed with 642 tests and no failures. The frontend test suite passed with 26 tests, and the production frontend build completed successfully.
-
-This verification supersedes the earlier audit-environment execution limitations for the tested Windows environment. It does not constitute clinical validation or independent approval of medication knowledge. Clinical assertions and evidence must still pass the established review and release-governance process.
-
-

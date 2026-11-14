@@ -112,3 +112,16 @@ export function listMedications() {
 export function getMedicationClinicalProfile(name, { signal } = {}) {
   return request(`/api/medications/${encodeURIComponent(name)}/clinical`, { method: 'GET', signal });
 }
+
+/** POST /api/external-knowledge/search — stage external evidence for human review only. */
+export function searchExternalMedicationSources(medicationName, { refresh = false } = {}) {
+  return request('/api/external-knowledge/search', {
+    method: 'POST',
+    body: JSON.stringify({ medication_name: medicationName, refresh }),
+  });
+}
+
+/** GET /api/external-knowledge/sources — source availability and jurisdiction metadata. */
+export function listExternalKnowledgeSources() {
+  return request('/api/external-knowledge/sources', { method: 'GET' });
+}

@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/badge/React-18-61DAFB" alt="React">
   <img src="https://img.shields.io/badge/Flask-3.0-black" alt="Flask">
   <img src="https://img.shields.io/badge/Vite-6-646CFF" alt="Vite">
-  <img src="https://img.shields.io/badge/Project%20Tasks-01--12-success" alt="Tasks 01–12">
+  <img src="https://img.shields.io/badge/Project%20Tasks-01--15-success" alt="Tasks 01–12">
   <img src="https://img.shields.io/badge/Status-Research%20Demonstrator-orange" alt="Research Demonstrator">
 </p>
 
@@ -95,47 +95,32 @@ The knowledge-management architecture includes:
 - Integrity-checked runtime loading.
 - Audit trails for knowledge-management operations.
 
-The development has progressed through twelve major implementation tasks, integrating the backend, frontend, reasoning services, medication catalog, knowledge governance, testing infrastructure, clinical-assessment response architecture, and web-tier security hardening.
+The development has progressed through fifteen completed implementation tasks, integrating the backend, frontend, reasoning services, medication catalog, evidence governance, controlled releases, security hardening, and governed clinical knowledge profiles. Task 16 is currently in progress and adds explicit external-source retrieval into the existing evidence staging workflow.
 
 ## Current Project Status
 
-**Current development status:** Tasks 01–11 are implemented in the supplied Task 11 baseline. Task 11's full Windows regression suite was reported as **399 passed**. Task 12 web-tier security hardening is being developed on `task-12-security-hardening`; its final test/audit results must be recorded after verification in the target Windows environment.
-
+**Current development status:** Tasks 01–15 are implemented. The Task 15 Windows verification reported 642 backend tests passed, 26 frontend tests passed, a successful production frontend build, and zero npm audit vulnerabilities. Task 16's initial external-source integration increment is in progress; it is not yet complete and must pass full backend/frontend verification before deployment.
 
 | Component | Status |
 |---|---|
-| Tasks 01–09 | Implemented and integrated |
+| Tasks 01–15 | Implemented and integrated |
 | Task 10 clinical validation framework | Implemented; clinical validation itself not performed |
-| Task 11 release governance | Implemented; 399-test full Windows suite reported |
-| Task 12 security hardening | In progress on `task-12-security-hardening` |
+| Task 11 release governance | Implemented |
+| Task 12 security hardening | Implemented |
+| Task 13 label-cited interaction rule expansion | Implemented |
+| Task 14 pluggable LLM providers | Implemented |
+| Task 15 governed clinical knowledge profiles | Implemented; no clinical assertions were added by Task 15 |
+| Task 16 external medication knowledge integration | Initial increment in progress; see `docs/TASK_16_ARCHITECTURE.md` |
 | Backend | Implemented |
 | React frontend | Implemented |
-| Neuro-symbolic reasoning | Implemented |
-| Constraint-based scheduling | Implemented |
-| Fuzzy confidence refinement | Implemented |
-| Goal-stack planning | Implemented |
-| Medication identity catalog | Implemented |
-| Evidence ingestion | Implemented |
-| Evidence review workflow | Implemented |
+| Evidence ingestion and review | Implemented |
 | Controlled knowledge releases | Implemented |
-| Task 09 clinical assessment | Integrated |
-| Task 10 Windows regression suite | 384 tests passed (historical Task 10 snapshot) |
-| Task 11 focused governance suite | 46 tests passed |
-| Task 11 full Windows regression suite | 399 tests passed (user-reported) |
-| Task 12 focused security suite | Pending Windows verification |
-| Frontend production build | Passed |
-| npm dependency audit | 0 vulnerabilities reported |
-| Knowledge structural validation | Passed |
+| External RxNorm / DailyMed / openFDA retrieval | Existing bounded clients, now exposed through Task 16 orchestration |
+| India regulatory source connector | Not configured; no unverified scraping |
 | Clinical validation | Not performed |
 | Patient-care authorization | Not authorized |
 
-**Latest recorded `main`-branch commit before Tasks 10–11 work:**
-
-```text
-217a7f9 Update README with complete project documentation
-```
-
-Task 11 and Task 12 are developed on separate feature branches and are not automatically merged into `main`. Merge only after review and CI verification.
+Task 15 Windows verification reported: backend **642 passed**, frontend **26 passed**, production build successful, and `npm audit` reported **0 vulnerabilities**. These are software verification results, not clinical validation.
 
 Repository:
 
@@ -2203,3 +2188,22 @@ python app.py                            # serves the API (and frontend/dist whe
 ```
 
 Set `RXLOGIC_KNOWLEDGE_MODE=active_release` only after a release has been promoted through the governance workflow.
+
+
+## External medication knowledge integration (Task 16 — initial increment)
+
+Task 16 adds an explicit user-triggered lookup control to the Task 15 medication
+profile. RxNorm/RxNav, DailyMed and openFDA adapters reuse the existing bounded
+source client and stage original source snapshots in the existing evidence
+store. `GET /api/external-knowledge/sources` reports source capability and
+jurisdiction metadata; `POST /api/external-knowledge/search` performs a
+rate-limited lookup and returns staged evidence IDs.
+
+Every retrieved record remains `pending_clinical_review` and `staged_only`.
+The lookup does not create clinical assertions, approve evidence, assemble a
+release or promote knowledge. MedlinePlus is reference-link-only. The India
+regulatory connector is deliberately not configured until an approved official
+machine-readable source and permitted acquisition method are established.
+DailyMed full SPL retrieval, product-level section extraction and applicability
+matching remain outstanding. See `docs/TASK_16_ARCHITECTURE.md`,
+`docs/TASK_16_CHANGELOG.md` and `docs/TASK_16_AUDIT_REPORT.md`.

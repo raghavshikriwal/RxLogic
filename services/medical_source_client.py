@@ -11,6 +11,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 import requests
+import xml.etree.ElementTree as ET
 
 from services.evidence_ingestion import EvidenceMetadata, IngestionResult, ingest_json_document
 from pathlib import Path
@@ -23,6 +24,8 @@ DEFAULT_TIMEOUT_SECONDS = 12
 MAX_RESPONSE_BYTES = 10 * 1024 * 1024
 MAX_OPENFDA_RESULTS = 100
 MAX_DAILYMED_PAGE_SIZE = 100
+DAILYMED_SPL_DOCUMENT_URL = "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/{setid}.xml"
+MAX_DAILYMED_LABELS_TO_STAGE = 5
 
 
 @dataclass(frozen=True)
@@ -181,20 +184,167 @@ class MedicalSourceClient:
             title=f"openFDA drug label search: {name}",
         )
 
+    @staticmethod
+    def _parse_dailymed_spl(xml_bytes: bytes) -> dict[str, Any]:
+        """Extract verbatim SPL section text while retaining code/title locators."""
+        try:
+            root = ET.fromstring(xml_bytes)
+        except ET.ParseError as exc:
+            raise ValueError("DailyMed returned malformed SPL XML") from exc
+
+        def local(tag: str) -> str:
+            return tag.rsplit("}", 1)[-1]
+
+        def descendants_text(node: ET.Element) -> str:
+            return " ".join(part.strip() for part in node.itertext() if part and part.strip())
+
+        title = ""
+        for node in root.iter():
+            if local(node.tag) == "title":
+                title = descendants_text(node)
+                if title:
+                    break
+        sections = []
+        for node in root.iter():
+            if local(node.tag) != "section":
+                continue
+            code = next((child.attrib.get("code") for child in node if local(child.tag) == "code"), None)
+            display = next((child.attrib.get("displayName") for child in node if local(child.tag) == "code"), None)
+            section_title = next((descendants_text(child) for child in node if local(child.tag) == "title"), "")
+            text_node = next((child for child in node if local(child.tag) == "text"), None)
+            original_text = descendants_text(text_node) if text_node is not None else ""
+            if section_title or original_text:
+                sections.append({
+                    "section_code": code, "section_code_system_display": display,
+                    "section_title": section_title, "original_text": original_text,
+                })
+        return {"label_title": title, "sections": sections}
+
+    def _fetch_dailymed_xml(self, setid: str) -> bytes:
+        # SET ID is a UUID from the allowlisted DailyMed search response, not a user URL.
+        import uuid
+        try:
+            normalized = str(uuid.UUID(str(setid)))
+        except (ValueError, AttributeError, TypeError) as exc:
+            raise ValueError("DailyMed returned an invalid SPL SET ID") from exc
+        endpoint = DAILYMED_SPL_DOCUMENT_URL.format(setid=normalized)
+        response = None
+        try:
+            response = self.session.get(endpoint, timeout=self.timeout, allow_redirects=False, stream=True,
+                headers={"Accept": "application/xml", "User-Agent": "RxLogic-Educational-Demonstrator/1.0"})
+            if 300 <= response.status_code < 400:
+                raise requests.HTTPError("Redirect responses are not accepted", response=response)
+            response.raise_for_status()
+            declared = response.headers.get("Content-Length")
+            if declared and int(declared) > self.max_response_bytes:
+                raise ValueError("DailyMed SPL response exceeds configured size limit")
+            chunks, total = [], 0
+            for chunk in response.iter_content(chunk_size=64 * 1024):
+                if not chunk:
+                    continue
+                total += len(chunk)
+                if total > self.max_response_bytes:
+                    raise ValueError("DailyMed SPL response exceeds configured size limit")
+                chunks.append(chunk)
+            content = b"".join(chunks)
+            if not content:
+                raise ValueError("DailyMed returned an empty SPL document")
+            return content
+        except requests.RequestException as exc:
+            from models.exceptions import ExternalAPIError
+            raise ExternalAPIError("DailyMed", status_code=getattr(exc.response, "status_code", None)) from exc
+        finally:
+            if response is not None:
+                response.close()
+
     def fetch_and_stage_dailymed_labels(self, medication_name: str, page_size: int = 10) -> SourceFetchResult:
+        """Search DailyMed, retrieve full SPL XML, extract sections and stage each label separately.
+
+        Every staged payload includes the exact original XML as UTF-8 text and
+        verbatim section text. Records remain pending review and staged only.
+        """
         name = self._validate_query(medication_name)
         if not 1 <= page_size <= MAX_DAILYMED_PAGE_SIZE:
             raise ValueError(f"page_size must be between 1 and {MAX_DAILYMED_PAGE_SIZE}")
-        params = {"drug_name": name, "name_type": "both", "pagesize": page_size, "page": 1}
-        return self._fetch_and_stage(
-            provider="DailyMed",
-            query=name,
-            endpoint=DAILYMED_SPL_URL,
-            params=params,
-            publisher="U.S. National Library of Medicine DailyMed",
-            source_type="dailymed_spl",
-            title=f"DailyMed SPL search: {name}",
-        )
+        params = {"drug_name": name, "name_type": "both", "pagesize": min(page_size, MAX_DAILYMED_LABELS_TO_STAGE), "page": 1}
+        search_payload = self._fetch_json(DAILYMED_SPL_URL, params, "DailyMed")
+        rows = search_payload.get("data", [])
+        if not isinstance(rows, list):
+            raise ValueError("DailyMed SPL search returned an invalid data collection")
+        columns = [str(c).upper() for c in search_payload.get("columns", [])] if isinstance(search_payload.get("columns"), list) else []
+        staged = []
+        first_label_url = None
+        import json, tempfile
+        from datetime import datetime, timezone
+        from services.evidence_ingestion import EvidenceMetadata, ingest_json_document
+        for row in rows[:MAX_DAILYMED_LABELS_TO_STAGE]:
+            if not isinstance(row, list):
+                continue
+            values = dict(zip(columns, row))
+            setid = values.get("SETID") or values.get("SET_ID")
+            if not setid:
+                continue
+            raw_xml = self._fetch_dailymed_xml(str(setid))
+            parsed = self._parse_dailymed_spl(raw_xml)
+            published = values.get("PUBLISHED_DATE")
+            label_title = str(values.get("TITLE") or parsed.get("label_title") or f"DailyMed SPL {setid}")
+            payload = {
+                "schema": "rxlogic.dailymed_spl_candidate.v1",
+                "medication_query": name, "set_id": str(setid),
+                "spl_version": values.get("SPL_VERSION"),
+                "published_date": published, "label_title": label_title,
+                "product_identity": {"label_title": label_title, "matching_status": "needs_human_product_applicability_review"},
+                "source_document": {"format": "SPL-XML", "original_xml_utf8": raw_xml.decode("utf-8", errors="replace")},
+                "sections": parsed["sections"],
+                "extraction": {"method": "xml_section_text_extraction", "extracted_at": datetime.now(timezone.utc).isoformat(), "clinical_interpretation_performed": False},
+                "review_status": "pending_clinical_review", "promotion_status": "staged_only",
+            }
+            endpoint = DAILYMED_SPL_DOCUMENT_URL.format(setid=str(setid))
+            if first_label_url is None:
+                first_label_url = endpoint
+            with tempfile.TemporaryDirectory(prefix="rxlogic-dailymed-spl-") as temp_dir:
+                document = Path(temp_dir) / "spl.json"
+                document.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+                metadata = EvidenceMetadata(
+                    publisher="U.S. National Library of Medicine DailyMed", source_type="dailymed_spl",
+                    document_title=label_title, canonical_url=endpoint,
+                    publication_date=self._iso_date_or_none(published), jurisdiction="US",
+                )
+                kwargs = {"staging_root": self.staging_root} if self.staging_root is not None else {}
+                ingestion = ingest_json_document(document, metadata, **kwargs)
+            staged.append(ingestion)
+        # Search metadata is not treated as a clinical evidence document. Each
+        # full label has its own immutable evidence artifact and locator.
+        if not staged:
+            return SourceFetchResult("DailyMed", name, self._query_url(DAILYMED_SPL_URL, params), 0,
+                self._stage_empty_dailymed_search(name, params))
+        # Backward-compatible summary result points to the first label; count
+        # reports all separately staged full SPLs.
+        return SourceFetchResult("DailyMed", name, str(first_label_url), len(staged), staged[0])
+
+    @staticmethod
+    def _iso_date_or_none(value: Any) -> str | None:
+        if not isinstance(value, str) or not value.strip():
+            return None
+        from datetime import datetime
+        for fmt in ("%Y-%m-%d", "%B %d, %Y", "%b %d, %Y"):
+            try:
+                return datetime.strptime(value.strip(), fmt).date().isoformat()
+            except ValueError:
+                pass
+        return None
+
+    def _stage_empty_dailymed_search(self, name: str, params: dict[str, Any]) -> Any:
+        # Preserve a bounded, auditable no-match search result without claiming
+        # that the medicine has no clinical information.
+        import json, tempfile
+        from services.evidence_ingestion import EvidenceMetadata, ingest_json_document
+        with tempfile.TemporaryDirectory(prefix="rxlogic-dailymed-empty-") as temp_dir:
+            document = Path(temp_dir) / "search.json"
+            document.write_text(json.dumps({"medication_query": name, "matched_labels": [], "status": "no_dailymed_label_match"}), encoding="utf-8")
+            metadata = EvidenceMetadata("U.S. National Library of Medicine DailyMed", "dailymed_spl", f"DailyMed label search: {name}", self._query_url(DAILYMED_SPL_URL, params), jurisdiction="US")
+            kwargs = {"staging_root": self.staging_root} if self.staging_root is not None else {}
+            return ingest_json_document(document, metadata, **kwargs)
 
     @staticmethod
     def _validate_query(value: str) -> str:

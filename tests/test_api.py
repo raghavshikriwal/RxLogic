@@ -526,3 +526,100 @@ def test_natural_language_input_length_is_bounded(client):
         response = client.post("/api/plan/nl", json={"text": "x" * 4001})
     assert response.status_code == 400
     parse.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Task 16 — DailyMed evidence preview API
+# ---------------------------------------------------------------------------
+
+@patch("routes.external_knowledge_api.preview_staged_dailymed_evidence")
+def test_dailymed_preview_api_success(mock_preview, client):
+    mock_preview.return_value = {
+        "schema": "rxlogic.dailymed_section_preview.v1",
+        "medication": "Metformin",
+        "preview_count": 1,
+        "mapped_count": 1,
+        "unmapped_count": 0,
+        "previews": [],
+        "evidence": {
+            "record_id": "EVD-DM-001",
+            "review_status": "pending_clinical_review",
+            "promotion_status": "staged_only",
+            "metadata_integrity": "verified",
+        },
+        "governance": {
+            "is_clinical_assertion": False,
+            "creates_curation_record": False,
+            "requires_human_review": True,
+            "can_be_promoted": False,
+        },
+    }
+
+    response = client.get(
+        "/api/external-knowledge/evidence/EVD-DM-001/dailymed-preview"
+        "?canonical_medication=Metformin"
+    )
+
+    body = response.get_json()
+
+    assert response.status_code == 200
+    assert body["medication"] == "Metformin"
+    assert body["evidence"]["review_status"] == "pending_clinical_review"
+    assert body["evidence"]["promotion_status"] == "staged_only"
+    assert body["governance"]["is_clinical_assertion"] is False
+    assert body["governance"]["creates_curation_record"] is False
+    assert body["governance"]["requires_human_review"] is True
+    assert body["governance"]["can_be_promoted"] is False
+
+    mock_preview.assert_called_once_with(
+        record_id="EVD-DM-001",
+        canonical_medication="Metformin",
+    )
+
+
+@patch("routes.external_knowledge_api.preview_staged_dailymed_evidence")
+def test_dailymed_preview_unknown_evidence_returns_404(mock_preview, client):
+    from services.evidence_review import EvidenceReviewError
+
+    mock_preview.side_effect = EvidenceReviewError("internal evidence path")
+
+    response = client.get(
+        "/api/external-knowledge/evidence/UNKNOWN/dailymed-preview"
+        "?canonical_medication=Metformin"
+    )
+
+    assert response.status_code == 404
+    body = response.get_json()
+    assert body["error"] == "evidence_unavailable"
+    assert "internal evidence path" not in str(body)
+
+
+@patch("routes.external_knowledge_api.preview_staged_dailymed_evidence")
+def test_dailymed_preview_invalid_request_returns_400(mock_preview, client):
+    mock_preview.side_effect = ValueError("unsupported evidence payload")
+
+    response = client.get(
+        "/api/external-knowledge/evidence/EVD-INVALID/dailymed-preview"
+        "?canonical_medication=Metformin"
+    )
+
+    assert response.status_code == 400
+    body = response.get_json()
+    assert body["error"] == "invalid_preview_request"
+    assert "unsupported evidence payload" not in str(body)
+
+
+@patch("routes.external_knowledge_api.preview_staged_dailymed_evidence")
+def test_dailymed_preview_unexpected_error_is_sanitized(mock_preview, client):
+    mock_preview.side_effect = RuntimeError("C:\\private\\staging\\secret.json")
+
+    response = client.get(
+        "/api/external-knowledge/evidence/EVD-ERROR/dailymed-preview"
+        "?canonical_medication=Metformin"
+    )
+
+    assert response.status_code == 503
+    body = response.get_json()
+    assert body["error"] == "preview_unavailable"
+    assert "private" not in str(body)
+    assert "secret.json" not in str(body)

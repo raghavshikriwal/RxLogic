@@ -36,6 +36,8 @@ ALLOWED_SOURCE_DOMAINS = frozenset({
     "open.fda.gov",
     "api.fda.gov",
     "doi.org",
+    "cdsco.gov.in",
+    "cdscoonline.gov.in",
 })
 
 
